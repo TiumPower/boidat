@@ -7,6 +7,14 @@
   <meta name="apple-mobile-web-app-title" content="<%= content_for?(:apple_title) ? yield(:apple_title) : current_workspace.name %>">
 <% end %>
 <title><%= content_for?(:title) ? yield(:title) : "BƠI ĐẠT" %></title>
+
+<%# Không khai ở đây thì trình duyệt vẫn tự xin /favicon.ico và ăn 404 trên MỌI
+    trang, còn iOS "Thêm vào màn hình chính" không có icon nào để dùng nên nó
+    chụp màn hình trang làm icon. Ba cổng của app này sinh ra để cài lên điện
+    thoại, nên đó không phải chuyện nhỏ. %>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <% if content_for?(:pwa_manifest_href) %>
   <link rel="manifest" href="<%= yield(:pwa_manifest_href) %>">
 <% end %>
