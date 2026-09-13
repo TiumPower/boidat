@@ -34,20 +34,12 @@
   <% end %>
 </div>
 
-<% delta = ->(value) do %>
-  <% next "" if value.nil? %>
-  <% up = value.to_f >= 0 %>
-  <span style="color:<%= up ? 'var(--good)' : 'var(--warn)' %>; font-weight:600;">
-    <%= up ? "▲" : "▼" %> <%= value.abs %>%
-  </span>
-<% end %>
-
 <%# ---- Nhóm chỉ số (FR-102) ---- %>
 <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(165px,1fr)); gap:14px; margin-bottom:18px;">
   <div class="l-kpi" style="outline:2px solid var(--primary); outline-offset:-1px;">
     <div class="k">Doanh thu khoá học</div>
     <div class="v" style="font-size:21px; color:var(--primary);"><%= vnd(@stats[:revenue_course]) %></div>
-    <div class="d"><%= delta.call(@stats[:deltas][:revenue_course]) %> so kỳ trước</div>
+    <div class="d"><%= delta_badge(@stats[:deltas][:revenue_course]) %> so kỳ trước</div>
   </div>
   <div class="l-kpi">
     <div class="k">Doanh thu cho thuê</div>
@@ -67,12 +59,12 @@
   <div class="l-kpi">
     <div class="k">Số tiết đã dạy</div>
     <div class="v"><%= @stats[:lessons_taught] %></div>
-    <div class="d"><%= delta.call(@stats[:deltas][:lessons_taught]) %> 1 tiết = 60 phút</div>
+    <div class="d"><%= delta_badge(@stats[:deltas][:lessons_taught]) %> 1 tiết = 60 phút</div>
   </div>
   <div class="l-kpi">
     <div class="k">Công giáo viên</div>
     <div class="v"><%= @stats[:credits] %></div>
-    <div class="d"><%= delta.call(@stats[:deltas][:credits]) %></div>
+    <div class="d"><%= delta_badge(@stats[:deltas][:credits]) %></div>
   </div>
   <div class="l-kpi">
     <div class="k">Tỷ lệ lấp đầy</div>

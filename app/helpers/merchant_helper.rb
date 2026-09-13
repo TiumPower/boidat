@@ -1,4 +1,13 @@
 module MerchantHelper
+  # Cột "% so kỳ trước" của dashboard BOD (FR-101). Trả về nil khi kỳ trước bằng 0
+  # — "tăng vô hạn" không phải thông tin dùng được.
+  def delta_badge(value)
+    return nil if value.nil?
+    up = value.to_f >= 0
+    tag.span("#{up ? '▲' : '▼'} #{value.abs}%",
+             style: "color:#{up ? 'var(--good)' : 'var(--warn)'}; font-weight:600;")
+  end
+
   # Renders a "Back" control into the merchant top bar (see layouts/merchant.html.erb).
   # It returns to the real previous page via browser history, falling back to `url`
   # when there is no history (e.g. the page was opened directly). Call once near the

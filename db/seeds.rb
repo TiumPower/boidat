@@ -368,7 +368,8 @@ ActsAsTenant.with_tenant(ws) do
         o.kind = "course"
         o.customer_type = enr.customer_type
         o.status = i.even? ? "paid" : "unpaid"
-        o.paid_at = i.even? ? 2.weeks.ago : nil
+        # Ghi nhận trong tháng hiện tại để dashboard demo có số liệu thật.
+        o.paid_at = i.even? ? [start_date.to_time, Date.current.beginning_of_month.to_time].max + 2.days : nil
       end
     end
     cls
