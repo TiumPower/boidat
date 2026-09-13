@@ -1,7 +1,9 @@
 <% content_for :page_title, "Giáo viên · #{current_pool.name}" %>
+
+<%= render "merchant/ops/teacher_tabs", active: :teachers %>
 <div class="l-panel">
   <table class="l-table">
-    <thead><tr><th>Giáo viên</th><th>Loại</th><th>Cấp độ</th><th>Tối đa / tiết</th><th>Chuyên môn</th><th>Trạng thái</th><th></th></tr></thead>
+    <thead><tr><th>Giáo viên</th><th>Loại</th><th>Cấp độ</th><th>Tối đa / tiết</th><th>Lịch tháng <%= @next_month.strftime("%m") %></th><th>Trạng thái</th><th></th></tr></thead>
     <tbody>
       <% @teachers.each do |t| %>
         <tr>
@@ -9,7 +11,17 @@
           <td><%= t.renter? ? "Thuê hồ" : "Thuộc trung tâm" %></td>
           <td><%= t.renter? ? "—" : t.level_label %></td>
           <td><%= t.renter? ? "—" : "#{t.capacity} HV" %></td>
-          <td style="color:var(--ink-2);"><%= t.specialty %></td>
+          <td>
+            <% if t.renter? %>
+              <span style="color:var(--ink-2);">—</span>
+            <% elsif (count = @availability[t.id].to_i).positive? %>
+              <strong><%= count %> ca</strong>
+              <div style="font-size:12px; color:var(--ink-2);"><%= @submitted.include?(t.id) ? "đã gửi" : "bản nháp" %></div>
+            <% else %>
+              <span style="color:#B4402F; font-weight:600;">Chưa gửi</span>
+              <div style="font-size:12px; color:var(--ink-2);">hạn <%= l(@deadline, format: "%d/%m") %></div>
+            <% end %>
+          </td>
           <td><span class="l-chip"><%= t.status_label %></span></td>
           <td style="text-align:right;"><%= link_to "Xem", merchant_ops_teacher_path(t), class: "l-btn l-btn-soft", style: "padding:5px 12px; font-size:12.5px;" %></td>
         </tr>

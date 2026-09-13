@@ -57,7 +57,7 @@ class CourseMaintenanceJob < ApplicationJob
       notify(workspace, enrollment.student,
              kind: "low_sessions",
              title: "#{enrollment.student.short_name} còn #{threshold} buổi",
-             body: "Liên hệ trung tâm để giữ chỗ khoá tiếp theo với cùng thầy và khung giờ.")
+             body: "Đăng ký khoá tiếp theo ngay trên ứng dụng để giữ đúng thầy và khung giờ.")
     end
   end
 

@@ -91,7 +91,12 @@ Rails.application.routes.draw do
       resources :households, only: [:index, :show] do
         member { post :reissue_qr }
       end
-      resources :teachers, only: [:index, :show]
+      resources :teachers, only: [:index, :show] do
+        member do
+          get   :availability   # admin xem/sửa lịch dạy hộ giáo viên (FR-217)
+          patch :availability
+        end
+      end
       resources :packages, only: [:index]   # sale tra bảng giá khi chốt lịch
       resources :graduations, only: [:index, :update]   # danh sách thi tốt nghiệp (FR-208)
       resources :day_passes, path: "day-passes", only: [:index, :create]  # bán vé lẻ nhanh (FR-214)
@@ -195,6 +200,10 @@ Rails.application.routes.draw do
 
     # Học viên: tiến độ + nhận xét của giáo viên (FR-406)
     get "students/:id", to: "students#show", as: :student
+
+    # Học viên CŨ tự đăng ký khoá mới ngay trên PWA (tái ký)
+    get  "students/:student_id/enroll", to: "enrollments#new",    as: :new_enrollment
+    post "students/:student_id/enroll", to: "enrollments#create", as: :enrollments
 
     # Hoá đơn & thanh toán PayOS (FR-408)
     get  "invoices",            to: "orders#index", as: :orders

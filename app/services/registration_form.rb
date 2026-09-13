@@ -24,6 +24,9 @@ class RegistrationForm
   attribute :guardian_relation, :string
   attribute :household_id, :integer
   attribute :guardian_id, :integer
+  # Tái ký cho học viên đã có hồ sơ — không tạo học viên mới (phụ huynh tự đăng
+  # ký trên PWA, hoặc sale chọn học viên cũ).
+  attribute :student_id, :integer
   attribute :adult_self_study, :boolean, default: false
 
   # Lịch
@@ -41,24 +44,44 @@ class RegistrationForm
   attribute :bonus_sessions, :integer, default: 0
   attribute :customer_type, :string, default: "new"
 
-  validates :student_name, presence: { message: "Chưa nhập tên học viên" }
+  validates :student_name, presence: { message: "Chưa nhập tên học viên" }, unless: :existing_student?
   validate  :guardian_required_for_child
   validate  :schedule_present
   validate  :package_present
+  validate  :package_matches_class
 
   def adult_self_study? = ActiveModel::Type::Boolean.new.cast(adult_self_study)
 
   def child?
     return false if adult_self_study?
+    return false if existing_student?   # học viên cũ đã có hộ và người giám hộ
     return true if birthdate.blank?
     ((Date.current - birthdate) / 365.25).floor < 16
   end
 
-  def household = @household ||= household_id.present? ? Household.find_by(id: household_id) : nil
+  # Học viên cũ: mọi thông tin (hộ, phụ huynh, hồ) lấy từ hồ sơ đang có.
+  def student = @student ||= student_id.present? ? Student.find_by(id: student_id) : nil
+  def existing_student? = student.present?
+
+  def household
+    @household ||= student&.household || (household_id.present? ? Household.find_by(id: household_id) : nil)
+  end
   def guardian  = @guardian  ||= guardian_id.present? ? Guardian.find_by(id: guardian_id) : nil
   def swim_class = @swim_class ||= swim_class_id.present? ? SwimClass.find_by(id: swim_class_id) : nil
   def teacher = @teacher ||= swim_class&.teacher || (teacher_id.present? ? Teacher.find_by(id: teacher_id) : nil)
-  def course  = @course  ||= swim_class&.course || (course_id.present? ? Course.find_by(id: course_id) : nil)
+
+  # Khoá học lấy theo gói đã chọn — gói là thứ khách trả tiền, nên nó quyết định
+  # nội dung học chứ không phải ngược lại.
+  def course
+    @course ||= swim_class&.course || package&.course ||
+                (course_id.present? ? Course.find_by(id: course_id) : nil)
+  end
+
+  # Loại lớp cũng lấy theo gói: khách mua gói 1:1 thì phải được mở lớp 1:1, không
+  # phải giá trị mặc định của form.
+  def effective_class_type
+    swim_class&.class_type || package&.class_type || class_type || 2
+  end
   def package = @package ||= package_id.present? ? Package.find_by(id: package_id) : nil
 
   def weekdays
@@ -93,5 +116,21 @@ class RegistrationForm
 
   def package_present
     errors.add(:base, "Chưa chọn gói học") if package.nil?
+  end
+
+  # Chống trường hợp khách trả tiền gói 1:1 nhưng bị xếp vào lớp 1:3 (hoặc ngược
+  # lại) — đây là lỗi im lặng, chỉ lộ ra khi phụ huynh đến hồ và thấy lớp đông.
+  def package_matches_class
+    return if package.nil? || swim_class.nil?
+
+    if package.class_type.present? && package.class_type != swim_class.class_type
+      errors.add(:base, "Gói #{package.name} là lớp 1:#{package.class_type}, " \
+                        "không khớp lớp 1:#{swim_class.class_type} bạn đang chọn")
+    end
+    if package.course_id.present? && swim_class.course_id.present? &&
+       package.course_id != swim_class.course_id
+      errors.add(:base, "Gói #{package.name} thuộc khoá #{package.course&.name}, " \
+                        "không khớp khoá của lớp đã chọn")
+    end
   end
 end

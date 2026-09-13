@@ -11,9 +11,14 @@
 #    dụng. Không bao giờ ghi thẳng vào lịch thật.
 #
 # "Phân bổ đồng đều" đo bằng **độ lệch chuẩn số CÔNG** giữa các giáo viên cùng
-# level trong tháng — không phải số tiết. Hai giáo viên cùng 20 tiết nhưng một
-# người toàn lớp 1:1 và một người toàn lớp 1:3 thì thu nhập chênh gấp ba lần,
-# nên cân theo tiết là cân sai thứ.
+# level — không phải số tiết. Hai giáo viên cùng 20 tiết nhưng một người toàn
+# lớp 1:1 và một người toàn lớp 1:3 thì thu nhập chênh gấp ba lần, nên cân theo
+# tiết là cân sai thứ.
+#
+# Cân bằng nhìn vào **lịch sử phân công 3 tháng gần nhất**, không chỉ tháng đang
+# xếp: một giáo viên vừa nghỉ thai sản về sẽ có tháng này trống trơn, nếu chỉ
+# nhìn tháng hiện tại thì thuật toán dồn hết slot cho họ. Tháng gần thì tính
+# nặng hơn tháng xa (trọng số 1.0 / 0.6 / 0.3).
 class AutoScheduler
   Proposal = Struct.new(:teacher_id, :teacher_name, :weekday, :hour, :date, :level,
                         :reason, keyword_init: true) do
@@ -52,13 +57,45 @@ class AutoScheduler
     end.to_set
   end
 
-  # Công hiện tại của từng giáo viên trong tháng — điểm xuất phát để cân bằng.
+  # Công hiện tại của từng giáo viên trong tháng đang xếp.
   def current_credits
-    @current_credits ||= TimesheetEntry.joins(:lesson)
-                                       .where(pool_id: @pool.id)
-                                       .where(lessons: { date: @month..@month.end_of_month })
-                                       .group(:teacher_id).sum(:credits)
-                                       .transform_values(&:to_f)
+    @current_credits ||= credits_between(@month, @month.end_of_month)
+  end
+
+  # Trọng số theo tháng: tháng liền trước nặng nhất, tháng thứ ba nhẹ nhất.
+  HISTORY_WEIGHTS = [1.0, 0.6, 0.3].freeze
+
+  # Điểm tải công có tính lịch sử 3 tháng gần nhất — đây mới là con số thuật toán
+  # dùng để quyết định ai được nhận slot tiếp theo.
+  def workload_score
+    @workload_score ||= begin
+      score = Hash.new(0.0)
+      current_credits.each { |teacher_id, credits| score[teacher_id] += credits }
+      HISTORY_WEIGHTS.each_with_index do |weight, offset|
+        month = @month - (offset + 1).months
+        credits_between(month, month.end_of_month).each do |teacher_id, credits|
+          score[teacher_id] += credits * weight
+        end
+      end
+      score
+    end
+  end
+
+  # Chi tiết ba tháng gần nhất — hiện trên màn hình duyệt để admin thấy vì sao
+  # thuật toán ưu tiên người này hơn người kia.
+  def history_breakdown
+    @history_breakdown ||= (1..3).map do |offset|
+      month = @month - offset.months
+      { month: month, credits: credits_between(month, month.end_of_month) }
+    end
+  end
+
+  def credits_between(from, to)
+    TimesheetEntry.joins(:lesson)
+                  .where(pool_id: @pool.id)
+                  .where(lessons: { date: from..to })
+                  .group(:teacher_id).sum(:credits)
+                  .transform_values(&:to_f)
   end
 
   private
@@ -67,22 +104,24 @@ class AutoScheduler
   # Mỗi lần gán, cộng dồn công dự kiến rồi sắp xếp lại — greedy nhưng đủ tốt và
   # quan trọng hơn là GIẢI THÍCH ĐƯỢC cho admin đang ngồi duyệt.
   def compute_proposals
-    running_credits = Hash.new(0.0).merge(current_credits)
+    running = Hash.new(0.0).merge(workload_score)
+    this_month = current_credits
     expected = expected_credit_per_slot
 
     open_slots.sort_by { |slot| [slot.weekday, slot.hour] }.map do |slot|
       teacher = slot.teacher
       level = teacher.level_label
-      before = running_credits[teacher.id]
-      running_credits[teacher.id] = before + expected
+      before = running[teacher.id]
+      running[teacher.id] = before + expected
 
       Proposal.new(
         teacher_id: teacher.id, teacher_name: teacher.display_name,
         weekday: slot.weekday, hour: slot.hour, level: level,
         date: first_date_for(slot.weekday)&.to_s,
-        reason: "Đang #{before.round(1)} công trong tháng · #{level}"
+        reason: "#{this_month[teacher.id].to_f.round(1)} công tháng này · " \
+                "điểm tải 3 tháng #{before.round(1)} · #{level}"
       )
-    end.sort_by { |p| -priority(p, running_credits) }
+    end.sort_by { |p| -priority(p, running) }
   end
 
   # Ưu tiên slot của giáo viên đang ít công nhất trong cùng level.
@@ -106,7 +145,7 @@ class AutoScheduler
 
   # Số liệu để admin đánh giá bản nháp trước khi áp dụng.
   def metrics(proposals)
-    projected = Hash.new(0.0).merge(current_credits)
+    projected = Hash.new(0.0).merge(workload_score)
     proposals.each { |p| projected[p.teacher_id] += expected_credit_per_slot }
 
     by_level = proposals.group_by(&:level)
@@ -123,7 +162,13 @@ class AutoScheduler
       "credit_stddev_by_level" => spread,
       "availability_submitted" => TeacherAvailability.for_month(@month)
                                                      .where(pool_id: @pool.id).submitted
-                                                     .distinct.count(:teacher_id)
+                                                     .distinct.count(:teacher_id),
+      # Lịch sử 3 tháng gần nhất, để admin đối chiếu khi duyệt bản nháp.
+      "history" => history_breakdown.map do |row|
+        { "month" => row[:month].strftime("%m/%Y"),
+          "total" => row[:credits].values.sum.round(1),
+          "teachers" => row[:credits].size }
+      end
     }
   end
 

@@ -1,0 +1,142 @@
+<% content_for :title, "Đăng ký khoá mới" %>
+<% content_for :no_tabbar, true %>
+<div class="l-screen" style="padding-bottom:40px;">
+  <header style="padding:16px 18px 12px;">
+    <%= link_to "← #{@student.short_name}", member_student_path(id: @student.id),
+          style: "font-size:13px; color:var(--ink-2); text-decoration:none;" %>
+    <div style="font-family:var(--font-display); font-size:20px; font-weight:700; margin-top:8px;">
+      Đăng ký khoá mới
+    </div>
+    <div style="font-size:13px; color:var(--ink-2);">
+      <%= @student.name %> · <%= @student.pool.name %>
+    </div>
+  </header>
+
+  <% if @error %>
+    <div style="margin:0 18px 12px; padding:12px; border-radius:12px; background:#FBECEC; color:#9B2C2C; font-size:13px;">
+      <%= @error %>
+    </div>
+  <% end %>
+
+  <div style="padding:0 18px;">
+    <% if @history.any? %>
+      <div class="l-panel" style="margin-bottom:14px; background:var(--surface-2);">
+        <div style="font-weight:700; font-size:14px;">Học viên cũ · ưu đãi tái ký</div>
+        <p style="font-size:12.5px; color:var(--ink-2); margin:6px 0 0;">
+          <%= @student.short_name %> đã học
+          <%= @history.sum { |e| e.sessions_used } %> buổi tại trung tâm.
+          Đăng ký ngay tại đây, không cần gọi điện — trung tâm giữ nguyên hồ và hồ sơ của con.
+        </p>
+      </div>
+    <% end %>
+
+    <%= form_with url: member_enrollments_path(student_id: @student.id), method: :post,
+          data: { turbo: false } do %>
+
+      <%# ---- 1. Gói học ---- %>
+      <div class="l-eyebrow" style="margin-bottom:8px;">1 · Chọn gói</div>
+      <% if @options.packages.empty? %>
+        <div class="l-panel" style="margin-bottom:14px;">
+          <p style="font-size:13.5px; color:var(--ink-2); margin:0;">
+            Hồ này chưa niêm yết gói nào. Nhắn tin cho trung tâm để được tư vấn.
+          </p>
+        </div>
+      <% end %>
+      <% @options.packages.each_with_index do |pkg, i| %>
+        <label class="l-panel" style="display:block; margin-bottom:8px; cursor:pointer;">
+          <div style="display:flex; gap:10px; align-items:flex-start;">
+            <%= radio_button_tag :package_id, pkg.id, i.zero?, style: "margin-top:4px;" %>
+            <div style="flex:1;">
+              <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                <div style="font-weight:700; font-size:14px;"><%= pkg.name %></div>
+                <div style="font-weight:700; color:var(--primary);"><%= pkg.price_label(@student.pool) %></div>
+              </div>
+              <div style="font-size:12.5px; color:var(--ink-2); margin-top:3px;">
+                <%= [pkg.class_type_label, "#{pkg.session_count} buổi", "hạn #{pkg.expiry_days} ngày"].compact.join(" · ") %>
+              </div>
+              <% if pkg.description.present? %>
+                <div style="font-size:12px; color:var(--ink-2);"><%= pkg.description %></div>
+              <% end %>
+            </div>
+          </div>
+        </label>
+      <% end %>
+
+      <%# ---- 2. Khung giờ ---- %>
+      <div class="l-eyebrow" style="margin:20px 0 8px;">2 · Chọn khung giờ</div>
+
+      <% if @options.open_classes.any? %>
+        <div style="font-size:12.5px; color:var(--ink-2); margin-bottom:8px;">
+          Lớp nhóm đang chạy còn chỗ — học cùng bạn, học phí thấp hơn
+        </div>
+        <% @options.open_classes.each do |slot| %>
+          <label class="l-panel" style="display:block; margin-bottom:8px; cursor:pointer;">
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <%= radio_button_tag :swim_class_id, slot.swim_class.id, false, style: "margin-top:4px;",
+                    onchange: "document.querySelectorAll('input[name=slot]').forEach(e=>e.checked=false)" %>
+              <div style="flex:1;">
+                <div style="font-weight:700; font-size:14px;">
+                  <%= slot.swim_class.slot_label %> · <%= slot.teacher.display_name %>
+                </div>
+                <div style="font-size:12.5px; color:var(--ink-2);">
+                  Lớp 1:<%= slot.swim_class.class_type %> · còn <%= slot.seats_left %> chỗ ·
+                  <%= slot.swim_class.course&.name %>
+                </div>
+              </div>
+            </div>
+          </label>
+        <% end %>
+      <% end %>
+
+      <% if @options.free_slots.any? %>
+        <div style="font-size:12.5px; color:var(--ink-2); margin:14px 0 8px;">
+          Hoặc mở lớp mới ở khung giờ giáo viên còn trống
+        </div>
+        <% @options.free_slots.each do |slot| %>
+          <label class="l-panel" style="display:block; margin-bottom:8px; cursor:pointer; border-style:dashed;">
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <%= radio_button_tag :slot, slot.key, false, style: "margin-top:4px;",
+                    onchange: "document.querySelectorAll('input[name=swim_class_id]').forEach(e=>e.checked=false)" %>
+              <div style="flex:1;">
+                <div style="font-weight:700; font-size:14px;">
+                  <%= slot.label %> · <%= slot.teacher.display_name %>
+                </div>
+                <div style="font-size:12.5px; color:var(--ink-2);">
+                  <%= slot.teacher.level_label %> · nhận tối đa <%= slot.seats_left %> học viên
+                  <% if (d = @options.suggested_start(slot.weekday)) %>
+                    · bắt đầu <%= l(d, format: "%d/%m") %>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </label>
+        <% end %>
+      <% end %>
+
+      <% if @options.open_classes.empty? && @options.free_slots.empty? %>
+        <div class="l-panel" style="text-align:center; padding:24px;">
+          <div style="font-weight:700;">Chưa có khung giờ trống</div>
+          <p style="font-size:13px; color:var(--ink-2); margin-top:6px;">
+            Giáo viên chưa gửi lịch cho kỳ tới. Nhắn tin cho trung tâm để được giữ chỗ.
+          </p>
+          <%= link_to "Nhắn tin cho trung tâm", member_chat_path, class: "l-btn l-btn-soft", style: "margin-top:10px;" %>
+        </div>
+      <% end %>
+
+      <% if @options.packages.any? && (@options.open_classes.any? || @options.free_slots.any?) %>
+        <div class="l-panel" style="margin-top:16px; background:var(--surface-2);">
+          <div style="font-weight:700; font-size:14px; margin-bottom:6px;">Bấm đăng ký, hệ thống sẽ</div>
+          <ul style="font-size:12.5px; color:var(--ink-2); padding-left:18px; line-height:1.85; margin:0;">
+            <li>Xếp <%= @student.short_name %> vào khung giờ bạn chọn</li>
+            <li>Tạo hoá đơn để bạn thanh toán bằng mã QR ngay trên app</li>
+            <li>Báo cho giáo viên và trung tâm biết</li>
+          </ul>
+          <%= submit_tag "Đăng ký khoá mới", class: "l-btn l-btn-primary l-btn-block", style: "margin-top:14px;" %>
+          <p style="font-size:11.5px; color:var(--ink-2); margin:10px 0 0; text-align:center;">
+            Lịch chỉ được chốt chính thức sau khi thanh toán.
+          </p>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</div>

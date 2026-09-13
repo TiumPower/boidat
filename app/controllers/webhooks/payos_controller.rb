@@ -51,10 +51,17 @@ module Webhooks
       end
     end
 
+    # Thanh toán xong phải báo CẢ HAI phía: phụ huynh để yên tâm, và admin của hồ
+    # để biết tiền đã về mà không phải ngồi F5 màn hình đơn hàng.
     def notify_paid(order)
+      notify_guardians(order)
+      notify_staff(order)
+    end
+
+    def notify_guardians(order)
       guardians = order.household&.guardians.to_a
       return if guardians.empty?
-      title = "Đã nhận thanh toán #{ActiveSupport::NumberHelper.number_to_delimited(order.total)}đ"
+      title = "Đã nhận thanh toán #{money(order.total)}"
       body  = "Đơn #{order.code} đã được ghi nhận. Cảm ơn quý phụ huynh."
       guardians.each do |g|
         Notification.create!(workspace: order.workspace, recipient: g, kind: "invoice",
@@ -62,5 +69,28 @@ module Webhooks
       end
       PushJob.perform_later(order.workspace_id, "Guardian", guardians.map(&:id), title, body, "/invoices")
     end
+
+    def notify_staff(order)
+      staff_ids = User.where(id: PoolAssignment.where(pool_id: order.pool_id).select(:user_id))
+                      .where(id: Membership.where(workspace_id: order.workspace_id,
+                                                  role: %w[bod admin sale]).select(:user_id))
+                      .pluck(:id)
+      # Sale tạo đơn thì luôn được báo, kể cả khi không còn được gán hồ đó nữa.
+      staff_ids |= [order.sale_id].compact
+      return if staff_ids.empty?
+
+      who = order.student&.name || order.household&.name || "khách lẻ"
+      title = "Đã thu #{money(order.total)} · #{order.code}"
+      body  = "#{who} vừa thanh toán qua PayOS."
+      staff_ids.each do |uid|
+        Notification.create!(workspace: order.workspace, recipient_type: "User", recipient_id: uid,
+                             kind: "invoice", title: title, body: body, subject: order,
+                             deep_link: "/merchant/ops/orders/#{order.id}")
+      end
+      PushJob.perform_later(order.workspace_id, "User", staff_ids, title, body,
+                            "/merchant/ops/orders/#{order.id}")
+    end
+
+    def money(amount) = "#{ActiveSupport::NumberHelper.number_to_delimited(amount.to_i)}đ"
   end
 end

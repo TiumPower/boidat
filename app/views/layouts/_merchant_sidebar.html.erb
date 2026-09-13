@@ -76,20 +76,18 @@
     <%= link_to merchant_ops_schedule_runs_path, class: "l-nav-item #{'active' if nav == :auto_schedule}" do %>
       <span>🤖</span><span>Xếp lịch tự động</span>
     <% end %>
-    <%= link_to merchant_ops_leave_requests_path, class: "l-nav-item #{'active' if nav == :leaves}" do %>
-      <span>📝</span><span>Đơn xin nghỉ</span>
-    <% end %>
     <%= link_to merchant_ops_rentals_path, class: "l-nav-item #{'active' if nav == :rentals}" do %>
       <span>🔑</span><span>Lớp thuê hồ</span>
     <% end %>
     <%= link_to merchant_ops_graduations_path, class: "l-nav-item #{'active' if nav == :graduations}" do %>
       <span>🏅</span><span>Thi tốt nghiệp</span>
     <% end %>
-    <%= link_to merchant_ops_teachers_path, class: "l-nav-item #{'active' if nav == :teachers}" do %>
-      <span>🎓</span><span>Giáo viên &amp; chấm công</span>
-    <% end %>
-    <%= link_to merchant_ops_timesheets_path, class: "l-nav-item #{'active' if nav == :timesheets}" do %>
-      <span>💰</span><span>Bảng chấm công</span>
+    <%= link_to merchant_ops_teachers_path, class: "l-nav-item #{'active' if [:teachers, :timesheets, :leaves].include?(nav)}" do %>
+      <span>🎓</span><span style="flex:1;">Giáo viên &amp; chấm công</span>
+      <% pending = Merchant::Ops::TeachersController.pending_leave_count(current_pool) %>
+      <% if pending.positive? %>
+        <span style="background:#e5484d; color:#fff; font-size:11px; font-weight:700; min-width:18px; height:18px; border-radius:999px; display:inline-grid; place-items:center; padding:0 5px;"><%= pending %></span>
+      <% end %>
     <% end %>
     <%= link_to merchant_ops_day_passes_path, class: "l-nav-item #{'active' if nav == :day_passes}" do %>
       <span>🎟</span><span>Vé lẻ</span>

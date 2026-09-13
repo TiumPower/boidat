@@ -1,0 +1,12 @@
+<%# Ba tab của màn hình Giáo viên — đúng như bộ UX. Chấm công và đơn xin nghỉ là
+    tab bên trong màn hình giáo viên chứ không phải ba mục rời rạc ở sidebar. %>
+<% pending_leaves = Merchant::Ops::TeachersController.pending_leave_count(current_pool) %>
+<div style="display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden; margin-bottom:16px;">
+  <% [[:teachers, "Danh sách giáo viên", merchant_ops_teachers_path],
+      [:timesheets, "Chấm công", merchant_ops_timesheets_path],
+      [:leaves, "Đơn xin nghỉ#{pending_leaves.positive? ? " (#{pending_leaves})" : ''}", merchant_ops_leave_requests_path]].each do |key, label, path| %>
+    <% on = active == key %>
+    <%= link_to label, path,
+          style: "padding:7px 16px; font-size:12.5px; font-weight:700; text-decoration:none; #{on ? 'background:var(--primary); color:#fff;' : 'color:var(--ink-2);'}" %>
+  <% end %>
+</div>

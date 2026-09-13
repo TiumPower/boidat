@@ -1,0 +1,79 @@
+<% content_for :page_title, "Lịch dạy · #{@teacher.display_name}" %>
+<% content_for :page_sub, "Tháng #{@month.strftime('%m/%Y')} · #{current_pool.name}" %>
+<% content_for :back do %>
+  <%= link_to "← Hồ sơ giáo viên", merchant_ops_teacher_path(@teacher), class: "l-btn l-btn-ghost",
+        style: "padding:6px 12px; font-size:13px;" %>
+<% end %>
+
+<div class="l-panel" style="margin-bottom:16px; background:var(--surface-2);">
+  <p style="font-size:13px; color:var(--ink-2); margin:0;">
+    Giáo viên tự đăng ký lịch trên PWA là đường chính. Màn hình này để admin
+    <strong>set hộ</strong> khi thầy/cô quên gửi hoặc không dùng app — không có nó thì cả hồ
+    đứng chờ một người. Lịch này là đầu vào của bộ xếp lịch tự động.
+  </p>
+</div>
+
+<%= form_with url: availability_merchant_ops_teacher_path(@teacher), method: :patch, data: { turbo: false } do %>
+  <%= hidden_field_tag :month, @month.strftime("%Y-%m") %>
+
+  <div class="l-panel" style="margin-bottom:16px;">
+    <div style="display:flex; gap:10px; align-items:center; margin-bottom:14px; flex-wrap:wrap;">
+      <% [-1, 0, 1].each do |offset| %>
+        <% m = Date.current.next_month.beginning_of_month + offset.months %>
+        <% on = m == @month %>
+        <%= link_to "Tháng #{m.strftime('%m/%Y')}",
+              availability_merchant_ops_teacher_path(@teacher, month: m.strftime("%Y-%m")),
+              class: "l-chip #{'l-chip-brand' if on}", style: "text-decoration:none;" %>
+      <% end %>
+      <div style="margin-left:auto; font-size:12.5px; color:var(--ink-2);">
+        Đang chọn <strong style="color:var(--ink);"><%= @selected.size %></strong> ca ·
+        trùng khung ở 2 hồ:
+        <strong style="color:<%= @conflicts.any? ? '#B4402F' : 'var(--ink)' %>;">
+          <%= @conflicts.any? ? "#{@conflicts.size} khung" : "không có" %>
+        </strong>
+      </div>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <table style="border-collapse:collapse; width:100%; font-size:13px;">
+        <thead>
+          <tr>
+            <th style="padding:8px; text-align:left; color:var(--ink-2);">Giờ</th>
+            <% %w[T2 T3 T4 T5 T6 T7 CN].each do |d| %>
+              <th style="padding:8px; color:var(--ink-2);"><%= d %></th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody>
+          <% @hours.each do |hour| %>
+            <tr>
+              <td style="padding:6px 8px; font-weight:600; white-space:nowrap;"><%= format("%02d:00", hour) %></td>
+              <% [1, 2, 3, 4, 5, 6, 0].each do |wd| %>
+                <% key = "#{current_pool.id}:#{wd}:#{hour}" %>
+                <% open = current_pool.slot_hours_on(Date.current.beginning_of_week + ((wd - 1) % 7)).include?(hour) %>
+                <td style="padding:3px; text-align:center;">
+                  <% if open %>
+                    <label style="display:block; cursor:pointer;">
+                      <%= check_box_tag "slots[]", key, @selected.include?(key), style: "display:none;",
+                            onchange: "const s=this.nextElementSibling; s.style.background = this.checked ? 'var(--primary)' : 'var(--surface-2)'; s.style.color = this.checked ? '#fff' : 'var(--ink-2)'; s.textContent = this.checked ? '✓' : '+';" %>
+                      <span style="display:block; padding:9px 2px; border-radius:8px; font-weight:600;
+                                   background:<%= @selected.include?(key) ? 'var(--primary)' : 'var(--surface-2)' %>;
+                                   color:<%= @selected.include?(key) ? '#fff' : 'var(--ink-2)' %>;">
+                        <%= @selected.include?(key) ? "✓" : "+" %>
+                      </span>
+                    </label>
+                  <% else %>
+                    <span style="display:block; padding:9px 2px; color:var(--line);">·</span>
+                  <% end %>
+                </td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <%= submit_tag "Lưu lịch dạy", class: "l-btn l-btn-primary" %>
+  <%= link_to "Huỷ", merchant_ops_teacher_path(@teacher), class: "l-btn l-btn-ghost" %>
+<% end %>

@@ -68,7 +68,11 @@ class RegisterStudent
                      is_student: @form.adult_self_study?)
   end
 
+  # Tái ký thì KHÔNG tạo hồ sơ mới — nhân bản học viên là cách nhanh nhất để mất
+  # dấu lịch sử học và làm hỏng thống kê.
   def build_student
+    return @form.student if @form.existing_student?
+
     Student.create!(
       workspace: @workspace, household: @household, pool: @pool,
       guardian: @form.adult_self_study? ? @guardian : nil,
@@ -82,7 +86,7 @@ class RegisterStudent
   def build_class
     SwimClass.create!(
       workspace: @workspace, pool: @pool, teacher: @form.teacher, course: @form.course,
-      class_type: @form.class_type, start_hour: @form.start_hour,
+      class_type: @form.effective_class_type, start_hour: @form.start_hour,
       weekdays: @form.weekdays, start_date: @form.start_date, status: "running", kind: "class"
     )
   end

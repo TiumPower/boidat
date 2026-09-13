@@ -1,6 +1,8 @@
 <% content_for :page_title, "Đơn xin nghỉ của giáo viên" %>
 <% content_for :page_sub, "FR-211 · #{current_pool.name}" %>
 
+<%= render "merchant/ops/teacher_tabs", active: :leaves %>
+
 <div style="display:grid; grid-template-columns:1fr 360px; gap:16px; align-items:start;">
   <div>
     <div class="l-panel" style="margin-bottom:16px;">
