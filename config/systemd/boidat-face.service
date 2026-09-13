@@ -1,17 +1,24 @@
-# Service nhận diện khuôn mặt (docker compose). Cài vào /etc/systemd/system/.
+# Face service chạy native bằng venv + uvicorn (máy chủ này không có Docker và
+# chỉ có ~3.8GB RAM — thêm một lớp container là thêm chi phí không cần thiết).
+# Cài vào /etc/systemd/system/.
 [Unit]
 Description=BƠI ĐẠT Face Service (InsightFace + FastAPI)
-Requires=docker.service
-After=docker.service
+After=network.target postgresql.service
 
 [Service]
-Type=oneshot
-RemainAfterExit=yes
+Type=simple
+User=deploy
 WorkingDirectory=/var/www/boidat/current/face_service
 EnvironmentFile=/var/www/boidat/shared/.env
-ExecStart=/usr/bin/docker compose up -d --build
-ExecStop=/usr/bin/docker compose down
-TimeoutStartSec=900
+Environment=PYTHONUNBUFFERED=1
+# Một worker là đủ: mô hình chiếm ~700MB RAM, nhân worker là nhân RAM. Quầy
+# điểm danh quét tuần tự nên không cần song song.
+# Chỉ bind 127.0.0.1 — dữ liệu sinh trắc học của trẻ em không có đường ra Internet.
+ExecStart=/var/www/boidat/shared/face/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8008 --workers 1
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/www/boidat/shared/log/face.log
+StandardError=append:/var/www/boidat/shared/log/face.log
 
 [Install]
 WantedBy=multi-user.target
