@@ -1,0 +1,55 @@
+<% content_for :page_title, "Buổi #{@lesson.session_index} · lớp #{@swim_class.code}" %>
+<% content_for :page_sub, "#{l(@lesson.date, format: '%A · %d/%m')} · #{@lesson.time_label} · #{@lesson.teacher.display_name}" %>
+<% content_for :back do %><%= link_to "← Lịch hồ bơi", merchant_ops_root_path(date: @lesson.date, view: "day"), class: "l-btn l-btn-ghost", style: "padding:6px 12px; font-size:13px;" %><% end %>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start;">
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:4px;">Điểm danh</div>
+    <p style="font-size:12.5px; color:var(--ink-2); margin-bottom:14px;">
+      Đây cũng là chỗ admin sửa tay khi quét khuôn mặt ở quầy thất bại (FR-234).
+      Mỗi lần sửa đều được ghi vào nhật ký.
+    </p>
+
+    <% @enrollments.each do |e| %>
+      <% att = @attendances[e.student_id] %>
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--line);">
+        <div>
+          <div style="font-weight:600; font-size:14px;"><%= e.student.name %></div>
+          <div style="font-size:12px; color:var(--ink-2);">
+            <%= e.progress_label %> · còn <%= e.sessions_left %> buổi
+            <% if att %> · <%= att.method_label %> lúc <%= l(att.checked_in_at, format: "%H:%M") %><% end %>
+          </div>
+        </div>
+        <%= button_to (att ? "✓ Có mặt" : "Điểm danh"),
+              attend_merchant_ops_lesson_path(@lesson, student_id: e.student_id), method: :patch,
+              class: "l-btn #{att ? 'l-btn-primary' : 'l-btn-soft'}",
+              style: "padding:6px 14px; font-size:13px;",
+              form: { data: { turbo_confirm: att ? "Bỏ điểm danh và hoàn lại 1 buổi cho #{e.student.name}?" : nil } } %>
+      </div>
+    <% end %>
+    <% if @enrollments.empty? %>
+      <p style="font-size:13.5px; color:var(--ink-2);">Lớp này chưa có học viên.</p>
+    <% end %>
+  </div>
+
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:10px;">Nội dung buổi dạy</div>
+    <%= form_with url: merchant_ops_lesson_path(@lesson), method: :patch, data: { turbo: false } do %>
+      <%= text_area_tag :content_override, @lesson.content, class: "l-field", rows: 5 %>
+      <div style="font-size:12px; color:var(--ink-2); margin:6px 0 12px;">
+        Lấy từ giáo án của khoá; sửa ở đây chỉ áp cho riêng buổi này.
+      </div>
+      <%= submit_tag "Lưu nội dung", class: "l-btn l-btn-soft" %>
+    <% end %>
+
+    <div class="l-eyebrow" style="margin:20px 0 8px;">Thông tin lớp</div>
+    <table class="l-table">
+      <tbody>
+        <tr><td style="color:var(--ink-2);">Lớp</td><td><%= link_to @swim_class.code, merchant_ops_class_path(@swim_class) %></td></tr>
+        <tr><td style="color:var(--ink-2);">Loại lớp</td><td>1:<%= @swim_class.class_type %></td></tr>
+        <tr><td style="color:var(--ink-2);">Buổi</td><td><%= @lesson.session_index %>/<%= @swim_class.total_sessions %><%= " · buổi thi" if @lesson.exam? %></td></tr>
+        <tr><td style="color:var(--ink-2);">Trạng thái</td><td><%= @lesson.status %></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>

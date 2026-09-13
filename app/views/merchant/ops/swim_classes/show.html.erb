@@ -1,0 +1,51 @@
+<% content_for :page_title, "Lớp #{@swim_class.code}" %>
+<% content_for :page_sub, "#{@swim_class.teacher.display_name} · #{@swim_class.slot_label} · 1:#{@swim_class.class_type}" %>
+<% content_for :back do %><%= link_to "← Lịch hồ bơi", merchant_ops_root_path, class: "l-btn l-btn-ghost", style: "padding:6px 12px; font-size:13px;" %><% end %>
+<% content_for :actions do %>
+  <%= link_to "Đổi lịch", edit_merchant_ops_class_path(@swim_class), class: "l-btn l-btn-soft" %>
+  <% if @swim_class.seats_left.positive? %>
+    <%= link_to "+ Thêm học viên", new_merchant_ops_registration_path(swim_class_id: @swim_class.id), class: "l-btn l-btn-primary" %>
+  <% end %>
+<% end %>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start;">
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:12px;">Học viên (<%= @swim_class.seats_taken %>/<%= @swim_class.capacity %>)</div>
+    <table class="l-table">
+      <thead><tr><th>Học viên</th><th>Buổi</th><th>Hạn gói</th><th>Trạng thái</th></tr></thead>
+      <tbody>
+        <% @enrollments.each do |e| %>
+          <tr>
+            <td><%= link_to e.student.name, merchant_ops_student_path(e.student), style: "font-weight:600;" %></td>
+            <td><%= e.progress_label %>
+              <% if e.low_sessions? %><span class="l-chip" style="background:#FBF1E4; color:#8A5B12;">sắp hết</span><% end %></td>
+            <td style="font-size:13px; color:var(--ink-2);"><%= e.expires_on ? l(e.expires_on, format: "%d/%m/%Y") : "—" %></td>
+            <td><span class="l-chip <%= 'l-chip-brand' if e.exam_eligible? %>">
+              <%= e.exam_eligible? ? "Đủ điều kiện thi" : e.status %></span></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:12px;">Các buổi của khoá</div>
+    <div style="max-height:520px; overflow:auto;">
+      <% @lessons.each do |lesson| %>
+        <%= link_to merchant_ops_lesson_path(lesson),
+              style: "display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--line); text-decoration:none; color:inherit;" do %>
+          <div>
+            <div style="font-weight:600; font-size:13.5px;">
+              B<%= lesson.session_index %> · <%= l(lesson.date, format: "%a %d/%m") %> · <%= lesson.time_label %>
+              <% if lesson.exam? %><span class="l-chip" style="margin-left:6px;">Thi</span><% end %>
+            </div>
+            <div style="font-size:12px; color:var(--ink-2);"><%= lesson.title %></div>
+          </div>
+          <div style="font-size:12.5px; color:var(--ink-2);">
+            <%= lesson.attendances.count { |a| a.status == "present" } %>/<%= @swim_class.seats_taken %> có mặt
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</div>

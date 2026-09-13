@@ -13,6 +13,9 @@ class Teacher < ApplicationRecord
   belongs_to :teacher_level, optional: true
   has_many :teacher_pools, dependent: :destroy
   has_many :pools, through: :teacher_pools
+  has_many :availabilities, class_name: "TeacherAvailability", dependent: :destroy
+  has_many :swim_classes, dependent: :restrict_with_error
+  has_many :lessons, dependent: :restrict_with_error
 
   validates :kind,   inclusion: { in: KINDS }
   validates :status, inclusion: { in: STATUSES }

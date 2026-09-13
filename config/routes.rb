@@ -79,6 +79,14 @@ Rails.application.routes.draw do
     # Cổng vận hành — Admin / Sale
     namespace :ops do
       root "schedule#index"                       # bảng master data lịch (FR-202)
+      get "schedule/slot", to: "schedule#slot", as: :schedule_slot
+      resources :registrations, only: [:new, :create] do
+        collection { get :households }
+      end
+      resources :classes, only: [:show, :edit, :update], controller: "swim_classes"
+      resources :lessons, only: [:show, :update] do
+        member { patch :attend }
+      end
       resources :students, only: [:index, :show, :new, :create, :edit, :update]
       resources :households, only: [:index, :show] do
         member { post :reissue_qr }

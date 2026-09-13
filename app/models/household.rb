@@ -9,6 +9,7 @@ class Household < ApplicationRecord
   belongs_to :workspace
   has_many :guardians, dependent: :destroy
   has_many :students,  dependent: :restrict_with_error
+  has_many :orders,    dependent: :nullify
 
   validates :name, presence: true
   validates :kind, inclusion: { in: KINDS }

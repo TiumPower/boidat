@@ -1,0 +1,164 @@
+<% content_for :page_title, "Đăng ký học viên mới" %>
+<% content_for :page_sub, "FR-204 · #{current_pool.name}" %>
+<% content_for :back do %><%= link_to "← Lịch hồ bơi", merchant_ops_root_path, class: "l-btn l-btn-ghost", style: "padding:6px 12px; font-size:13px;" %><% end %>
+
+<%= form_with model: @form, scope: :registration, url: merchant_ops_registrations_path, data: { turbo: false } do |f| %>
+  <% if @form.errors.any? %>
+    <div class="l-chip" style="background:#FBECEC; color:#9B2C2C; display:block; margin-bottom:16px; padding:12px;">
+      <%= @form.errors.full_messages.uniq.join(" · ") %>
+    </div>
+  <% end %>
+
+  <div style="display:grid; grid-template-columns:1fr 340px; gap:16px; align-items:start;">
+    <div>
+      <%# ---- 1. Khung giờ ---- %>
+      <div class="l-panel" style="margin-bottom:14px;">
+        <div style="font-weight:700; margin-bottom:4px;">1 · Khung giờ học</div>
+        <p style="font-size:12.5px; color:var(--ink-2); margin-bottom:14px;">
+          Chọn một lớp nhóm còn chỗ, hoặc mở lớp mới trên slot giáo viên đã đăng ký dạy.
+        </p>
+
+        <% if @open_classes.any? %>
+          <div class="l-eyebrow" style="margin-bottom:8px;">Lớp còn chỗ</div>
+          <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:8px; margin-bottom:16px;">
+            <% @open_classes.each do |cls| %>
+              <label style="border:1px solid var(--line); border-radius:12px; padding:10px; display:block; cursor:pointer;">
+                <div style="display:flex; gap:8px; align-items:baseline;">
+                  <%= f.radio_button :swim_class_id, cls.id %>
+                  <div>
+                    <div style="font-weight:600; font-size:13.5px;"><%= cls.slot_label %> — <%= cls.code %></div>
+                    <div style="font-size:12px; color:var(--ink-2);">
+                      <%= cls.teacher.display_name %> · 1:<%= cls.class_type %> · còn <%= cls.seats_left %> chỗ
+                    </div>
+                  </div>
+                </div>
+              </label>
+            <% end %>
+          </div>
+        <% end %>
+
+        <div class="l-eyebrow" style="margin-bottom:8px;">Hoặc mở lớp mới</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:10px;">
+          <div><%= f.label :teacher_id, "Giáo viên", class: "l-label" %>
+            <%= f.select :teacher_id, @teachers.map { |t| ["#{t.display_name} · #{t.level_label}", t.id] },
+                  { include_blank: "— chọn —" }, class: "l-field" %></div>
+          <div><%= f.label :start_hour, "Giờ bắt đầu", class: "l-label" %>
+            <%= f.select :start_hour, (6..20).map { |h| [format("%02d:00", h), h] },
+                  { include_blank: "—" }, class: "l-field" %></div>
+          <div><%= f.label :class_type, "Loại lớp", class: "l-label" %>
+            <%= f.select :class_type, (1..4).map { |n| ["1:#{n}", n] }, {}, class: "l-field" %></div>
+        </div>
+        <div style="display:grid; grid-template-columns:2fr 1fr; gap:10px;">
+          <div>
+            <label class="l-label">Học các thứ</label>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; padding-top:6px;">
+              <% %w[CN T2 T3 T4 T5 T6 T7].each_with_index do |label, wd| %>
+                <label style="display:flex; gap:5px; align-items:center; font-size:13px;">
+                  <input type="checkbox" name="weekday_boxes[]" value="<%= wd %>"
+                         <%= "checked" if @form.weekdays.include?(wd) %>
+                         onchange="document.getElementById('weekday_list').value =
+                           Array.from(document.querySelectorAll('input[name=\'weekday_boxes[]\']:checked')).map(e=>e.value).join(',')">
+                  <%= label %>
+                </label>
+              <% end %>
+            </div>
+            <%= f.hidden_field :weekday_list, id: "weekday_list" %>
+          </div>
+          <div><%= f.label :start_date, "Ngày bắt đầu", class: "l-label" %>
+            <%= f.date_field :start_date, class: "l-field" %></div>
+        </div>
+      </div>
+
+      <%# ---- 2. Học viên ---- %>
+      <div class="l-panel" style="margin-bottom:14px;">
+        <div style="font-weight:700; margin-bottom:14px;">2 · Thông tin học viên</div>
+        <div style="display:grid; grid-template-columns:2fr 1fr 1fr; gap:10px; margin-bottom:10px;">
+          <div><%= f.label :student_name, "Họ tên học viên", class: "l-label" %>
+            <%= f.text_field :student_name, class: "l-field", autofocus: true %></div>
+          <div><%= f.label :birthdate, "Ngày sinh", class: "l-label" %>
+            <%= f.date_field :birthdate, class: "l-field" %></div>
+          <div><%= f.label :gender, "Giới tính", class: "l-label" %>
+            <%= f.select :gender, [["—", ""], ["Nam", "nam"], ["Nữ", "nữ"]], {}, class: "l-field" %></div>
+        </div>
+        <div style="display:grid; grid-template-columns:2fr 1fr; gap:10px; margin-bottom:10px;">
+          <div><%= f.label :health_notes, "Lưu ý sức khoẻ", class: "l-label" %>
+            <%= f.text_field :health_notes, class: "l-field", placeholder: "Hen suyễn nhẹ, dị ứng…" %></div>
+          <div><%= f.label :source, "Nguồn khách", class: "l-label" %>
+            <%= f.select :source, ["Giới thiệu", "Facebook", "Google", "Vãng lai"],
+                  { include_blank: "—" }, class: "l-field" %></div>
+        </div>
+        <label style="display:flex; gap:8px; align-items:center; font-size:13.5px;">
+          <%= f.check_box :adult_self_study %> Người lớn tự học (không cần phụ huynh)
+        </label>
+      </div>
+
+      <%# ---- 3. Phụ huynh ---- %>
+      <div class="l-panel">
+        <div style="font-weight:700; margin-bottom:4px;">3 · Phụ huynh / người giám hộ</div>
+        <p style="font-size:12.5px; color:var(--ink-2); margin-bottom:14px;">
+          Bắt buộc với học viên trẻ em. Nếu gia đình đã có con học ở đây, chọn hộ sẵn có để dùng chung mã QR.
+        </p>
+
+        <div style="margin-bottom:12px;">
+          <%= f.label :household_id, "Hộ gia đình đã có", class: "l-label" %>
+          <%= f.select :household_id,
+                @households.map { |h| ["#{h.name} — #{h.students.map(&:name).join(', ')}", h.id] },
+                { include_blank: "— tạo hộ mới —" }, class: "l-field" %>
+        </div>
+        <div style="display:grid; grid-template-columns:2fr 1fr 1fr; gap:10px;">
+          <div><%= f.label :guardian_name, "Họ tên phụ huynh", class: "l-label" %>
+            <%= f.text_field :guardian_name, class: "l-field" %></div>
+          <div><%= f.label :guardian_phone, "Số điện thoại", class: "l-label" %>
+            <%= f.text_field :guardian_phone, class: "l-field" %></div>
+          <div><%= f.label :guardian_relation, "Quan hệ", class: "l-label" %>
+            <%= f.select :guardian_relation, ["Bố", "Mẹ", "Ông bà", "Người giám hộ", "Khác"],
+                  { include_blank: "—" }, class: "l-field" %></div>
+        </div>
+      </div>
+    </div>
+
+    <%# ---- Cột phải: gói + tóm tắt ---- %>
+    <div>
+      <div class="l-panel" style="margin-bottom:14px;">
+        <div style="font-weight:700; margin-bottom:14px;">4 · Gói học</div>
+        <div style="margin-bottom:10px;">
+          <%= f.label :package_id, "Gói", class: "l-label" %>
+          <%= f.select :package_id,
+                @packages.map { |p| ["#{p.name} — #{p.price_label(current_pool)}", p.id] },
+                { include_blank: "— chọn gói —" }, class: "l-field" %>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+          <div><%= f.label :discount, "Giảm giá (đ)", class: "l-label" %>
+            <%= f.number_field :discount, class: "l-field", step: 1000 %></div>
+          <div><%= f.label :bonus_sessions, "Tặng thêm (buổi)", class: "l-label" %>
+            <%= f.number_field :bonus_sessions, class: "l-field" %></div>
+        </div>
+        <div>
+          <%= f.label :customer_type, "Phân loại", class: "l-label" %>
+          <%= f.select :customer_type, [["Học viên mới", "new"], ["Học viên cũ · tái ký", "returning"]], {}, class: "l-field" %>
+        </div>
+
+        <% if @promotions.any? %>
+          <div class="l-eyebrow" style="margin:16px 0 8px;">Khuyến mãi đang chạy</div>
+          <% @promotions.each do |p| %>
+            <div style="font-size:12.5px; color:var(--ink-2); padding:4px 0;">
+              <strong style="color:var(--ink);"><%= p.value_label %></strong> — <%= p.name %>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+
+      <div class="l-panel" style="background:var(--surface-2);">
+        <div style="font-weight:700; margin-bottom:8px;">Bấm xác nhận, hệ thống tự tạo</div>
+        <ul style="font-size:13px; color:var(--ink-2); padding-left:18px; line-height:1.9; margin:0;">
+          <li>Hồ sơ học viên + hồ sơ phụ huynh</li>
+          <li>Hộ gia đình &amp; mã QR đăng nhập PWA (thu hồi được)</li>
+          <li>Lớp học và toàn bộ buổi học của khoá</li>
+          <li>Đơn hàng trạng thái “Chưa thanh toán”</li>
+          <li>Thông báo cho <strong>cả giáo viên và phụ huynh</strong> (FR-222)</li>
+        </ul>
+        <%= f.submit "Xác nhận tạo lớp", class: "l-btn l-btn-primary l-btn-block", style: "margin-top:16px;" %>
+      </div>
+    </div>
+  </div>
+<% end %>

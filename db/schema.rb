@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_13_100001) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_13_200001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -67,6 +67,31 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_100001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["key"], name: "index_app_settings_on_key", unique: true
+  end
+
+  create_table "attendances", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "pool_id", null: false
+    t.bigint "lesson_id", null: false
+    t.bigint "student_id", null: false
+    t.bigint "enrollment_id"
+    t.bigint "actor_id"
+    t.string "status", default: "present", null: false
+    t.string "method", default: "manual", null: false
+    t.float "face_score"
+    t.boolean "deducted", default: false, null: false
+    t.datetime "checked_in_at"
+    t.string "note"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["actor_id"], name: "index_attendances_on_actor_id"
+    t.index ["enrollment_id"], name: "index_attendances_on_enrollment_id"
+    t.index ["lesson_id", "student_id"], name: "index_attendances_on_lesson_id_and_student_id", unique: true
+    t.index ["lesson_id"], name: "index_attendances_on_lesson_id"
+    t.index ["pool_id"], name: "index_attendances_on_pool_id"
+    t.index ["student_id"], name: "index_attendances_on_student_id"
+    t.index ["workspace_id", "pool_id", "checked_in_at"], name: "idx_on_workspace_id_pool_id_checked_in_at_4532ff50f4"
+    t.index ["workspace_id"], name: "index_attendances_on_workspace_id"
   end
 
   create_table "audit_logs", force: :cascade do |t|
@@ -159,6 +184,33 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_100001) do
     t.index ["workspace_id"], name: "index_courses_on_workspace_id"
   end
 
+  create_table "enrollments", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "pool_id", null: false
+    t.bigint "student_id", null: false
+    t.bigint "swim_class_id", null: false
+    t.bigint "package_id"
+    t.integer "sessions_total", default: 0, null: false
+    t.integer "sessions_used", default: 0, null: false
+    t.integer "bonus_sessions", default: 0, null: false
+    t.date "starts_on"
+    t.date "expires_on"
+    t.string "status", default: "active", null: false
+    t.string "customer_type", default: "new", null: false
+    t.datetime "exam_eligible_at"
+    t.string "exam_result"
+    t.date "exam_date"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["package_id"], name: "index_enrollments_on_package_id"
+    t.index ["pool_id"], name: "index_enrollments_on_pool_id"
+    t.index ["student_id", "swim_class_id"], name: "index_enrollments_on_student_id_and_swim_class_id", unique: true
+    t.index ["student_id"], name: "index_enrollments_on_student_id"
+    t.index ["swim_class_id"], name: "index_enrollments_on_swim_class_id"
+    t.index ["workspace_id", "status"], name: "index_enrollments_on_workspace_id_and_status"
+    t.index ["workspace_id"], name: "index_enrollments_on_workspace_id"
+  end
+
   create_table "face_profiles", force: :cascade do |t|
     t.bigint "workspace_id", null: false
     t.bigint "student_id", null: false
@@ -238,6 +290,30 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_100001) do
     t.index ["workspace_id"], name: "index_invoices_on_workspace_id"
   end
 
+  create_table "lessons", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "pool_id", null: false
+    t.bigint "teacher_id", null: false
+    t.bigint "swim_class_id", null: false
+    t.date "date", null: false
+    t.integer "start_hour", null: false
+    t.integer "session_index"
+    t.string "status", default: "scheduled", null: false
+    t.string "cancel_reason"
+    t.text "content_override"
+    t.boolean "exam", default: false, null: false
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["pool_id"], name: "index_lessons_on_pool_id"
+    t.index ["swim_class_id", "session_index"], name: "index_lessons_on_swim_class_id_and_session_index"
+    t.index ["swim_class_id"], name: "index_lessons_on_swim_class_id"
+    t.index ["teacher_id", "date", "start_hour"], name: "index_lessons_on_teacher_id_and_date_and_start_hour"
+    t.index ["teacher_id"], name: "index_lessons_on_teacher_id"
+    t.index ["workspace_id", "pool_id", "date"], name: "index_lessons_on_workspace_id_and_pool_id_and_date"
+    t.index ["workspace_id"], name: "index_lessons_on_workspace_id"
+  end
+
   create_table "memberships", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "workspace_id", null: false
@@ -277,6 +353,39 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_100001) do
     t.index ["workspace_id"], name: "index_notifications_on_workspace_id"
   end
 
+  create_table "orders", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "pool_id", null: false
+    t.bigint "household_id"
+    t.bigint "student_id"
+    t.bigint "enrollment_id"
+    t.bigint "package_id"
+    t.bigint "sale_id"
+    t.string "code", null: false
+    t.integer "amount", default: 0, null: false
+    t.integer "discount", default: 0, null: false
+    t.string "status", default: "unpaid", null: false
+    t.string "kind", default: "course", null: false
+    t.string "customer_type", default: "new", null: false
+    t.bigint "payos_order_code"
+    t.string "checkout_url"
+    t.datetime "paid_at"
+    t.jsonb "gateway_response", default: {}, null: false
+    t.text "note"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_orders_on_code", unique: true
+    t.index ["enrollment_id"], name: "index_orders_on_enrollment_id"
+    t.index ["household_id"], name: "index_orders_on_household_id"
+    t.index ["package_id"], name: "index_orders_on_package_id"
+    t.index ["payos_order_code"], name: "index_orders_on_payos_order_code", unique: true, where: "(payos_order_code IS NOT NULL)"
+    t.index ["pool_id"], name: "index_orders_on_pool_id"
+    t.index ["sale_id"], name: "index_orders_on_sale_id"
+    t.index ["student_id"], name: "index_orders_on_student_id"
+    t.index ["workspace_id", "pool_id", "status"], name: "index_orders_on_workspace_id_and_pool_id_and_status"
+    t.index ["workspace_id"], name: "index_orders_on_workspace_id"
+  end
+
   create_table "otp_challenges", force: :cascade do |t|
     t.bigint "workspace_id"
     t.string "identity", null: false
@@ -309,6 +418,22 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_100001) do
     t.index ["course_id"], name: "index_packages_on_course_id"
     t.index ["workspace_id", "kind"], name: "index_packages_on_workspace_id_and_kind"
     t.index ["workspace_id"], name: "index_packages_on_workspace_id"
+  end
+
+  create_table "payments", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "order_id", null: false
+    t.bigint "recorded_by_id"
+    t.integer "amount", default: 0, null: false
+    t.string "method", default: "payos", null: false
+    t.datetime "paid_at", null: false
+    t.string "reference"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["order_id"], name: "index_payments_on_order_id"
+    t.index ["recorded_by_id"], name: "index_payments_on_recorded_by_id"
+    t.index ["workspace_id", "paid_at"], name: "index_payments_on_workspace_id_and_paid_at"
+    t.index ["workspace_id"], name: "index_payments_on_workspace_id"
   end
 
   create_table "plans", force: :cascade do |t|
@@ -454,6 +579,46 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_100001) do
     t.index ["workspace_id"], name: "index_students_on_workspace_id"
   end
 
+  create_table "swim_classes", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "pool_id", null: false
+    t.bigint "teacher_id", null: false
+    t.bigint "course_id"
+    t.string "code"
+    t.integer "class_type", default: 1, null: false
+    t.integer "start_hour", null: false
+    t.jsonb "weekdays", default: [], null: false
+    t.date "start_date", null: false
+    t.date "end_date"
+    t.string "status", default: "running", null: false
+    t.string "kind", default: "class", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_swim_classes_on_code", unique: true, where: "(code IS NOT NULL)"
+    t.index ["course_id"], name: "index_swim_classes_on_course_id"
+    t.index ["pool_id"], name: "index_swim_classes_on_pool_id"
+    t.index ["teacher_id"], name: "index_swim_classes_on_teacher_id"
+    t.index ["workspace_id", "pool_id", "status"], name: "index_swim_classes_on_workspace_id_and_pool_id_and_status"
+    t.index ["workspace_id"], name: "index_swim_classes_on_workspace_id"
+  end
+
+  create_table "teacher_availabilities", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "teacher_id", null: false
+    t.bigint "pool_id", null: false
+    t.date "month", null: false
+    t.integer "weekday", null: false
+    t.integer "hour", null: false
+    t.datetime "submitted_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["pool_id"], name: "index_teacher_availabilities_on_pool_id"
+    t.index ["teacher_id", "month", "weekday", "hour", "pool_id"], name: "index_availability_unique_slot", unique: true
+    t.index ["teacher_id"], name: "index_teacher_availabilities_on_teacher_id"
+    t.index ["workspace_id", "pool_id", "month"], name: "idx_on_workspace_id_pool_id_month_e47adbacab"
+    t.index ["workspace_id"], name: "index_teacher_availabilities_on_workspace_id"
+  end
+
   create_table "teacher_levels", force: :cascade do |t|
     t.bigint "workspace_id", null: false
     t.string "name", null: false
@@ -543,6 +708,12 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_100001) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "attendances", "enrollments"
+  add_foreign_key "attendances", "lessons"
+  add_foreign_key "attendances", "pools"
+  add_foreign_key "attendances", "students"
+  add_foreign_key "attendances", "users", column: "actor_id"
+  add_foreign_key "attendances", "workspaces"
   add_foreign_key "audit_logs", "pools"
   add_foreign_key "audit_logs", "users"
   add_foreign_key "audit_logs", "workspaces"
@@ -555,19 +726,38 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_100001) do
   add_foreign_key "course_sessions", "courses"
   add_foreign_key "course_sessions", "workspaces"
   add_foreign_key "courses", "workspaces"
+  add_foreign_key "enrollments", "packages"
+  add_foreign_key "enrollments", "pools"
+  add_foreign_key "enrollments", "students"
+  add_foreign_key "enrollments", "swim_classes"
+  add_foreign_key "enrollments", "workspaces"
   add_foreign_key "face_profiles", "students"
   add_foreign_key "face_profiles", "workspaces"
   add_foreign_key "guardians", "households"
   add_foreign_key "guardians", "workspaces"
   add_foreign_key "households", "workspaces"
   add_foreign_key "invoices", "workspaces"
+  add_foreign_key "lessons", "pools"
+  add_foreign_key "lessons", "swim_classes"
+  add_foreign_key "lessons", "teachers"
+  add_foreign_key "lessons", "workspaces"
   add_foreign_key "memberships", "users"
   add_foreign_key "memberships", "workspaces"
   add_foreign_key "notifications", "broadcasts"
   add_foreign_key "notifications", "workspaces"
+  add_foreign_key "orders", "enrollments"
+  add_foreign_key "orders", "households"
+  add_foreign_key "orders", "packages"
+  add_foreign_key "orders", "pools"
+  add_foreign_key "orders", "students"
+  add_foreign_key "orders", "users", column: "sale_id"
+  add_foreign_key "orders", "workspaces"
   add_foreign_key "otp_challenges", "workspaces"
   add_foreign_key "packages", "courses"
   add_foreign_key "packages", "workspaces"
+  add_foreign_key "payments", "orders"
+  add_foreign_key "payments", "users", column: "recorded_by_id"
+  add_foreign_key "payments", "workspaces"
   add_foreign_key "pool_assignments", "pools"
   add_foreign_key "pool_assignments", "users"
   add_foreign_key "pool_assignments", "workspaces"
@@ -588,6 +778,13 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_100001) do
   add_foreign_key "students", "households"
   add_foreign_key "students", "pools"
   add_foreign_key "students", "workspaces"
+  add_foreign_key "swim_classes", "courses"
+  add_foreign_key "swim_classes", "pools"
+  add_foreign_key "swim_classes", "teachers"
+  add_foreign_key "swim_classes", "workspaces"
+  add_foreign_key "teacher_availabilities", "pools"
+  add_foreign_key "teacher_availabilities", "teachers"
+  add_foreign_key "teacher_availabilities", "workspaces"
   add_foreign_key "teacher_levels", "workspaces"
   add_foreign_key "teacher_pools", "pools"
   add_foreign_key "teacher_pools", "teachers"

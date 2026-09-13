@@ -1,0 +1,27 @@
+<% content_for :page_title, "Đổi lịch lớp #{@swim_class.code}" %>
+<div class="l-panel" style="max-width:640px;">
+  <p style="font-size:13px; color:var(--ink-2); margin-bottom:16px;">
+    Thay đổi chỉ áp cho các buổi <strong>chưa diễn ra</strong>. Buổi đã học giữ nguyên lịch sử
+    điểm danh và chấm công.
+  </p>
+  <%= form_with url: merchant_ops_class_path(@swim_class), method: :patch, data: { turbo: false } do %>
+    <div style="display:grid; grid-template-columns:2fr 1fr; gap:12px; margin-bottom:12px;">
+      <div><label class="l-label">Giáo viên</label>
+        <%= select_tag :teacher_id, options_for_select(@teachers.map { |t| [t.display_name, t.id] }, @swim_class.teacher_id), class: "l-field" %></div>
+      <div><label class="l-label">Giờ bắt đầu</label>
+        <%= select_tag :start_hour, options_for_select((6..20).map { |h| [format("%02d:00", h), h] }, @swim_class.start_hour), class: "l-field" %></div>
+    </div>
+    <div style="margin-bottom:18px;">
+      <label class="l-label">Học các thứ</label>
+      <div style="display:flex; gap:12px; flex-wrap:wrap; padding-top:6px;">
+        <% %w[CN T2 T3 T4 T5 T6 T7].each_with_index do |label, wd| %>
+          <label style="display:flex; gap:5px; align-items:center; font-size:13px;">
+            <%= check_box_tag "weekdays[]", wd, @swim_class.weekday_list.include?(wd) %> <%= label %>
+          </label>
+        <% end %>
+      </div>
+    </div>
+    <%= submit_tag "Áp dụng cho buổi chưa diễn ra", class: "l-btn l-btn-primary" %>
+    <%= link_to "Huỷ", merchant_ops_class_path(@swim_class), class: "l-btn l-btn-ghost" %>
+  <% end %>
+</div>

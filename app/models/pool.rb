@@ -11,6 +11,9 @@ class Pool < ApplicationRecord
   has_many :teacher_pools, dependent: :destroy
   has_many :teachers, through: :teacher_pools
   has_many :students, dependent: :restrict_with_error
+  has_many :swim_classes, dependent: :destroy
+  has_many :lessons, dependent: :destroy
+  has_many :orders, dependent: :restrict_with_error
 
   validates :name, presence: true
   validates :status, inclusion: { in: STATUSES }

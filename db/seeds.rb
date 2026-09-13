@@ -310,8 +310,113 @@ ActsAsTenant.with_tenant(ws) do
     st.save!
   end
 
+
+  # ---- Lịch đăng ký dạy, lớp và buổi học (FR-304, FR-202) ---------------
+  puts "→ Lịch dạy & lớp học"
+  # Mỗi giáo viên đăng ký các khung giờ cố định cho tháng này và tháng sau, để
+  # bảng master data có cả slot đã có lớp lẫn slot còn trống ngay sau khi seed.
+  SHIFT_HOURS = [6, 7, 8, 16, 17, 18, 19].freeze
+  months = [Date.current.beginning_of_month, Date.current.next_month.beginning_of_month]
+
+  Teacher.staff.active.includes(:pools).find_each do |teacher|
+    teacher.pools.each do |pool|
+      months.each do |month|
+        (1..6).each do |weekday|            # T2 → T7
+          SHIFT_HOURS.each do |hour|
+            next unless pool.slot_hours_on(month + (weekday - month.wday) % 7).include?(hour)
+            TeacherAvailability.find_or_create_by!(
+              workspace: ws, teacher: teacher, pool: pool,
+              month: month, weekday: weekday, hour: hour
+            ) { |a| a.submitted_at = Time.current }
+          end
+        end
+      end
+    end
+  end
+
+  # Vài lớp đang chạy ở hồ Quận 7 — đúng các lớp có trong bộ UX.
+  basic_course = Course.find_by(name: "Bơi cơ bản trẻ em")
+  pkg_1v2 = Package.find_by(name: "Khoá 12 buổi trẻ em 1:2")
+  pkg_1v3 = Package.find_by(name: "Khoá 12 buổi trẻ em 1:3")
+
+  def open_class!(ws:, pool:, teacher:, course:, package:, class_type:, weekdays:, hour:, start_date:, students:, used: 0)
+    cls = SwimClass.find_or_initialize_by(workspace: ws, pool: pool, teacher: teacher,
+                                          start_hour: hour, start_date: start_date)
+    cls.assign_attributes(course: course, class_type: class_type, weekdays: weekdays,
+                          status: "running", kind: "class")
+    cls.save!
+    LessonGenerator.new(cls).call
+
+    students.each_with_index do |student, i|
+      next if student.nil?
+      enr = Enrollment.find_or_initialize_by(workspace: ws, student: student, swim_class: cls)
+      next unless enr.new_record?
+      enr.assign_attributes(pool: pool, package: package, starts_on: start_date,
+                            sessions_total: package&.session_count || cls.total_sessions,
+                            customer_type: i.zero? ? "new" : "returning", status: "active")
+      enr.save!
+      # Ghi nhận số buổi đã học để màn hình có tiến độ thật.
+      enr.update!(sessions_used: used)
+      enr.check_exam_eligibility!
+
+      Order.find_or_create_by!(workspace: ws, enrollment: enr) do |o|
+        o.pool = pool
+        o.household = student.household
+        o.student = student
+        o.package = package
+        o.amount = package&.price_for(pool).to_i
+        o.kind = "course"
+        o.customer_type = enr.customer_type
+        o.status = i.even? ? "paid" : "unpaid"
+        o.paid_at = i.even? ? 2.weeks.ago : nil
+      end
+    end
+    cls
+  end
+
+  by_name = Student.where(pool: q7).index_by(&:name)
+  minh = Teacher.joins(:user).find_by(users: { email: "minh@boidat.vn" })
+  hanh = Teacher.joins(:user).find_by(users: { email: "hanh@boidat.vn" })
+  tuan = Teacher.joins(:user).find_by(users: { email: "tuan@boidat.vn" })
+
+  open_class!(ws: ws, pool: q7, teacher: minh, course: basic_course, package: pkg_1v2,
+              class_type: 2, weekdays: [1, 3], hour: 17, start_date: 8.weeks.ago.to_date.beginning_of_week,
+              students: [by_name["Trần Bảo Ngọc"], by_name["Nguyễn Gia Bảo"]], used: 8)
+
+  open_class!(ws: ws, pool: q7, teacher: minh, course: basic_course, package: pkg_1v2,
+              class_type: 2, weekdays: [1, 3], hour: 6, start_date: 5.weeks.ago.to_date.beginning_of_week,
+              students: [by_name["Vũ Gia Hân"], by_name["Đỗ Minh Khôi"]], used: 5)
+
+  open_class!(ws: ws, pool: q7, teacher: minh, course: basic_course, package: pkg_1v3,
+              class_type: 3, weekdays: [2, 4], hour: 7, start_date: 2.weeks.ago.to_date.beginning_of_week,
+              students: [by_name["Ngô Bảo An"], by_name["Lâm Khánh Vy"], by_name["Bùi Tuệ Nhi"]], used: 2)
+
+  open_class!(ws: ws, pool: q7, teacher: hanh, course: basic_course, package: pkg_1v2,
+              class_type: 2, weekdays: [2, 4], hour: 16, start_date: 10.weeks.ago.to_date.beginning_of_week,
+              students: [by_name["Đặng Hà My"], by_name["Vũ Anh Thư"]], used: 11)
+
+  open_class!(ws: ws, pool: q7, teacher: tuan, course: basic_course, package: pkg_1v2,
+              class_type: 2, weekdays: [5], hour: 19, start_date: 3.weeks.ago.to_date.beginning_of_week,
+              students: [by_name["Phạm Quốc Duy"]], used: 5)
+
+  # Giờ giáo viên thuê hồ chiếm chỗ trên bảng lịch (FR-225) — không chấm công,
+  # không giáo án, chỉ để slot đó hiện là "đã bận".
+  rental_students = Student.where(pool: q7, kind: "renter").to_a
+  rental_class = SwimClass.find_or_initialize_by(workspace: ws, pool: q7, teacher: khoa,
+                                                 start_hour: 6, start_date: 4.weeks.ago.to_date.beginning_of_week)
+  rental_class.assign_attributes(class_type: 4, weekdays: [2, 4, 6], status: "running", kind: "rental", course: nil)
+  rental_class.save!
+  LessonGenerator.new(rental_class).call(total: 24)
+  rental_students.each do |st|
+    enr = Enrollment.find_or_initialize_by(workspace: ws, student: st, swim_class: rental_class)
+    next unless enr.new_record?
+    enr.assign_attributes(pool: q7, sessions_total: 10, sessions_used: rand(0..7), status: "active")
+    enr.save!
+  end
+
   puts "   #{Pool.count} hồ · #{Teacher.count} giáo viên · #{Course.count} khoá · #{Package.count} gói · " \
-       "#{Household.count} hộ · #{Student.count} học viên"
+       "#{Household.count} hộ · #{Student.count} học viên · #{SwimClass.count} lớp · #{Lesson.count} buổi · " \
+       "#{TeacherAvailability.count} ca đăng ký"
 end
 
 puts <<~INFO

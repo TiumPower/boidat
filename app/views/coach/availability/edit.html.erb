@@ -1,0 +1,86 @@
+<% content_for :title, "Đăng ký lịch dạy" %>
+<% content_for :tab, "availability" %>
+<div class="l-screen" style="padding-bottom:120px;">
+  <header style="padding:18px 18px 10px;">
+    <div style="font-family:var(--font-display); font-size:20px; font-weight:700;">
+      Lịch rảnh tháng <%= @month.strftime("%m") %>
+    </div>
+    <div style="font-size:13px; color:var(--ink-2);">
+      Hạn đăng ký: <%= l(@deadline, format: "%d/%m") %>
+      <% days = (@deadline - Date.current).to_i %>
+      <% if days >= 0 %>· còn <%= days %> ngày<% else %>· <strong style="color:#B4402F;">đã quá hạn</strong><% end %>
+    </div>
+  </header>
+
+  <%= form_with url: teacher_availability_path, method: :patch, data: { turbo: false } do %>
+    <%= hidden_field_tag :month, @month.strftime("%Y-%m") %>
+
+    <% @pools.each do |pool| %>
+      <div style="padding:0 18px 14px;">
+        <div class="l-eyebrow" style="margin-bottom:8px;"><%= pool.name %></div>
+        <div style="overflow-x:auto; border:1px solid var(--line); border-radius:12px; background:#fff;">
+          <table style="border-collapse:collapse; width:100%; font-size:12px;">
+            <thead>
+              <tr>
+                <th style="padding:8px; text-align:left; color:var(--ink-2);"></th>
+                <% %w[T2 T3 T4 T5 T6 T7 CN].each do |d| %>
+                  <th style="padding:8px 4px; color:var(--ink-2);"><%= d %></th>
+                <% end %>
+              </tr>
+            </thead>
+            <tbody>
+              <% @hours.each do |hour| %>
+                <tr>
+                  <td style="padding:6px 8px; font-weight:600; white-space:nowrap;"><%= format("%02d:00", hour) %></td>
+                  <% [1, 2, 3, 4, 5, 6, 0].each do |wd| %>
+                    <% open = pool.slot_hours_on(Date.current.beginning_of_week + ((wd - 1) % 7)).include?(hour) %>
+                    <% key = "#{pool.id}:#{wd}:#{hour}" %>
+                    <td style="padding:3px; text-align:center;">
+                      <% if open %>
+                        <label style="display:block; cursor:pointer;">
+                          <%= check_box_tag "slots[]", key, @selected.include?(key), style: "display:none;",
+                                onchange: "this.parentNode.style.background = this.checked ? 'var(--primary)' : 'var(--surface-2)'; this.parentNode.style.color = this.checked ? '#fff' : 'var(--ink-2)';" %>
+                          <span style="display:block; padding:8px 2px; border-radius:8px; font-weight:600;
+                                       background:<%= @selected.include?(key) ? 'var(--primary)' : 'var(--surface-2)' %>;
+                                       color:<%= @selected.include?(key) ? '#fff' : 'var(--ink-2)' %>;">
+                            <%= @selected.include?(key) ? "✓" : "+" %>
+                          </span>
+                        </label>
+                      <% else %>
+                        <span style="display:block; padding:8px 2px; color:var(--line);">·</span>
+                      <% end %>
+                    </td>
+                  <% end %>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    <% end %>
+
+    <div style="padding:0 18px;">
+      <div class="l-panel" style="background:var(--surface-2);">
+        <div style="display:flex; justify-content:space-between; font-size:13px; padding:3px 0;">
+          <span style="color:var(--ink-2);">Số ca đã chọn</span>
+          <strong><%= @selected.size %> ca / tháng</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:13px; padding:3px 0;">
+          <span style="color:var(--ink-2);">Hồ đăng ký</span>
+          <strong><%= @pools.map(&:short_name).join(" · ") %></strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:13px; padding:3px 0;">
+          <span style="color:var(--ink-2);">Trùng khung ở 2 hồ</span>
+          <strong style="color:<%= @conflicts.any? ? '#B4402F' : 'inherit' %>;">
+            <%= @conflicts.any? ? "#{@conflicts.size} khung" : "Không có" %>
+          </strong>
+        </div>
+      </div>
+      <p style="font-size:12.5px; color:var(--ink-2); margin:12px 0;">
+        Lịch này là đầu vào cho bộ xếp lịch tự động. Lớp đang chạy của thầy/cô được giữ nguyên,
+        không bị xáo lại.
+      </p>
+      <%= submit_tag @submitted ? "Cập nhật đăng ký" : "Gửi đăng ký", class: "l-btn l-btn-primary l-btn-block" %>
+    </div>
+  <% end %>
+</div>

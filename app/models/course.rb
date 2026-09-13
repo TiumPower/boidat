@@ -7,6 +7,7 @@ class Course < ApplicationRecord
   belongs_to :workspace
   has_many :course_sessions, -> { order(:position) }, dependent: :destroy
   has_many :packages, dependent: :nullify
+  has_many :swim_classes, dependent: :nullify
 
   validates :name, presence: true
   validates :audience, inclusion: { in: AUDIENCES }

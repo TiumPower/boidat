@@ -11,6 +11,10 @@ class Student < ApplicationRecord
   belongs_to :guardian, optional: true
   has_one  :face_profile, dependent: :destroy
   has_many :biometric_consents, dependent: :destroy
+  has_many :enrollments, dependent: :destroy
+  has_many :swim_classes, through: :enrollments
+  has_many :attendances, dependent: :destroy
+  has_many :orders, dependent: :nullify
 
   validates :name, presence: true
   validates :kind,   inclusion: { in: KINDS }

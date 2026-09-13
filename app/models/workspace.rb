@@ -18,6 +18,11 @@ class Workspace < ApplicationRecord
   has_many :courses, dependent: :destroy
   has_many :packages, dependent: :destroy
   has_many :promotions, dependent: :destroy
+  has_many :swim_classes, dependent: :destroy
+  has_many :lessons, dependent: :destroy
+  has_many :enrollments, dependent: :destroy
+  has_many :attendances, dependent: :destroy
+  has_many :orders, dependent: :destroy
   has_many :households, dependent: :destroy
   has_many :guardians, dependent: :destroy
   has_many :students, dependent: :destroy

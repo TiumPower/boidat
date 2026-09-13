@@ -1,53 +1,94 @@
-<% content_for :page_title, "Lịch #{current_pool&.name}" %>
-<% content_for :page_sub, "Bảng master data lịch học · FR-202" %>
+<% content_for :page_title, "Lịch #{current_pool.name}" %>
+<% content_for :page_sub, "Bảng master data lịch học · FR-202 · FR-203" %>
+<% content_for :actions do %>
+  <%= link_to "+ Đăng ký học viên", new_merchant_ops_registration_path, class: "l-btn l-btn-primary" %>
+<% end %>
 
+<%# ---- KPI của hồ ---- %>
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin-bottom:16px;">
+  <div class="l-kpi"><div class="k">Lớp đang chạy</div><div class="v"><%= @kpis[:classes] %></div></div>
+  <div class="l-kpi"><div class="k">Học viên đang học</div><div class="v"><%= @kpis[:students] %></div></div>
+  <div class="l-kpi"><div class="k">Slot trống <%= @view == "day" ? "hôm nay" : "trong kỳ" %></div><div class="v"><%= @kpis[:free_slots] %></div></div>
+  <div class="l-kpi"><div class="k">Sắp hết buổi (≤<%= current_workspace.low_sessions_threshold %>)</div><div class="v"><%= @kpis[:low_sessions] %></div></div>
+  <div class="l-kpi"><div class="k">Đơn chờ thanh toán</div><div class="v"><%= @kpis[:unpaid_orders] %></div></div>
+</div>
+
+<%# ---- Thanh điều khiển ---- %>
 <div class="l-panel" style="margin-bottom:16px;">
   <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
     <div style="display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden;">
       <% [["day", "Ngày"], ["week", "Tuần"], ["month", "Tháng"]].each do |key, label| %>
         <% on = @view == key %>
-        <%= link_to label, merchant_ops_root_path(view: key, date: @anchor),
+        <%= link_to label, merchant_ops_root_path(view: key, date: @anchor, q: @q, free: params[:free]),
               style: "padding:6px 16px; font-size:12.5px; font-weight:700; text-decoration:none; #{on ? 'background:var(--primary); color:#fff;' : 'color:var(--ink-2);'}" %>
       <% end %>
     </div>
-    <%= form_with url: merchant_ops_root_path, method: :get, data: { turbo: false },
-          style: "display:inline-flex; gap:8px; align-items:center;" do %>
-      <%= hidden_field_tag :view, @view %>
-      <%= date_field_tag :date, @anchor, class: "l-field", style: "width:auto;", onchange: "this.form.requestSubmit()" %>
-    <% end %>
-    <input type="search" class="l-field" style="width:auto; min-width:240px;"
-           placeholder="Tìm giáo viên / học viên…" disabled>
-    <span style="font-size:12px; color:var(--ink-2);">tìm kiếm &amp; lọc slot trống — P2</span>
-  </div>
-</div>
 
-<div class="l-panel">
-  <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px;">
-    <div style="font-weight:700;">Giáo viên đang dạy tại <%= current_pool&.name %></div>
-    <div style="font-size:12.5px; color:var(--ink-2);">
-      Giờ mở cửa hôm nay: <%= current_pool&.hours_on(Date.current)&.map { |t| t.strftime("%H:%M") }&.join(" – ") || "nghỉ" %>
+    <% step = @view == "month" ? 1.month : (@view == "week" ? 7.days : 1.day) %>
+    <div style="display:inline-flex; gap:6px;">
+      <%= link_to "‹", merchant_ops_root_path(view: @view, date: @anchor - step, q: @q, free: params[:free]), class: "l-btn l-btn-ghost", style: "padding:6px 14px;" %>
+      <%= link_to "Hôm nay", merchant_ops_root_path(view: @view, q: @q, free: params[:free]), class: "l-btn l-btn-ghost", style: "padding:6px 14px;" %>
+      <%= link_to "›", merchant_ops_root_path(view: @view, date: @anchor + step, q: @q, free: params[:free]), class: "l-btn l-btn-ghost", style: "padding:6px 14px;" %>
     </div>
+
+    <%= form_with url: merchant_ops_root_path, method: :get, data: { turbo: false },
+          style: "display:inline-flex; gap:8px; align-items:center; flex:1; min-width:280px;" do %>
+      <%= hidden_field_tag :view, @view %>
+      <%= hidden_field_tag :date, @anchor %>
+      <%= search_field_tag :q, @q, class: "l-field", style: "flex:1; min-width:200px;",
+            placeholder: "Tìm giáo viên / học viên…" %>
+      <%= submit_tag "Tìm", class: "l-btn l-btn-soft" %>
+    <% end %>
+
+    <%= link_to (@only_free ? "✓ Chỉ slot trống" : "Chỉ slot trống"),
+          merchant_ops_root_path(view: @view, date: @anchor, q: @q, free: @only_free ? nil : "1"),
+          class: "l-chip #{'l-chip-brand' if @only_free}", style: "text-decoration:none;" %>
   </div>
-  <table class="l-table">
-    <thead><tr><th>Giáo viên</th><th>Level</th><th>Tối đa / tiết</th><th>Chuyên môn</th><th>Trạng thái</th></tr></thead>
-    <tbody>
-      <% @teachers.each do |t| %>
-        <tr>
-          <td><strong><%= t.display_name %></strong></td>
-          <td><%= t.level_label %></td>
-          <td><%= t.capacity %> học viên</td>
-          <td style="color:var(--ink-2);"><%= t.specialty %></td>
-          <td><span class="l-chip"><%= t.status_label %></span></td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
+
+  <div style="margin-top:10px; font-size:12.5px; color:var(--ink-2);">
+    <%= @summary[:classes] %> lớp · <%= @summary[:rentals] %> thuê hồ · <%= @summary[:free] %> slot trống ·
+    <%= current_pool.name %>
+    <% if @q.present? %> · đang lọc theo “<%= @q %>”<% end %>
+  </div>
 </div>
 
-<div class="l-panel" style="margin-top:16px; background:var(--surface-2);">
-  <div style="font-weight:700; margin-bottom:6px;">Bảng lịch đầy đủ đang được dựng ở giai đoạn P2</div>
-  <p style="font-size:13.5px; color:var(--ink-2); margin:0;">
-    Sẽ hiển thị toàn bộ slot của hồ — cả slot đã có lớp lẫn slot còn trống — kèm giáo viên,
-    danh sách học viên, buổi thứ mấy, nội dung buổi học và số buổi còn lại của từng em (FR-202, FR-203).
-  </p>
-</div>
+<%# ---- Bảng lịch ---- %>
+<% if @slots.empty? %>
+  <div class="l-panel" style="text-align:center; padding:36px;">
+    <div style="font-size:32px;">🗓</div>
+    <div style="font-weight:700; margin-top:10px;">Chưa có gì trong khoảng này</div>
+    <p style="font-size:13.5px; color:var(--ink-2);">
+      Slot trống chỉ hiện khi giáo viên đã <strong>đăng ký lịch dạy</strong> cho tháng đó trên PWA của họ.
+      Chưa có đăng ký thì bảng lịch trống — đó là dấu hiệu cần nhắc giáo viên gửi lịch.
+    </p>
+  </div>
+<% else %>
+  <% by_day = @slots.group_by(&:date) %>
+  <div style="display:grid; gap:14px;">
+    <% @days.each do |day| %>
+      <% day_slots = (by_day[day] || []).sort_by { |s| [s.hour, s.teacher.short_name] } %>
+      <% next if day_slots.empty? && @view == "month" %>
+      <div class="l-panel">
+        <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:10px;">
+          <div style="font-weight:700;">
+            <%= l(day, format: "%A · %d/%m") %>
+            <% if day == Date.current %><span class="l-chip l-chip-brand" style="margin-left:6px;">hôm nay</span><% end %>
+          </div>
+          <div style="font-size:12.5px; color:var(--ink-2);">
+            <%= day_slots.count { |s| !s.free? } %> lớp · <%= day_slots.count(&:free?) %> slot trống
+          </div>
+        </div>
+
+        <% if day_slots.empty? %>
+          <div style="font-size:13px; color:var(--ink-2);">Hồ đóng cửa hoặc chưa có giáo viên đăng ký dạy.</div>
+        <% else %>
+          <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:10px;">
+            <% day_slots.each do |slot| %>
+              <%= render "merchant/ops/schedule/slot_card", slot: slot %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
