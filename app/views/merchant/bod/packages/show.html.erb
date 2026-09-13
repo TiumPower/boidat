@@ -1,0 +1,51 @@
+<% content_for :page_title, @package.name %>
+<% content_for :page_sub, "#{@package.kind_label} · #{@package.class_type_label}" %>
+<% content_for :back do %><%= link_to "← Gói sản phẩm", merchant_bod_packages_path, class: "l-btn l-btn-ghost", style: "padding:6px 12px; font-size:13px;" %><% end %>
+<% content_for :actions do %>
+  <%= link_to "Sửa gói", edit_merchant_bod_package_path(@package), class: "l-btn l-btn-soft" %>
+<% end %>
+
+<div style="display:grid; grid-template-columns:1fr 380px; gap:16px; align-items:start;">
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:4px;">Bảng giá</div>
+    <p style="font-size:12.5px; color:var(--ink-2); margin-bottom:14px;">
+      Giá riêng của một hồ thắng giá chung. Giá có hiệu lực theo thời gian, nên tăng giá
+      không làm sai lệch các đơn đã bán.
+    </p>
+    <% if @prices.empty? %>
+      <p style="font-size:13.5px; color:var(--ink-2);">Chưa có dòng giá nào — gói này chưa bán được.</p>
+    <% else %>
+      <table class="l-table">
+        <thead><tr><th>Phạm vi</th><th>Giá</th><th>Hiệu lực</th><th></th></tr></thead>
+        <tbody>
+          <% @prices.each do |item| %>
+            <tr>
+              <td><%= item.scope_label %></td>
+              <td><strong><%= vnd(item.price) %></strong></td>
+              <td style="font-size:13px; color:var(--ink-2);"><%= item.period_label %></td>
+              <td style="text-align:right;">
+                <%= button_to "Xoá", merchant_bod_package_price_path(@package, item), method: :delete,
+                      class: "l-btn l-btn-ghost", style: "padding:4px 10px; font-size:12px;" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% end %>
+  </div>
+
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:12px;">Thêm dòng giá</div>
+    <%= form_with model: PriceListItem.new, url: merchant_bod_package_prices_path(@package), data: { turbo: false } do |f| %>
+      <div style="margin-bottom:10px;"><%= f.label :pool_id, "Áp dụng cho", class: "l-label" %>
+        <%= f.collection_select :pool_id, @pools, :id, :name, { include_blank: "Tất cả hồ" }, class: "l-field" %></div>
+      <div style="margin-bottom:10px;"><%= f.label :price, "Giá (đ)", class: "l-label" %>
+        <%= f.number_field :price, class: "l-field", step: 1000 %></div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+        <div><%= f.label :effective_from, "Từ ngày", class: "l-label" %><%= f.date_field :effective_from, class: "l-field" %></div>
+        <div><%= f.label :effective_to, "Đến ngày", class: "l-label" %><%= f.date_field :effective_to, class: "l-field" %></div>
+      </div>
+      <%= f.submit "Thêm giá", class: "l-btn l-btn-primary l-btn-block" %>
+    <% end %>
+  </div>
+</div>

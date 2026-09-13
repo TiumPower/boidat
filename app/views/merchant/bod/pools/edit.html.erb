@@ -1,0 +1,4 @@
+<% content_for :page_title, "Sửa #{@pool.name}" %>
+<div class="l-panel" style="max-width:640px;">
+  <%= render "merchant/bod/pools/form", pool: @pool, url: merchant_bod_pool_path(@pool), method: :patch, submit_label: "Lưu" %>
+</div>

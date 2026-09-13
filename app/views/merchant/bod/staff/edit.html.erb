@@ -1,0 +1,10 @@
+<% content_for :page_title, "Sửa #{@user.name}" %>
+<div class="l-panel" style="max-width:680px;">
+  <%= render "merchant/bod/staff/form", user: @user, role: @role, pool_ids: @pool_ids,
+        url: merchant_bod_staff_path(@membership), method: :patch, submit_label: "Lưu", new_record: false %>
+  <div style="margin-top:18px; padding-top:16px; border-top:1px solid var(--line);">
+    <%= button_to "Khoá tài khoản này", merchant_bod_staff_path(@membership), method: :delete,
+          class: "l-btn l-btn-ghost",
+          form: { data: { turbo_confirm: "Khoá tài khoản #{@user.name}? Dữ liệu và nhật ký của họ vẫn được giữ." } } %>
+  </div>
+</div>

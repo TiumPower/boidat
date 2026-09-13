@@ -1,0 +1,46 @@
+<% content_for :page_title, "Nhật ký thao tác" %>
+<% content_for :page_sub, "FR-116 · FR-221" %>
+
+<div class="l-panel" style="margin-bottom:16px;">
+  <%= form_with url: merchant_bod_audit_logs_path, method: :get, data: { turbo: false },
+        style: "display:flex; gap:10px; flex-wrap:wrap; align-items:end;" do %>
+    <div><label class="l-label">Người thực hiện</label>
+      <%= select_tag :user_id, options_from_collection_for_select(@users, :id, :name, params[:user_id]),
+            include_blank: "Tất cả", class: "l-field", style: "width:auto;" %></div>
+    <div><label class="l-label">Hồ</label>
+      <%= select_tag :pool_id, options_from_collection_for_select(@pools, :id, :name, params[:pool_id]),
+            include_blank: "Tất cả", class: "l-field", style: "width:auto;" %></div>
+    <div><label class="l-label">Hành động</label>
+      <%= select_tag :action_kind, options_for_select(AuditLog::ACTIONS.map { |a| [a, a] }, params[:action_kind]),
+            include_blank: "Tất cả", class: "l-field", style: "width:auto;" %></div>
+    <div><label class="l-label">Từ ngày</label><%= date_field_tag :from, params[:from], class: "l-field", style: "width:auto;" %></div>
+    <div><label class="l-label">Đến ngày</label><%= date_field_tag :to, params[:to], class: "l-field", style: "width:auto;" %></div>
+    <%= submit_tag "Lọc", class: "l-btn l-btn-primary" %>
+  <% end %>
+</div>
+
+<div class="l-panel">
+  <% if @logs.empty? %>
+    <p style="font-size:13.5px; color:var(--ink-2);">Chưa có thao tác nào khớp bộ lọc.</p>
+  <% else %>
+    <table class="l-table">
+      <thead><tr><th>Thời điểm</th><th>Người thực hiện</th><th>Hành động</th><th>Đối tượng</th><th>Hồ</th></tr></thead>
+      <tbody>
+        <% @logs.each do |log| %>
+          <tr>
+            <td style="white-space:nowrap; font-size:13px;"><%= l(log.created_at, format: "%H:%M · %d/%m/%Y") %></td>
+            <td><%= log.actor_label || log.user&.name || "hệ thống" %></td>
+            <td><span class="l-chip"><%= log.action_label %></span></td>
+            <td style="font-size:13px;"><%= log.summary.presence || "#{log.entity_type}##{log.entity_id}" %></td>
+            <td style="font-size:13px; color:var(--ink-2);"><%= log.pool&.short_name %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+</div>
+
+<p style="font-size:12.5px; color:var(--ink-2); margin-top:12px;">
+  Chỉ ghi thao tác ghi/sửa/xoá và các lần đọc dữ liệu nhạy cảm (thanh toán, ảnh khuôn mặt) —
+  log cả thao tác đọc thường thì cơ sở dữ liệu phình rất nhanh.
+</p>

@@ -1,0 +1,5 @@
+<% content_for :page_title, "Sửa hồ sơ #{@teacher.name}" %>
+<div class="l-panel" style="max-width:760px;">
+  <%= render "merchant/bod/teachers/form", teacher: @teacher, user: @user, pool_ids: @pool_ids,
+        url: merchant_bod_teacher_path(@teacher), method: :patch, submit_label: "Lưu", new_record: false %>
+</div>

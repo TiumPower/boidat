@@ -1,0 +1,33 @@
+<% content_for :page_title, "Nhân viên" %>
+<% content_for :page_sub, "FR-113 · FR-218" %>
+<% content_for :actions do %>
+  <%= link_to "+ Tài khoản mới", new_merchant_bod_staff_path, class: "l-btn l-btn-primary" %>
+<% end %>
+
+<div class="l-panel">
+  <table class="l-table">
+    <thead><tr><th>Họ tên</th><th>Vai trò</th><th>Hồ phụ trách</th><th>Liên hệ</th><th>Trạng thái</th><th></th></tr></thead>
+    <tbody>
+      <% @memberships.each do |m| %>
+        <tr>
+          <td><strong><%= m.user.name %></strong><div style="font-size:12px; color:var(--ink-2);"><%= m.user.email %></div></td>
+          <td><span class="l-chip"><%= m.label %></span></td>
+          <td style="font-size:13px; color:var(--ink-2);">
+            <%= (@by_user[m.user_id] || []).map { |pa| pa.pool.short_name }.join(" · ").presence ||
+                (m.bod? ? "Tất cả hồ" : "chưa gán") %>
+          </td>
+          <td style="font-size:13px; color:var(--ink-2);"><%= m.user.phone %></td>
+          <td><span class="l-chip"><%= m.status == "active" ? "Đang làm" : "Đã khoá" %></span></td>
+          <td style="text-align:right; white-space:nowrap;">
+            <% unless m.bod? %>
+              <%= link_to "Sửa", edit_merchant_bod_staff_path(m), class: "l-btn l-btn-soft", style: "padding:5px 12px; font-size:12.5px;" %>
+              <%= button_to "Đặt lại MK", reset_password_merchant_bod_staff_path(m), method: :patch,
+                    class: "l-btn l-btn-ghost", style: "padding:5px 12px; font-size:12.5px;",
+                    form: { style: "display:inline;", data: { turbo_confirm: "Đặt lại mật khẩu cho #{m.user.name}?" } } %>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

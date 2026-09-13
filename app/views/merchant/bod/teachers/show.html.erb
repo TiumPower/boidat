@@ -1,0 +1,38 @@
+<% content_for :page_title, @teacher.display_name %>
+<% content_for :page_sub, @teacher.renter? ? "Thuê hồ · #{@teacher.org_name}" : @teacher.level_label %>
+<% content_for :actions do %>
+  <%= link_to "Sửa hồ sơ", edit_merchant_bod_teacher_path(@teacher), class: "l-btn l-btn-primary" %>
+<% end %>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start;">
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:12px;">Thông tin</div>
+    <table class="l-table">
+      <tbody>
+        <tr><td style="color:var(--ink-2);">Email</td><td><%= @teacher.email %></td></tr>
+        <tr><td style="color:var(--ink-2);">Điện thoại</td><td><%= @teacher.phone %></td></tr>
+        <tr><td style="color:var(--ink-2);">Loại</td><td><%= @teacher.renter? ? "Thuê hồ" : "Thuộc trung tâm" %></td></tr>
+        <tr><td style="color:var(--ink-2);">Cấp độ</td><td><%= @teacher.level_label %></td></tr>
+        <tr><td style="color:var(--ink-2);">Tối đa mỗi tiết</td><td><%= @teacher.capacity %> học viên</td></tr>
+        <tr><td style="color:var(--ink-2);">Đơn giá</td><td><%= @teacher.pay_rate.positive? ? "#{vnd(@teacher.pay_rate)} / công" : "—" %></td></tr>
+        <tr><td style="color:var(--ink-2);">Hồ dạy</td><td><%= @teacher.pools.map(&:name).join(", ") %></td></tr>
+        <tr><td style="color:var(--ink-2);">Trạng thái</td><td><%= @teacher.status_label %></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:8px;">Mô tả năng lực</div>
+    <p style="font-size:13.5px; color:var(--ink-2);"><%= @teacher.bio.presence || "Chưa có mô tả — phụ huynh sẽ thấy nội dung này khi chọn lớp." %></p>
+
+    <div class="l-eyebrow" style="margin:20px 0 8px;">Chấm công & lịch dạy</div>
+    <p style="font-size:13px; color:var(--ink-2);">
+      <% if @teacher.renter? %>
+        Giáo viên thuê hồ không có chấm công, giáo án hay nhận xét — trung tâm chỉ theo dõi khung giờ thuê
+        và điểm danh học viên của họ.
+      <% else %>
+        Bảng công tự tính từ dữ liệu điểm danh (P3). Lịch dạy tháng do chính giáo viên đăng ký trên PWA.
+      <% end %>
+    </p>
+  </div>
+</div>

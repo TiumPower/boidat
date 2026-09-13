@@ -1,0 +1,32 @@
+<% content_for :page_title, "Cấp độ giáo viên" %>
+<% content_for :page_sub, "FR-216 · quyết định sức chứa mỗi tiết và đơn giá công" %>
+<% content_for :back do %><%= link_to "← Giáo viên", merchant_bod_teachers_path, class: "l-btn l-btn-ghost", style: "padding:6px 12px; font-size:13px;" %><% end %>
+
+<div style="display:grid; grid-template-columns:1fr 340px; gap:16px; align-items:start;">
+  <div class="l-panel">
+    <table class="l-table">
+      <thead><tr><th>Cấp độ</th><th>Tối đa / tiết</th><th>Đơn giá / công</th><th>Giáo viên</th><th></th></tr></thead>
+      <tbody>
+        <% @levels.each do |lvl| %>
+          <tr>
+            <td><strong><%= lvl.name %></strong><div style="font-size:12px; color:var(--ink-2);"><%= lvl.description %></div></td>
+            <td><%= lvl.max_students_per_slot %> học viên</td>
+            <td><%= vnd(lvl.pay_rate_per_credit) %></td>
+            <td><%= @counts[lvl.id].to_i %></td>
+            <td style="text-align:right; white-space:nowrap;">
+              <%= link_to "Sửa", edit_merchant_bod_teacher_level_path(lvl), class: "l-btn l-btn-soft", style: "padding:5px 12px; font-size:12.5px;" %>
+              <%= button_to "Xoá", merchant_bod_teacher_level_path(lvl), method: :delete, class: "l-btn l-btn-ghost",
+                    style: "padding:5px 12px; font-size:12.5px;", form: { style: "display:inline;", data: { turbo_confirm: "Xoá #{lvl.name}?" } } %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:12px;">Thêm cấp độ</div>
+    <%= render "merchant/bod/teacher_levels/form", level: @level,
+          url: merchant_bod_teacher_levels_path, method: :post, submit_label: "Thêm" %>
+  </div>
+</div>

@@ -1,0 +1,143 @@
+<% content_for :page_title, "Cấu hình hệ thống" %>
+<% content_for :page_sub, "Quy tắc nghiệp vụ · đổi ở đây, không cần sửa code" %>
+
+<%= form_with url: merchant_bod_settings_path, method: :patch, data: { turbo: false } do %>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start;">
+
+    <%# ---- Chấm công (BR-02, OQ-04/05/06) ---- %>
+    <div class="l-panel">
+      <div style="font-weight:700;">Chấm công giáo viên</div>
+      <p style="font-size:12.5px; color:var(--ink-2); margin:4px 0 14px;">
+        Công của một tiết 60 phút, theo số học viên. Mặc định 0.5 × sĩ số.
+      </p>
+      <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px;">
+        <% (1..4).each do |n| %>
+          <div>
+            <label class="l-label"><%= n %> HV</label>
+            <%= number_field_tag "settings[credit_table][#{n}]", @settings["credit_table"][n.to_s],
+                  step: 0.1, min: 0, class: "l-field" %>
+          </div>
+        <% end %>
+      </div>
+      <div style="padding:10px 12px; border-radius:10px; background:var(--surface-2); font-size:12.5px; color:var(--ink-2); margin-bottom:14px;">
+        <strong style="color:var(--ink);">OQ-05 chưa chốt với khách.</strong>
+        Lớp 1:4 đang để 2.0 công (suy tuyến tính) — gấp 4 lần lớp 1:1 cho cùng một giờ đứng lớp,
+        trong khi doanh thu lớp nhóm không gấp 4. Muốn đặt trần thì sửa ô “4 HV” thành 1.5.
+      </div>
+
+      <label class="l-label">Khi có học viên vắng thì tính công theo</label>
+      <%= select_tag "settings[credit_basis]",
+            options_for_select([["Sĩ số đăng ký — trung tâm chịu phần thiệt", "registered"],
+                                ["Số có mặt thực tế — giáo viên chịu phần thiệt", "present"]],
+                               @settings["credit_basis"]), class: "l-field" %>
+      <div style="font-size:12.5px; color:var(--ink-2); margin-top:6px;">
+        OQ-06. Học viên vắng không báo thì không bị trừ buổi (BR-12), nên buổi đó không có doanh thu:
+        lựa chọn này quyết định ai chịu phần thiệt.
+      </div>
+
+      <label style="display:flex; gap:8px; align-items:center; font-size:13.5px; margin-top:14px;">
+        <%= check_box_tag "settings[feedback_blocks_payroll]", "1", @settings["feedback_blocks_payroll"] %>
+        Bắt buộc có nhận xét mới chấm công
+      </label>
+      <div style="font-size:12.5px; color:var(--ink-2); margin-top:4px;">
+        OQ-22 — khuyến nghị TẮT: gộp hai nghiệp vụ này lại thì thầy quên nhận xét là mất lương,
+        rất dễ thành tranh chấp. Deadline nhận xét đặt riêng bên dưới.
+      </div>
+      <div style="margin-top:10px;">
+        <label class="l-label">Hạn nộp nhận xét (giờ)</label>
+        <%= number_field_tag "settings[feedback_deadline_hours]", @settings["feedback_deadline_hours"], class: "l-field" %>
+      </div>
+    </div>
+
+    <%# ---- Vòng đời khoá học (BR-11, OQ-07, OQ-25) ---- %>
+    <div class="l-panel">
+      <div style="font-weight:700;">Khoá học & thi tốt nghiệp</div>
+      <p style="font-size:12.5px; color:var(--ink-2); margin:4px 0 14px;">
+        Cách hiểu hiện tại: 11 buổi học + buổi 12 là buổi thi (OQ-25 cần khách xác nhận một câu).
+      </p>
+      <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:12px;">
+        <div><label class="l-label">Số buổi / khoá</label>
+          <%= number_field_tag "settings[course_sessions]", @settings["course_sessions"], class: "l-field" %></div>
+        <div><label class="l-label">Vào danh sách thi ở buổi</label>
+          <%= number_field_tag "settings[graduation_at_session]", @settings["graduation_at_session"], class: "l-field" %></div>
+        <div><label class="l-label">Buổi thi là buổi số</label>
+          <%= number_field_tag "settings[exam_session_index]", @settings["exam_session_index"], class: "l-field" %></div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:8px; font-size:13.5px; margin-bottom:14px;">
+        <label style="display:flex; gap:8px;"><%= check_box_tag "settings[exam_deducts_session]", "1", @settings["exam_deducts_session"] %> Buổi thi bị trừ khỏi gói</label>
+        <label style="display:flex; gap:8px;"><%= check_box_tag "settings[exam_pays_credit]", "1", @settings["exam_pays_credit"] %> Buổi thi vẫn tính công cho giáo viên</label>
+        <label style="display:flex; gap:8px;"><%= check_box_tag "settings[exam_eligible_sticky]", "1", @settings["exam_eligible_sticky"] %> Giữ học viên trong danh sách thi cho tới khi có kết quả</label>
+      </div>
+      <div style="font-size:12.5px; color:var(--ink-2); margin-bottom:14px;">
+        Điều kiện thi là <strong>bằng đúng</strong> số buổi đã đặt, nên nếu không giữ cờ thì học viên
+        học sang buổi kế tiếp sẽ biến mất khỏi danh sách — admin bận một tuần là mất dấu (OQ-07).
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        <div><label class="l-label">Hạn dùng gói (ngày)</label>
+          <%= number_field_tag "settings[package_validity_days]", @settings["package_validity_days"], class: "l-field" %></div>
+        <div><label class="l-label">Nhắc trước khi hết hạn (ngày)</label>
+          <%= number_field_tag "settings[expiry_warning_days]", @settings["expiry_warning_days"], class: "l-field" %></div>
+      </div>
+    </div>
+
+    <%# ---- Điểm danh & vắng mặt ---- %>
+    <div class="l-panel">
+      <div style="font-weight:700;">Điểm danh & vắng mặt</div>
+      <div style="display:flex; flex-direction:column; gap:8px; font-size:13.5px; margin:12px 0 14px;">
+        <label style="display:flex; gap:8px;"><%= check_box_tag "settings[no_show_deducts]", "1", @settings["no_show_deducts"] %> Vắng không báo vẫn bị trừ buổi</label>
+        <label style="display:flex; gap:8px;"><%= check_box_tag "settings[day_pass_uses_face]", "1", @settings["day_pass_uses_face"] %> Vé lẻ cũng phải đăng ký khuôn mặt</label>
+      </div>
+      <div style="font-size:12.5px; color:var(--ink-2); margin-bottom:14px;">
+        BR-12 khách đã chốt: nghỉ không báo thì <strong>không</strong> trừ buổi.
+        Hệ quả cần theo dõi: slot bỏ trống mà không ai mất gì, nên dashboard có chỉ số “vắng không báo”.
+        OQ-13: vé lẻ mặc định dùng mã QR một lần, khỏi phải xin đồng ý dữ liệu sinh trắc cho một lượt bơi.
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+        <div><label class="l-label">Ngưỡng khớp mặt</label>
+          <%= number_field_tag "settings[face_match_threshold]", @settings["face_match_threshold"], step: 0.01, class: "l-field" %></div>
+        <div><label class="l-label">Ngưỡng cần xác nhận tay</label>
+          <%= number_field_tag "settings[face_review_threshold]", @settings["face_review_threshold"], step: 0.01, class: "l-field" %></div>
+        <div><label class="l-label">Tỷ lệ lỗi → yêu cầu chụp lại</label>
+          <%= number_field_tag "settings[face_recapture_fail_ratio]", @settings["face_recapture_fail_ratio"], step: 0.05, class: "l-field" %></div>
+      </div>
+      <div style="font-size:12.5px; color:var(--ink-2); margin-top:6px;">
+        Khuôn mặt trẻ em thay đổi nhanh theo tháng; hệ thống đếm tỷ lệ quét lỗi của từng em và tự
+        đề nghị chụp lại ảnh khi vượt ngưỡng (OQ-01).
+      </div>
+    </div>
+
+    <%# ---- Vận hành & quyền hộ gia đình ---- %>
+    <div class="l-panel">
+      <div style="font-weight:700;">Vận hành & hộ gia đình</div>
+      <div style="margin:12px 0;">
+        <label class="l-label">Ai trong hộ xem được lịch sử thanh toán</label>
+        <%= select_tag "settings[household_scope_payments]",
+              options_for_select([["Chỉ chủ hộ", "owner_only"], ["Mọi người có mã QR", "everyone"]],
+                                 @settings["household_scope_payments"]), class: "l-field" %>
+        <div style="font-size:12.5px; color:var(--ink-2); margin-top:6px;">
+          OQ-03 — gia đình ly hôn, ông bà hoặc người giúp việc đưa đón đều “có QR”.
+          Người đưa đón vẫn xem được lịch học và điểm danh.
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+        <div><label class="l-label">Hạn giáo viên đăng ký lịch (ngày trong tháng)</label>
+          <%= number_field_tag "settings[availability_deadline_day]", @settings["availability_deadline_day"], class: "l-field" %></div>
+        <div><label class="l-label">Nhắc gia hạn khi còn ≤ n buổi</label>
+          <%= number_field_tag "settings[low_sessions_threshold]", @settings["low_sessions_threshold"], class: "l-field" %></div>
+      </div>
+      <label style="display:flex; gap:8px; align-items:center; font-size:13.5px;">
+        <%= check_box_tag "settings[rental_revenue_separate]", "1", @settings["rental_revenue_separate"] %>
+        Tách doanh thu cho thuê hồ thành dòng riêng trên dashboard
+      </label>
+      <div style="font-size:12.5px; color:var(--ink-2); margin-top:4px;">
+        OQ-26 — hai mô hình có biên lợi nhuận rất khác nhau, BOD cần nhìn tách bạch để biết nên ưu tiên bán cái nào.
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:18px;">
+    <%= submit_tag "Lưu cấu hình", class: "l-btn l-btn-primary" %>
+  </div>
+<% end %>

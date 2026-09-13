@@ -1,0 +1,4 @@
+<% content_for :page_title, "Sửa #{@package.name}" %>
+<div class="l-panel" style="max-width:760px;">
+  <%= render "merchant/bod/packages/form", package: @package, url: merchant_bod_package_path(@package), method: :patch, submit_label: "Lưu" %>
+</div>

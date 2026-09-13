@@ -1,0 +1,20 @@
+<% content_for :page_title, "Nhật ký thao tác · #{current_pool.name}" %>
+<div class="l-panel">
+  <% if @logs.empty? %>
+    <p style="font-size:13.5px; color:var(--ink-2);">Chưa có thao tác nào tại hồ này.</p>
+  <% else %>
+    <table class="l-table">
+      <thead><tr><th>Thời điểm</th><th>Người thực hiện</th><th>Hành động</th><th>Đối tượng</th></tr></thead>
+      <tbody>
+        <% @logs.each do |log| %>
+          <tr>
+            <td style="white-space:nowrap; font-size:13px;"><%= l(log.created_at, format: "%H:%M · %d/%m/%Y") %></td>
+            <td><%= log.actor_label || log.user&.name %></td>
+            <td><span class="l-chip"><%= log.action_label %></span></td>
+            <td style="font-size:13px;"><%= log.summary %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% end %>
+</div>

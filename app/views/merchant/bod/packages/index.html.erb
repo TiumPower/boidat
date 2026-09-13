@@ -1,0 +1,46 @@
+<% content_for :page_title, "Gói sản phẩm & bảng giá" %>
+<% content_for :page_sub, "FR-213 · FR-214" %>
+<% content_for :actions do %>
+  <%= link_to "Khuyến mãi", merchant_bod_promotions_path, class: "l-btn l-btn-soft" %>
+  <%= link_to "+ Gói sản phẩm mới", new_merchant_bod_package_path, class: "l-btn l-btn-primary" %>
+<% end %>
+
+<div style="display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden; margin-bottom:16px; flex-wrap:wrap;">
+  <% ([[nil, "Tất cả"]] + Package::KINDS.map { |k| [k, Package::KIND_LABELS[k]] }).each do |key, label| %>
+    <% on = @kind == key %>
+    <%= link_to "#{label}#{key ? " (#{@counts[key].to_i})" : ''}", merchant_bod_packages_path(kind: key),
+          style: "padding:6px 14px; font-size:12.5px; font-weight:700; text-decoration:none; #{on ? 'background:var(--primary); color:#fff;' : 'color:var(--ink-2);'}" %>
+  <% end %>
+</div>
+
+<% if @packages.empty? %>
+  <div class="l-panel" style="text-align:center; padding:36px;">
+    <div style="font-weight:700;">Chưa có gói nào trong nhóm này</div>
+    <p style="font-size:13.5px; color:var(--ink-2);">Gói là thứ sale chọn khi đăng ký học viên — chưa có gói thì chưa bán được.</p>
+    <%= link_to "+ Gói sản phẩm mới", new_merchant_bod_package_path(kind: @kind), class: "l-btn l-btn-primary" %>
+  </div>
+<% else %>
+  <div class="l-panel">
+    <table class="l-table">
+      <thead><tr><th>Gói</th><th>Loại</th><th>Khoá học</th><th>Lớp</th><th>Số buổi</th><th>Giá</th><th>Trạng thái</th><th></th></tr></thead>
+      <tbody>
+        <% @packages.each do |pkg| %>
+          <tr>
+            <td><strong><%= pkg.name %></strong><div style="font-size:12px; color:var(--ink-2);"><%= pkg.description&.truncate(50) %></div></td>
+            <td><%= pkg.kind_label %></td>
+            <td style="font-size:13px; color:var(--ink-2);"><%= pkg.course&.name || "—" %></td>
+            <td><%= pkg.class_type_label %></td>
+            <td><%= pkg.session_count || "—" %></td>
+            <td>
+              <% @pools.each do |pool| %>
+                <div style="font-size:12.5px;"><span style="color:var(--ink-2);"><%= pool.short_name %>:</span> <%= pkg.price_label(pool) %></div>
+              <% end %>
+            </td>
+            <td><span class="l-chip <%= 'l-chip-brand' if pkg.active? %>"><%= pkg.active? ? "Đang bán" : "Tạm dừng" %></span></td>
+            <td style="text-align:right;"><%= link_to "Mở", merchant_bod_package_path(pkg), class: "l-btn l-btn-soft", style: "padding:5px 12px; font-size:12.5px;" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>

@@ -1,0 +1,4 @@
+<% content_for :page_title, "Hồ bơi mới" %>
+<div class="l-panel" style="max-width:640px;">
+  <%= render "merchant/bod/pools/form", pool: @pool, url: merchant_bod_pools_path, method: :post, submit_label: "Tạo hồ" %>
+</div>

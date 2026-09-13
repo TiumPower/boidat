@@ -1,0 +1,26 @@
+<% content_for :page_title, "Khuyến mãi" %>
+<% content_for :back do %><%= link_to "← Gói sản phẩm", merchant_bod_packages_path, class: "l-btn l-btn-ghost", style: "padding:6px 12px; font-size:13px;" %><% end %>
+<% content_for :actions do %>
+  <%= link_to "+ Khuyến mãi mới", new_merchant_bod_promotion_path, class: "l-btn l-btn-primary" %>
+<% end %>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px;">
+  <% @promotions.each do |promo| %>
+    <div class="l-panel">
+      <div style="display:flex; justify-content:space-between; align-items:baseline;">
+        <div style="font-weight:700;"><%= promo.name %></div>
+        <span class="l-chip <%= 'l-chip-brand' if promo.running? %>"><%= promo.running? ? "Đang chạy" : "Tạm dừng" %></span>
+      </div>
+      <div style="font-size:19px; font-weight:700; color:var(--primary); margin:8px 0;"><%= promo.value_label %></div>
+      <div style="font-size:12.5px; color:var(--ink-2);"><%= promo.kind_label %><%= " · #{promo.pool.short_name}" if promo.pool %></div>
+      <p style="font-size:13px; color:var(--ink-2); margin:8px 0 12px;"><%= promo.condition_note %></p>
+      <%= link_to "Sửa", edit_merchant_bod_promotion_path(promo), class: "l-btn l-btn-soft l-btn-block" %>
+    </div>
+  <% end %>
+  <% if @promotions.empty? %>
+    <div class="l-panel" style="text-align:center; padding:36px;">
+      <div style="font-weight:700;">Chưa có khuyến mãi nào</div>
+      <p style="font-size:13.5px; color:var(--ink-2);">Tặng buổi, giảm giá tái ký, ưu đãi anh chị em, quà tặng, voucher giới thiệu.</p>
+    </div>
+  <% end %>
+</div>

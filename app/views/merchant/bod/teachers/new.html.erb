@@ -1,0 +1,5 @@
+<% content_for :page_title, "Giáo viên mới" %>
+<div class="l-panel" style="max-width:760px;">
+  <%= render "merchant/bod/teachers/form", teacher: @teacher, user: @user, pool_ids: @pool_ids,
+        url: merchant_bod_teachers_path, method: :post, submit_label: "Tạo giáo viên", new_record: true %>
+</div>

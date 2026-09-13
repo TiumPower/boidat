@@ -1,0 +1,43 @@
+<%= form_with model: course, url: url, method: method, data: { turbo: false } do |f| %>
+  <% if course.errors.any? %>
+    <div class="l-chip" style="background:#FBECEC; color:#9B2C2C; display:block; margin-bottom:14px;">
+      <%= course.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+  <div style="display:grid; grid-template-columns:2fr 1fr; gap:12px; margin-bottom:12px;">
+    <div><%= f.label :name, "Tên khoá", class: "l-label" %><%= f.text_field :name, class: "l-field", placeholder: "Bơi cơ bản trẻ em" %></div>
+    <div><%= f.label :audience, "Đối tượng", class: "l-label" %>
+      <%= f.select :audience, Course::AUDIENCES.map { |a| [Course::AUDIENCE_LABELS[a], a] }, {}, class: "l-field" %></div>
+  </div>
+  <div style="margin-bottom:12px;"><%= f.label :description, "Mô tả", class: "l-label" %><%= f.text_area :description, class: "l-field", rows: 2 %></div>
+
+  <div class="l-eyebrow" style="margin:18px 0 10px;">Vòng đời khoá</div>
+  <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:8px;">
+    <div><%= f.label :sessions_count, "Số buổi", class: "l-label" %>
+      <%= f.number_field :sessions_count, class: "l-field", placeholder: current_workspace.course_session_count %></div>
+    <div><%= f.label :graduation_at_session, "Vào DS thi ở buổi", class: "l-label" %>
+      <%= f.number_field :graduation_at_session, class: "l-field", placeholder: current_workspace.graduation_at_session %></div>
+    <div><%= f.label :exam_session_index, "Buổi thi", class: "l-label" %>
+      <%= f.number_field :exam_session_index, class: "l-field", placeholder: current_workspace.exam_session_index %></div>
+    <div><%= f.label :validity_days, "Hạn dùng (ngày)", class: "l-label" %>
+      <%= f.number_field :validity_days, class: "l-field", placeholder: current_workspace.package_validity_days %></div>
+  </div>
+  <div style="font-size:12.5px; color:var(--ink-2); margin-bottom:16px;">
+    Để trống thì lấy theo cấu hình chung của trung tâm. Khai riêng ở đây khi khoá nâng cao
+    hay khoá người lớn có số buổi khác.
+  </div>
+
+  <div style="margin-bottom:18px;">
+    <div class="l-label">Loại lớp mở được</div>
+    <div style="display:flex; gap:14px;">
+      <% (1..4).each do |n| %>
+        <label style="display:flex; align-items:center; gap:6px; font-size:13.5px;">
+          <%= check_box_tag "course[class_types][]", n, course.allowed_class_types.include?(n) %> 1:<%= n %>
+        </label>
+      <% end %>
+    </div>
+  </div>
+
+  <%= f.submit submit_label, class: "l-btn l-btn-primary" %>
+  <%= link_to "Huỷ", merchant_bod_courses_path, class: "l-btn l-btn-ghost" %>
+<% end %>

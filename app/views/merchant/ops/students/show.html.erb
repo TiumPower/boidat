@@ -1,0 +1,48 @@
+<% content_for :page_title, @student.name %>
+<% content_for :page_sub, [@student.age_label, @household.name].compact.join(" · ") %>
+<% content_for :back do %><%= link_to "← Học viên", merchant_ops_students_path, class: "l-btn l-btn-ghost", style: "padding:6px 12px; font-size:13px;" %><% end %>
+<% content_for :actions do %>
+  <%= link_to "Sửa hồ sơ", edit_merchant_ops_student_path(@student), class: "l-btn l-btn-soft" %>
+  <%= link_to "Hộ gia đình", merchant_ops_household_path(@household), class: "l-btn l-btn-primary" %>
+<% end %>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start;">
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:12px;">Hồ sơ</div>
+    <table class="l-table">
+      <tbody>
+        <tr><td style="color:var(--ink-2);">Ngày sinh</td><td><%= @student.birthdate ? l(@student.birthdate, format: "%d/%m/%Y") : "—" %></td></tr>
+        <tr><td style="color:var(--ink-2);">Hồ trực thuộc</td><td><%= @student.pool.name %></td></tr>
+        <tr><td style="color:var(--ink-2);">Nguồn khách</td><td><%= @student.source %></td></tr>
+        <tr><td style="color:var(--ink-2);">Lưu ý sức khoẻ</td><td><%= @student.health_notes.presence || "—" %></td></tr>
+        <tr><td style="color:var(--ink-2);">Ảnh khuôn mặt</td>
+            <td><%= @student.face_registered? ? "Đã đăng ký" : "Chưa có — chưa điểm danh tự động được" %></td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:12.5px; color:var(--ink-2); margin-top:12px;">
+      Học viên chỉ học tại hồ đã đăng ký. Muốn đổi cơ sở thì phải chuyển hồ trực thuộc ở đây trước,
+      nếu không quầy bên kia sẽ chặn điểm danh.
+    </p>
+  </div>
+
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:12px;">Người giám hộ</div>
+    <% @household.guardians.each do |g| %>
+      <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line);">
+        <div><div style="font-weight:600; font-size:14px;"><%= g.name %></div>
+          <div style="font-size:12px; color:var(--ink-2);"><%= g.role_label %> · <%= g.relation %></div></div>
+        <div style="font-size:13px; color:var(--ink-2);"><%= g.phone %></div>
+      </div>
+    <% end %>
+
+    <% if @siblings.any? %>
+      <div class="l-eyebrow" style="margin:18px 0 8px;">Anh chị em cùng hộ</div>
+      <% @siblings.each do |s| %>
+        <%= link_to s.name, merchant_ops_student_path(s), class: "l-chip", style: "margin-right:6px;" %>
+      <% end %>
+    <% end %>
+
+    <div class="l-eyebrow" style="margin:18px 0 8px;">Khoá học & buổi</div>
+    <p style="font-size:13px; color:var(--ink-2);">Đăng ký lớp, số buổi đã học / còn lại và lịch sử điểm danh nối vào ở P2–P3.</p>
+  </div>
+</div>

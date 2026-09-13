@@ -1,0 +1,65 @@
+<%= form_with model: teacher, url: url, method: method, data: { turbo: false } do |f| %>
+  <% if teacher.errors.any? || user.errors.any? %>
+    <div class="l-chip" style="background:#FBECEC; color:#9B2C2C; display:block; margin-bottom:14px;">
+      <%= (teacher.errors.full_messages + user.errors.full_messages).to_sentence %>
+    </div>
+  <% end %>
+
+  <div class="l-eyebrow" style="margin-bottom:10px;">Tài khoản đăng nhập PWA</div>
+  <div style="display:grid; grid-template-columns:2fr 1fr; gap:12px; margin-bottom:12px;">
+    <div><%= label_tag "user[name]", "Họ tên", class: "l-label" %>
+      <%= text_field_tag "user[name]", user.name, class: "l-field" %></div>
+    <div><%= label_tag "user[title]", "Kính ngữ", class: "l-label" %>
+      <%= select_tag "user[title]", options_for_select([["—", ""], ["Thầy", "Thầy"], ["Cô", "Cô"]], user.title), class: "l-field" %></div>
+  </div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+    <div><%= label_tag "user[email]", "Email", class: "l-label" %>
+      <%= email_field_tag "user[email]", user.email, class: "l-field" %></div>
+    <div><%= label_tag "user[phone]", "Số điện thoại", class: "l-label" %>
+      <%= text_field_tag "user[phone]", user.phone, class: "l-field" %></div>
+  </div>
+  <% if new_record %>
+    <div style="margin-bottom:18px;">
+      <%= label_tag "user[password]", "Mật khẩu (để trống sẽ tự sinh)", class: "l-label" %>
+      <%= text_field_tag "user[password]", nil, class: "l-field" %>
+    </div>
+  <% end %>
+
+  <div class="l-eyebrow" style="margin:20px 0 10px;">Hồ sơ giáo viên</div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+    <div><%= f.label :kind, "Loại", class: "l-label" %>
+      <%= f.select :kind, [["Thuộc trung tâm", "staff"], ["Thuê hồ (giáo viên ngoài)", "renter"]], {}, class: "l-field" %></div>
+    <div><%= f.label :status, "Trạng thái", class: "l-label" %>
+      <%= f.select :status, [["Đang dạy", "active"], ["Tạm nghỉ", "on_leave"], ["Ngưng", "inactive"]], {}, class: "l-field" %></div>
+  </div>
+  <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:12px;">
+    <div><%= f.label :teacher_level_id, "Cấp độ", class: "l-label" %>
+      <%= f.collection_select :teacher_level_id, TeacherLevel.ordered, :id, :name, { include_blank: "— chưa xếp —" }, class: "l-field" %></div>
+    <div><%= f.label :specialty, "Chuyên môn", class: "l-label" %>
+      <%= f.text_field :specialty, class: "l-field", placeholder: "Trẻ em sợ nước" %></div>
+    <div><%= f.label :years_experience, "Số năm kinh nghiệm", class: "l-label" %>
+      <%= f.number_field :years_experience, class: "l-field" %></div>
+  </div>
+  <div style="margin-bottom:12px;">
+    <%= f.label :org_name, "Đơn vị (với giáo viên thuê hồ)", class: "l-label" %>
+    <%= f.text_field :org_name, class: "l-field", placeholder: "CLB Cá Heo" %>
+  </div>
+  <div style="margin-bottom:12px;">
+    <%= f.label :bio, "Mô tả năng lực (phụ huynh đọc được)", class: "l-label" %>
+    <%= f.text_area :bio, class: "l-field", rows: 3 %>
+  </div>
+
+  <div style="margin-bottom:18px;">
+    <div class="l-label">Hồ được phân công dạy</div>
+    <div style="display:flex; flex-wrap:wrap; gap:12px;">
+      <% accessible_pools.each do |pool| %>
+        <label style="display:flex; align-items:center; gap:7px; font-size:13.5px;">
+          <%= check_box_tag "pool_ids[]", pool.id, pool_ids.include?(pool.id) %> <%= pool.name %>
+        </label>
+      <% end %>
+    </div>
+  </div>
+
+  <%= f.submit submit_label, class: "l-btn l-btn-primary" %>
+  <%= link_to "Huỷ", merchant_bod_teachers_path, class: "l-btn l-btn-ghost" %>
+<% end %>

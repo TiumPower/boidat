@@ -1,0 +1,72 @@
+<% content_for :page_title, @pool.name %>
+<% content_for :page_sub, @pool.address %>
+<% content_for :actions do %>
+  <%= link_to "Sửa thông tin", edit_merchant_bod_pool_path(@pool), class: "l-btn l-btn-soft" %>
+<% end %>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start;">
+  <%# ---- Giờ mở cửa (FR-217) ---- %>
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:4px;">Giờ mở cửa theo thứ</div>
+    <p style="font-size:12.5px; color:var(--ink-2); margin-bottom:12px;">
+      Bộ xếp lịch và màn hình lịch chỉ sinh slot trong khung giờ này.
+    </p>
+    <%= form_with url: merchant_bod_pool_path(@pool), method: :patch, data: { turbo: false } do %>
+      <%= hidden_field_tag "pool[name]", @pool.name %>
+      <% @hours.each do |h| %>
+        <div style="display:grid; grid-template-columns:70px 1fr 1fr 90px; gap:8px; align-items:center; margin-bottom:8px;">
+          <div style="font-size:13px; font-weight:600;"><%= h.weekday_label %></div>
+          <%= time_field_tag "hours[#{h.weekday}][opens_at]", h.opens_at&.strftime("%H:%M"), class: "l-field" %>
+          <%= time_field_tag "hours[#{h.weekday}][closes_at]", h.closes_at&.strftime("%H:%M"), class: "l-field" %>
+          <label style="font-size:12.5px; display:flex; gap:6px; align-items:center;">
+            <%= check_box_tag "hours[#{h.weekday}][closed]", "1", h.closed? %> Nghỉ
+          </label>
+        </div>
+      <% end %>
+      <%= submit_tag "Lưu giờ mở cửa", class: "l-btn l-btn-primary", style: "margin-top:10px;" %>
+    <% end %>
+  </div>
+
+  <div>
+    <%# ---- Ngày nghỉ ---- %>
+    <div class="l-panel" style="margin-bottom:16px;">
+      <div style="font-weight:700; margin-bottom:12px;">Ngày nghỉ lễ / bảo trì</div>
+      <%= form_with url: merchant_bod_pool_holidays_path(@pool), method: :post, data: { turbo: false },
+            style: "display:flex; gap:8px; margin-bottom:12px;" do %>
+        <%= date_field_tag :date, nil, class: "l-field" %>
+        <%= text_field_tag :reason, nil, class: "l-field", placeholder: "Lý do" %>
+        <%= submit_tag "Thêm", class: "l-btn l-btn-soft" %>
+      <% end %>
+      <% if @holidays.empty? %>
+        <p style="font-size:13px; color:var(--ink-2);">Chưa có ngày nghỉ nào sắp tới.</p>
+      <% else %>
+        <% @holidays.each do |h| %>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--line);">
+            <div style="font-size:13.5px;"><strong><%= l(h.date, format: "%d/%m/%Y") %></strong> <span style="color:var(--ink-2);"><%= h.reason %></span></div>
+            <%= button_to "Xoá", merchant_bod_pool_holiday_path(@pool, h), method: :delete, class: "l-btn l-btn-ghost", style: "padding:4px 10px; font-size:12px;" %>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+
+    <%# ---- Gán nhân sự (FR-112) ---- %>
+    <div class="l-panel">
+      <div style="font-weight:700; margin-bottom:4px;">Nhân sự phụ trách hồ này</div>
+      <p style="font-size:12.5px; color:var(--ink-2); margin-bottom:12px;">
+        Một người có thể phụ trách nhiều hồ. Gỡ gán chỉ cắt quyền truy cập, không xoá dữ liệu đã phát sinh.
+      </p>
+      <%= form_with url: assign_staff_merchant_bod_pool_path(@pool), method: :patch, data: { turbo: false } do %>
+        <% @staff.each do |m| %>
+          <label style="display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid var(--line);">
+            <%= check_box_tag "user_ids[]", m.user_id, @assigned_ids.include?(m.user_id) %>
+            <span style="flex:1;">
+              <span style="font-weight:600; font-size:14px;"><%= m.user.name %></span>
+              <span style="font-size:12px; color:var(--ink-2);"> · <%= m.label %></span>
+            </span>
+          </label>
+        <% end %>
+        <%= submit_tag "Lưu danh sách", class: "l-btn l-btn-primary", style: "margin-top:14px;" %>
+      <% end %>
+    </div>
+  </div>
+</div>

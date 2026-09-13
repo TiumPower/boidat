@@ -1,0 +1,19 @@
+<% content_for :page_title, "Giáo viên · #{current_pool.name}" %>
+<div class="l-panel">
+  <table class="l-table">
+    <thead><tr><th>Giáo viên</th><th>Loại</th><th>Cấp độ</th><th>Tối đa / tiết</th><th>Chuyên môn</th><th>Trạng thái</th><th></th></tr></thead>
+    <tbody>
+      <% @teachers.each do |t| %>
+        <tr>
+          <td><strong><%= t.display_name %></strong></td>
+          <td><%= t.renter? ? "Thuê hồ" : "Thuộc trung tâm" %></td>
+          <td><%= t.renter? ? "—" : t.level_label %></td>
+          <td><%= t.renter? ? "—" : "#{t.capacity} HV" %></td>
+          <td style="color:var(--ink-2);"><%= t.specialty %></td>
+          <td><span class="l-chip"><%= t.status_label %></span></td>
+          <td style="text-align:right;"><%= link_to "Xem", merchant_ops_teacher_path(t), class: "l-btn l-btn-soft", style: "padding:5px 12px; font-size:12.5px;" %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

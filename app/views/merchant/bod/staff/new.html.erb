@@ -1,0 +1,5 @@
+<% content_for :page_title, "Tài khoản nhân sự mới" %>
+<div class="l-panel" style="max-width:680px;">
+  <%= render "merchant/bod/staff/form", user: @user, role: @role, pool_ids: @pool_ids,
+        url: merchant_bod_staff_index_path, method: :post, submit_label: "Tạo tài khoản", new_record: true %>
+</div>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_13_000016) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_13_100001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -123,6 +123,40 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_000016) do
     t.index ["created_by_id"], name: "index_broadcasts_on_created_by_id"
     t.index ["pool_id"], name: "index_broadcasts_on_pool_id"
     t.index ["workspace_id"], name: "index_broadcasts_on_workspace_id"
+  end
+
+  create_table "course_sessions", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "course_id", null: false
+    t.integer "position", null: false
+    t.string "title", null: false
+    t.text "content"
+    t.string "goal"
+    t.boolean "exam", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["course_id", "position"], name: "index_course_sessions_on_course_id_and_position", unique: true
+    t.index ["course_id"], name: "index_course_sessions_on_course_id"
+    t.index ["workspace_id"], name: "index_course_sessions_on_workspace_id"
+  end
+
+  create_table "courses", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.string "name", null: false
+    t.string "code"
+    t.text "description"
+    t.string "audience", default: "child", null: false
+    t.string "status", default: "active", null: false
+    t.integer "position", default: 0, null: false
+    t.integer "sessions_count"
+    t.integer "graduation_at_session"
+    t.integer "exam_session_index"
+    t.integer "validity_days"
+    t.jsonb "class_types", default: [1, 2, 3, 4], null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["workspace_id", "name"], name: "index_courses_on_workspace_id_and_name"
+    t.index ["workspace_id"], name: "index_courses_on_workspace_id"
   end
 
   create_table "face_profiles", force: :cascade do |t|
@@ -259,6 +293,24 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_000016) do
     t.index ["workspace_id"], name: "index_otp_challenges_on_workspace_id"
   end
 
+  create_table "packages", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "course_id"
+    t.string "name", null: false
+    t.string "kind", default: "full_course", null: false
+    t.integer "class_type"
+    t.integer "sessions"
+    t.integer "validity_days"
+    t.string "status", default: "active", null: false
+    t.text "description"
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["course_id"], name: "index_packages_on_course_id"
+    t.index ["workspace_id", "kind"], name: "index_packages_on_workspace_id_and_kind"
+    t.index ["workspace_id"], name: "index_packages_on_workspace_id"
+  end
+
   create_table "plans", force: :cascade do |t|
     t.string "key", null: false
     t.string "name", null: false
@@ -328,6 +380,39 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_000016) do
     t.datetime "updated_at", null: false
     t.index ["workspace_id", "name"], name: "index_pools_on_workspace_id_and_name"
     t.index ["workspace_id"], name: "index_pools_on_workspace_id"
+  end
+
+  create_table "price_list_items", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "package_id", null: false
+    t.bigint "pool_id"
+    t.integer "price", default: 0, null: false
+    t.date "effective_from"
+    t.date "effective_to"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["package_id", "pool_id", "effective_from"], name: "index_price_items_on_package_pool_from"
+    t.index ["package_id"], name: "index_price_list_items_on_package_id"
+    t.index ["pool_id"], name: "index_price_list_items_on_pool_id"
+    t.index ["workspace_id"], name: "index_price_list_items_on_workspace_id"
+  end
+
+  create_table "promotions", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "pool_id"
+    t.string "name", null: false
+    t.string "kind", default: "bonus_sessions", null: false
+    t.integer "value", default: 0, null: false
+    t.text "condition_note"
+    t.integer "stock"
+    t.string "status", default: "active", null: false
+    t.date "starts_on"
+    t.date "ends_on"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["pool_id"], name: "index_promotions_on_pool_id"
+    t.index ["workspace_id", "status"], name: "index_promotions_on_workspace_id_and_status"
+    t.index ["workspace_id"], name: "index_promotions_on_workspace_id"
   end
 
   create_table "push_subscriptions", force: :cascade do |t|
@@ -467,6 +552,9 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_000016) do
   add_foreign_key "broadcasts", "pools"
   add_foreign_key "broadcasts", "users", column: "created_by_id"
   add_foreign_key "broadcasts", "workspaces"
+  add_foreign_key "course_sessions", "courses"
+  add_foreign_key "course_sessions", "workspaces"
+  add_foreign_key "courses", "workspaces"
   add_foreign_key "face_profiles", "students"
   add_foreign_key "face_profiles", "workspaces"
   add_foreign_key "guardians", "households"
@@ -478,6 +566,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_000016) do
   add_foreign_key "notifications", "broadcasts"
   add_foreign_key "notifications", "workspaces"
   add_foreign_key "otp_challenges", "workspaces"
+  add_foreign_key "packages", "courses"
+  add_foreign_key "packages", "workspaces"
   add_foreign_key "pool_assignments", "pools"
   add_foreign_key "pool_assignments", "users"
   add_foreign_key "pool_assignments", "workspaces"
@@ -486,6 +576,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_000016) do
   add_foreign_key "pool_operating_hours", "pools"
   add_foreign_key "pool_operating_hours", "workspaces"
   add_foreign_key "pools", "workspaces"
+  add_foreign_key "price_list_items", "packages"
+  add_foreign_key "price_list_items", "pools"
+  add_foreign_key "price_list_items", "workspaces"
+  add_foreign_key "promotions", "pools"
+  add_foreign_key "promotions", "workspaces"
   add_foreign_key "push_subscriptions", "guardians"
   add_foreign_key "push_subscriptions", "users"
   add_foreign_key "push_subscriptions", "workspaces"

@@ -1,0 +1,20 @@
+<% content_for :page_title, "Sửa #{@student.name}" %>
+<div class="l-panel" style="max-width:640px;">
+  <%= form_with model: @student, url: merchant_ops_student_path(@student), method: :patch, data: { turbo: false } do |f| %>
+    <div style="margin-bottom:12px;"><%= f.label :name, "Họ tên", class: "l-label" %><%= f.text_field :name, class: "l-field" %></div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+      <div><%= f.label :birthdate, "Ngày sinh", class: "l-label" %><%= f.date_field :birthdate, class: "l-field" %></div>
+      <div><%= f.label :gender, "Giới tính", class: "l-label" %>
+        <%= f.select :gender, [["—", ""], ["Nam", "nam"], ["Nữ", "nữ"]], {}, class: "l-field" %></div>
+    </div>
+    <div style="margin-bottom:12px;"><%= f.label :health_notes, "Lưu ý sức khoẻ (giáo viên đọc được)", class: "l-label" %>
+      <%= f.text_area :health_notes, class: "l-field", rows: 2 %></div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px;">
+      <div><%= f.label :source, "Nguồn khách", class: "l-label" %><%= f.text_field :source, class: "l-field" %></div>
+      <div><%= f.label :status, "Trạng thái", class: "l-label" %>
+        <%= f.select :status, [["Đang học", "active"], ["Đã tốt nghiệp", "graduated"], ["Ngưng", "inactive"]], {}, class: "l-field" %></div>
+    </div>
+    <%= f.submit "Lưu", class: "l-btn l-btn-primary" %>
+    <%= link_to "Huỷ", merchant_ops_student_path(@student), class: "l-btn l-btn-ghost" %>
+  <% end %>
+</div>

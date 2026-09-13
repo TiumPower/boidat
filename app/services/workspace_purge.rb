@@ -6,6 +6,7 @@ class WorkspacePurge
   DELETE_ORDER = %w[
     audit_logs notifications push_subscriptions broadcasts
     biometric_consents face_profiles students guardians households
+    price_list_items promotions packages course_sessions courses
     teacher_pools teachers teacher_levels
     pool_assignments pool_holidays pool_operating_hours pools
     memberships invoices otp_challenges

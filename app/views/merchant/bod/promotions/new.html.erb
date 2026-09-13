@@ -1,0 +1,4 @@
+<% content_for :page_title, "Khuyến mãi mới" %>
+<div class="l-panel" style="max-width:760px;">
+  <%= render "merchant/bod/promotions/form", promotion: @promotion, url: merchant_bod_promotions_path, method: :post, submit_label: "Tạo" %>
+</div>

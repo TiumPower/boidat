@@ -1,0 +1,4 @@
+<% content_for :page_title, "Khoá học mới" %>
+<div class="l-panel" style="max-width:720px;">
+  <%= render "merchant/bod/courses/form", course: @course, url: merchant_bod_courses_path, method: :post, submit_label: "Tạo khoá" %>
+</div>

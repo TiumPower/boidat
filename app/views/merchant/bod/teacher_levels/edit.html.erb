@@ -1,0 +1,5 @@
+<% content_for :page_title, "Sửa #{@level.name}" %>
+<div class="l-panel" style="max-width:420px;">
+  <%= render "merchant/bod/teacher_levels/form", level: @level,
+        url: merchant_bod_teacher_level_path(@level), method: :patch, submit_label: "Lưu" %>
+</div>

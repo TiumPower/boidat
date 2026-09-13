@@ -135,6 +135,96 @@ ActsAsTenant.with_tenant(ws) do
   khoa.save!
   TeacherPool.find_or_create_by!(workspace: ws, teacher: khoa, pool: q7)
 
+
+  # ---- Khoá học & giáo án (FR-212) --------------------------------------
+  puts "→ Khoá học & giáo án"
+  # Giáo án 12 buổi của khoá cơ bản — lấy đúng chuỗi mục tiêu trong bộ UX.
+  BASIC_PLAN = [
+    ["Làm quen nước, thở bọt", "Hết sợ nước"],
+    ["Nổi ngửa có phao",       "Nổi 10 giây"],
+    ["Đạp chân tự do có phao", "Đạp 10m"],
+    ["Đạp chân không phao",    "Đạp 10m không phao"],
+    ["Quạt tay tự do",         "Phối hợp tay"],
+    ["Thở nghiêng",            "Thở không sặc nước"],
+    ["Phối hợp tay chân",      "Bơi 10m"],
+    ["Thở nghiêng + tay",      "Bơi 15m"],
+    ["Tăng cự ly tự do",       "Bơi 15m liên tục"],
+    ["Đạp chân ếch",           "Đạp đúng kỹ thuật"],
+    ["Ôn tập & an toàn nước",  "Đủ điều kiện thi"],
+    ["Thi tốt nghiệp",         "Bơi 25m liên tục"]
+  ].freeze
+
+  courses_data = [
+    { name: "Bơi cơ bản trẻ em", audience: "child",  class_types: [1, 2, 3, 4], plan: BASIC_PLAN },
+    { name: "Bơi ếch nâng cao",  audience: "child",  class_types: [1, 2, 3] },
+    { name: "Người lớn cơ bản",  audience: "adult",  class_types: [1, 2] },
+    { name: "Kỹ năng an toàn nước", audience: "child", class_types: [2, 3, 4] }
+  ]
+  courses = courses_data.map do |c|
+    course = Course.find_or_initialize_by(workspace: ws, name: c[:name])
+    course.assign_attributes(audience: c[:audience], class_types: c[:class_types], status: "active")
+    course.save!
+    course.ensure_session_plan!
+    if c[:plan]
+      c[:plan].each_with_index do |(title, goal), i|
+        cs = CourseSession.find_by(workspace: ws, course: course, position: i + 1)
+        cs&.update!(title: title, goal: goal, exam: (i + 1) == course.exam_session)
+      end
+    end
+    course
+  end
+  basic = courses.first
+
+  # ---- Gói sản phẩm & bảng giá (FR-213, FR-214) -------------------------
+  puts "→ Gói sản phẩm & bảng giá"
+  packages_data = [
+    { name: "Khoá 12 buổi trẻ em 1:1", kind: "full_course", course: basic, class_type: 1, sessions: 12,
+      price: 9_600_000, description: "Kèm riêng · hạn dùng 1 năm · có thi tốt nghiệp" },
+    { name: "Khoá 12 buổi trẻ em 1:2", kind: "full_course", course: basic, class_type: 2, sessions: 12,
+      price: 4_800_000, description: "Hạn dùng 1 năm · có thi tốt nghiệp" },
+    { name: "Khoá 12 buổi trẻ em 1:3", kind: "full_course", course: basic, class_type: 3, sessions: 12,
+      price: 3_600_000, description: "Lớp nhóm 3 bạn" },
+    { name: "Khoá 12 buổi trẻ em 1:4", kind: "full_course", course: basic, class_type: 4, sessions: 12,
+      price: 3_000_000, description: "Lớp nhóm 4 bạn" },
+    { name: "Gói lẻ 4 buổi", kind: "per_session", course: basic, class_type: 2, sessions: 4,
+      price: 1_800_000, validity_days: 180, description: "Linh hoạt giờ · hạn 6 tháng" },
+    { name: "Vé bơi tự do", kind: "day_pass", course: nil, class_type: nil, sessions: 1,
+      price: 80_000, validity_days: 1, description: "Dùng 1 lần · QR một lần, không cần đăng ký khuôn mặt" },
+    { name: "Thuê hồ theo giờ", kind: "pool_rental", course: nil, class_type: nil, sessions: nil,
+      price: 300_000, description: "Giáo viên ngoài thuê giờ dạy học viên của họ" }
+  ]
+  packages_data.each_with_index do |p, idx|
+    pkg = Package.find_or_initialize_by(workspace: ws, name: p[:name])
+    pkg.assign_attributes(kind: p[:kind], course: p[:course], class_type: p[:class_type],
+                          sessions: p[:sessions], validity_days: p[:validity_days],
+                          description: p[:description], status: "active", position: idx)
+    pkg.save!
+    unless pkg.price_list_items.exists?
+      PriceListItem.create!(workspace: ws, package: pkg, pool: nil, price: p[:price],
+                            effective_from: Date.current.beginning_of_year)
+    end
+  end
+
+  # ---- Khuyến mãi (OQ-17) -----------------------------------------------
+  puts "→ Khuyến mãi"
+  promos = [
+    { name: "Tặng 1 buổi khi đăng ký khoá 12 buổi", kind: "bonus_sessions", value: 1,
+      condition_note: "Áp dụng học viên mới · tháng 9" },
+    { name: "Giảm 10% khi tái ký trong 30 ngày", kind: "percent_off", value: 10,
+      condition_note: "Tự gợi ý khi học viên còn ≤2 buổi" },
+    { name: "Ưu đãi anh chị em ruột", kind: "sibling", value: 5,
+      condition_note: "Từ học viên thứ 2 cùng gia đình" },
+    { name: "Quà tặng: kính bơi + mũ", kind: "gift", value: 0, stock: 24,
+      condition_note: "Khoá 1:1 · trao tại quầy buổi đầu" },
+    { name: "Voucher giới thiệu bạn", kind: "referral_voucher", value: 200_000,
+      condition_note: "Người giới thiệu nhận sau khi bạn đóng đủ" }
+  ]
+  promos.each do |pr|
+    promo = Promotion.find_or_initialize_by(workspace: ws, name: pr[:name])
+    promo.assign_attributes(pr.merge(status: "active"))
+    promo.save!
+  end
+
   # ---- Hộ gia đình & học viên (FR-206, FR-204) --------------------------
   puts "→ Hộ gia đình & học viên"
   households_data = [
@@ -220,7 +310,8 @@ ActsAsTenant.with_tenant(ws) do
     st.save!
   end
 
-  puts "   #{Pool.count} hồ · #{Teacher.count} giáo viên · #{Household.count} hộ · #{Student.count} học viên"
+  puts "   #{Pool.count} hồ · #{Teacher.count} giáo viên · #{Course.count} khoá · #{Package.count} gói · " \
+       "#{Household.count} hộ · #{Student.count} học viên"
 end
 
 puts <<~INFO

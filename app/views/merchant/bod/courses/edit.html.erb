@@ -1,0 +1,4 @@
+<% content_for :page_title, "Sửa #{@course.name}" %>
+<div class="l-panel" style="max-width:720px;">
+  <%= render "merchant/bod/courses/form", course: @course, url: merchant_bod_course_path(@course), method: :patch, submit_label: "Lưu" %>
+</div>

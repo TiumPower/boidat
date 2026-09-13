@@ -54,7 +54,6 @@ Rails.application.routes.draw do
       root "dashboard#show"
       get  "reports", to: "reports#index", as: :reports
       resources :pools do
-        resources :operating_hours, only: [:index, :create, :update, :destroy]
         resources :holidays, only: [:create, :destroy]
         member { patch :assign_staff }
       end
@@ -63,6 +62,13 @@ Rails.application.routes.draw do
       end
       resources :teachers, only: [:index, :show, :new, :create, :edit, :update]
       resources :teacher_levels, path: "levels", except: [:show]
+      resources :courses do
+        member { post :generate_plan }
+      end
+      resources :packages, path: "packages" do
+        resources :prices, only: [:create, :destroy], controller: "price_list_items"
+      end
+      resources :promotions, except: [:show]
       get   "settings", to: "settings#edit",   as: :settings
       patch "settings", to: "settings#update"
       get   "appearance", to: "appearance#edit", as: :appearance
@@ -78,6 +84,7 @@ Rails.application.routes.draw do
         member { post :reissue_qr }
       end
       resources :teachers, only: [:index, :show]
+      resources :packages, only: [:index]   # sale tra bảng giá khi chốt lịch
       resources :audit_logs, path: "audit", only: [:index]
     end
 

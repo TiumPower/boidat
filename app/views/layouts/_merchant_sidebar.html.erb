@@ -47,6 +47,15 @@
     <%= link_to merchant_bod_teachers_path, class: "l-nav-item #{'active' if nav == :teachers}" do %>
       <span>🎓</span><span>Giáo viên</span>
     <% end %>
+    <div class="l-navgrp">Sản phẩm</div>
+    <%= link_to merchant_bod_courses_path, class: "l-nav-item #{'active' if nav == :courses}" do %>
+      <span>📘</span><span>Khoá học &amp; giáo án</span>
+    <% end %>
+    <%= link_to merchant_bod_packages_path, class: "l-nav-item #{'active' if nav == :packages}" do %>
+      <span>🏷</span><span>Gói &amp; bảng giá</span>
+    <% end %>
+
+    <div class="l-navgrp">Cấu hình</div>
     <%= link_to merchant_bod_settings_path, class: "l-nav-item #{'active' if nav == :settings}" do %>
       <span>⚙️</span><span>Cấu hình hệ thống</span>
     <% end %>
@@ -66,6 +75,9 @@
     <% end %>
     <%= link_to merchant_ops_teachers_path, class: "l-nav-item #{'active' if nav == :teachers}" do %>
       <span>🎓</span><span>Giáo viên &amp; chấm công</span>
+    <% end %>
+    <%= link_to merchant_ops_packages_path, class: "l-nav-item #{'active' if nav == :packages}" do %>
+      <span>🏷</span><span>Gói &amp; bảng giá</span>
     <% end %>
     <%= link_to merchant_ops_audit_logs_path, class: "l-nav-item #{'active' if nav == :audit}" do %>
       <span>🧾</span><span>Nhật ký thao tác</span>

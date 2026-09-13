@@ -15,6 +15,9 @@ class Workspace < ApplicationRecord
   has_many :pools, dependent: :destroy
   has_many :teacher_levels, dependent: :destroy
   has_many :teachers, dependent: :destroy
+  has_many :courses, dependent: :destroy
+  has_many :packages, dependent: :destroy
+  has_many :promotions, dependent: :destroy
   has_many :households, dependent: :destroy
   has_many :guardians, dependent: :destroy
   has_many :students, dependent: :destroy

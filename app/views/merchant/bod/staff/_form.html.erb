@@ -1,0 +1,52 @@
+<%= form_with model: user, url: url, method: method, data: { turbo: false } do |f| %>
+  <% if user.errors.any? %>
+    <div class="l-chip" style="background:#FBECEC; color:#9B2C2C; display:block; margin-bottom:14px;">
+      <%= user.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+
+  <div style="display:grid; grid-template-columns:2fr 1fr; gap:12px; margin-bottom:12px;">
+    <div><%= f.label :name, "Họ tên", class: "l-label" %><%= f.text_field :name, class: "l-field" %></div>
+    <div><%= f.label :title, "Kính ngữ", class: "l-label" %>
+      <%= f.select :title, [["—", ""], ["Thầy", "Thầy"], ["Cô", "Cô"]], {}, class: "l-field" %></div>
+  </div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+    <div><%= f.label :email, "Email đăng nhập", class: "l-label" %><%= f.email_field :email, class: "l-field" %></div>
+    <div><%= f.label :phone, "Số điện thoại", class: "l-label" %><%= f.text_field :phone, class: "l-field" %></div>
+  </div>
+
+  <% if new_record %>
+    <div style="margin-bottom:12px;">
+      <%= f.label :password, "Mật khẩu (để trống sẽ tự sinh)", class: "l-label" %>
+      <%= text_field_tag "user[password]", nil, class: "l-field" %>
+      <div style="font-size:12px; color:var(--ink-2); margin-top:4px;">
+        Hệ thống không gửi email kích hoạt — bạn gửi mật khẩu cho nhân sự qua kênh riêng,
+        họ tự đổi lại trong hồ sơ cá nhân.
+      </div>
+    </div>
+  <% end %>
+
+  <div style="margin-bottom:12px;">
+    <%= label_tag :role, "Vai trò", class: "l-label" %>
+    <%= select_tag :role,
+          options_for_select(Merchant::Bod::StaffController::ASSIGNABLE_ROLES.map { |r| [Membership::ROLE_LABELS[r], r] }, role),
+          class: "l-field" %>
+    <div style="font-size:12px; color:var(--ink-2); margin-top:4px;">
+      Không có vai trò Ban giám đốc trong danh sách — chỉ Super Admin nền tảng tạo được BOD.
+    </div>
+  </div>
+
+  <div style="margin-bottom:18px;">
+    <div class="l-label">Hồ được gán</div>
+    <div style="display:flex; flex-wrap:wrap; gap:12px;">
+      <% accessible_pools.each do |pool| %>
+        <label style="display:flex; align-items:center; gap:7px; font-size:13.5px;">
+          <%= check_box_tag "pool_ids[]", pool.id, pool_ids.include?(pool.id) %> <%= pool.name %>
+        </label>
+      <% end %>
+    </div>
+  </div>
+
+  <%= f.submit submit_label, class: "l-btn l-btn-primary" %>
+  <%= link_to "Huỷ", merchant_bod_staff_index_path, class: "l-btn l-btn-ghost" %>
+<% end %>

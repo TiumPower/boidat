@@ -1,0 +1,19 @@
+<%= form_with model: pool, url: url, method: method, data: { turbo: false } do |f| %>
+  <% if pool.errors.any? %>
+    <div class="l-chip" style="background:#FBECEC; color:#9B2C2C; display:block; margin-bottom:14px;">
+      <%= pool.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+  <div style="display:grid; grid-template-columns:2fr 1fr; gap:12px; margin-bottom:12px;">
+    <div><%= f.label :name, "Tên hồ", class: "l-label" %><%= f.text_field :name, class: "l-field", placeholder: "Hồ Quận 7" %></div>
+    <div><%= f.label :code, "Mã ngắn", class: "l-label" %><%= f.text_field :code, class: "l-field", placeholder: "Q7" %></div>
+  </div>
+  <div style="margin-bottom:12px;"><%= f.label :address, "Địa chỉ", class: "l-label" %><%= f.text_field :address, class: "l-field" %></div>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px;">
+    <div><%= f.label :phone, "Số điện thoại", class: "l-label" %><%= f.text_field :phone, class: "l-field" %></div>
+    <div><%= f.label :status, "Trạng thái", class: "l-label" %>
+      <%= f.select :status, [["Đang hoạt động", "active"], ["Tạm dừng", "paused"], ["Đã đóng", "closed"]], {}, class: "l-field" %></div>
+  </div>
+  <%= f.submit submit_label, class: "l-btn l-btn-primary" %>
+  <%= link_to "Huỷ", merchant_bod_pools_path, class: "l-btn l-btn-ghost" %>
+<% end %>

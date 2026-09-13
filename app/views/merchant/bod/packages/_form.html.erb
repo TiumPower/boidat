@@ -1,0 +1,28 @@
+<%= form_with model: package, url: url, method: method, data: { turbo: false } do |f| %>
+  <% if package.errors.any? %>
+    <div class="l-chip" style="background:#FBECEC; color:#9B2C2C; display:block; margin-bottom:14px;">
+      <%= package.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+  <div style="display:grid; grid-template-columns:2fr 1fr; gap:12px; margin-bottom:12px;">
+    <div><%= f.label :name, "Tên gói", class: "l-label" %><%= f.text_field :name, class: "l-field", placeholder: "Khoá 12 buổi trẻ em 1:2" %></div>
+    <div><%= f.label :kind, "Loại gói", class: "l-label" %>
+      <%= f.select :kind, Package::KINDS.map { |k| [Package::KIND_LABELS[k], k] }, {}, class: "l-field" %></div>
+  </div>
+  <div style="display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:12px; margin-bottom:12px;">
+    <div><%= f.label :course_id, "Khoá học", class: "l-label" %>
+      <%= f.collection_select :course_id, Course.active.ordered, :id, :name, { include_blank: "— không gắn khoá —" }, class: "l-field" %></div>
+    <div><%= f.label :class_type, "Loại lớp", class: "l-label" %>
+      <%= f.select :class_type, (1..4).map { |n| ["1:#{n}", n] }, { include_blank: "—" }, class: "l-field" %></div>
+    <div><%= f.label :sessions, "Số buổi", class: "l-label" %><%= f.number_field :sessions, class: "l-field" %></div>
+    <div><%= f.label :validity_days, "Hạn dùng (ngày)", class: "l-label" %>
+      <%= f.number_field :validity_days, class: "l-field", placeholder: current_workspace.package_validity_days %></div>
+  </div>
+  <div style="margin-bottom:12px;"><%= f.label :description, "Mô tả bán hàng", class: "l-label" %>
+    <%= f.text_area :description, class: "l-field", rows: 2, placeholder: "Hạn dùng 1 năm · có thi tốt nghiệp" %></div>
+  <div style="margin-bottom:18px;"><%= f.label :status, "Trạng thái", class: "l-label" %>
+    <%= f.select :status, [["Đang bán", "active"], ["Tạm dừng", "paused"]], {}, class: "l-field" %></div>
+
+  <%= f.submit submit_label, class: "l-btn l-btn-primary" %>
+  <%= link_to "Huỷ", merchant_bod_packages_path, class: "l-btn l-btn-ghost" %>
+<% end %>

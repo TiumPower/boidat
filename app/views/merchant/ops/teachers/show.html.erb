@@ -1,0 +1,25 @@
+<% content_for :page_title, @teacher.display_name %>
+<% content_for :page_sub, @teacher.renter? ? "Thuê hồ" : @teacher.level_label %>
+<% content_for :back do %><%= link_to "← Giáo viên", merchant_ops_teachers_path, class: "l-btn l-btn-ghost", style: "padding:6px 12px; font-size:13px;" %><% end %>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start;">
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:12px;">Hồ sơ</div>
+    <table class="l-table">
+      <tbody>
+        <tr><td style="color:var(--ink-2);">Điện thoại</td><td><%= @teacher.phone %></td></tr>
+        <tr><td style="color:var(--ink-2);">Chuyên môn</td><td><%= @teacher.specialty %></td></tr>
+        <tr><td style="color:var(--ink-2);">Kinh nghiệm</td><td><%= @teacher.years_experience %> năm</td></tr>
+        <tr><td style="color:var(--ink-2);">Tối đa mỗi tiết</td><td><%= @teacher.capacity %> học viên</td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:13px; color:var(--ink-2); margin-top:12px;"><%= @teacher.bio %></p>
+  </div>
+  <div class="l-panel" style="background:var(--surface-2);">
+    <div style="font-weight:700; margin-bottom:6px;">Chấm công & đơn xin nghỉ</div>
+    <p style="font-size:13.5px; color:var(--ink-2); margin:0;">
+      Bảng công tự tính từ dữ liệu điểm danh (P3) và màn hình duyệt đơn xin nghỉ (P6)
+      sẽ hiển thị tại đây.
+    </p>
+  </div>
+</div>
