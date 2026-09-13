@@ -417,6 +417,19 @@ ActsAsTenant.with_tenant(ws) do
               class_type: 2, weekdays: [5], hour: 19, start_date: 3.weeks.ago.to_date.beginning_of_week,
               students: [by_name["Phạm Quốc Duy"]], used: 5)
 
+  # Lớp cuối tuần. Hai lý do, cả hai đều là lỗi thật đã gặp khi demo:
+  #
+  # 1. Không lớp nào chạy Chủ nhật, mà cả ba hồ đều mở 7 ngày. Ai mở bản demo
+  #    vào Chủ nhật sẽ thấy PWA quầy và PWA giáo viên trống trơn — đúng hai màn
+  #    hình người ta bấm vào đầu tiên. Cuối tuần vốn là giờ vàng của lớp trẻ em,
+  #    nên không có lớp cuối tuần vừa sai nghiệp vụ vừa hỏng demo.
+  # 2. Không có lớp 1:4 nào ĐANG DẠY (lớp 1:4 duy nhất là giờ thuê hồ, không
+  #    chấm công), nên quyết định OQ-05 "lớp 1:4 = 2.0 công" không kiểm chứng
+  #    được trên màn hình bảng công.
+  open_class!(ws: ws, pool: q7, teacher: tuan, course: basic_course, package: pkg_1v3,
+              class_type: 3, weekdays: [0, 6], hour: 8, start_date: 4.weeks.ago.to_date.beginning_of_week,
+              students: [by_name["Ngô Bảo An"], by_name["Đặng Hà My"], by_name["Vũ Anh Thư"]], used: 4)
+
   # Lớp ở hai hồ còn lại — để chuyển hồ trên sidebar là thấy dữ liệu ngay.
   td_by_name = Student.where(pool: thu_duc, kind: "center").index_by(&:name)
   gv_by_name = Student.where(pool: go_vap, kind: "center").index_by(&:name)
@@ -441,6 +454,16 @@ ActsAsTenant.with_tenant(ws) do
   open_class!(ws: ws, pool: go_vap, teacher: phuc, course: basic_course, package: pkg_1v2,
               class_type: 2, weekdays: [1, 4], hour: 19, start_date: 11.weeks.ago.to_date.beginning_of_week,
               students: [gv_by_name["Lê Nam Phong"], gv_by_name["Ngô Bảo Trâm"]], used: 11)
+
+  # Lớp 1:4 thật (có chấm công) ở Gò Vấp — Thầy Phúc là Level 4 nên đủ quyền
+  # dạy 4 học viên/tiết; BR-04 chặn cứng nếu xếp giáo viên level thấp hơn.
+  pkg_1v4 = Package.find_by(name: "Khoá 12 buổi trẻ em 1:4")
+  if pkg_1v4
+    open_class!(ws: ws, pool: go_vap, teacher: phuc, course: basic_course, package: pkg_1v4,
+                class_type: 4, weekdays: [0, 6], hour: 9, start_date: 5.weeks.ago.to_date.beginning_of_week,
+                students: [gv_by_name["Phan Linh Đan"], gv_by_name["Trương Quốc Bảo"],
+                           gv_by_name["Lê Nam Phong"], gv_by_name["Ngô Bảo Trâm"]].compact, used: 6)
+  end
 
   # Giờ giáo viên thuê hồ chiếm chỗ trên bảng lịch (FR-225) — không chấm công,
   # không giáo án, chỉ để slot đó hiện là "đã bận".
