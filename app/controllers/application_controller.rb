@@ -20,7 +20,19 @@ class ApplicationController < ActionController::Base
        %w[POST PUT PATCH DELETE].include?(request.request_method)
       response_options[:status] = :see_other
     end
+    # Đăng nhập xong là nhảy sang subdomain của trung tâm (mỗi workspace một
+    # subdomain), mà Rails 7 chặn mọi redirect khác host. Chỉ mở đúng cho các
+    # host thuộc nền tảng của mình — không nới cho host lạ.
+    response_options[:allow_other_host] = true if own_platform_url?(options)
     super
+  end
+
+  def own_platform_url?(target)
+    return false unless target.is_a?(String) && target.start_with?("http")
+    host = URI.parse(target).host
+    host.present? && (host == PLATFORM_HOST || host.end_with?(".#{PLATFORM_HOST}"))
+  rescue URI::InvalidURIError
+    false
   end
 
   # Base platform host (no subdomain), e.g. "loyalty.czin.net".
