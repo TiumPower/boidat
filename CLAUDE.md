@@ -23,6 +23,20 @@
   PRODUCTION mà dev không tái hiện được. `customer_subdomain_test.rb` chạy ở chế độ
   subdomain chính là để bắt lỗi này.
 
+- **Mã QR là của TỪNG người giám hộ**, không phải của hộ. Chủ hộ và người đưa
+  đón có quyền khác nhau (OQ-03); dùng chung một mã thì không thể biết ai đang
+  quét, và mọi phân quyền theo người trở thành vô nghĩa. Mã cấp hộ vẫn nhận để
+  link cũ không chết, nhưng nó dẫn về chủ hộ.
+- **Đo N+1 phải `clear_query_cache` trước mỗi lần đếm.** Query cache của Rails
+  sống xuyên các request trong cùng một integration test, nên lần GET thứ hai
+  ăn cache sạch và phép đo trả về 0 — bộ đo xanh rờn trong khi không đo gì cả.
+- **Seed không được gán `external_ref` cho FaceProfile.** `registered?` chính là
+  `external_ref.present?`, tức là lời khai "vector này có thật trong face
+  service". Khai khống thì quầy quét mãi không ra mà không ai hiểu vì sao.
+- **Controller Stimulus nạp kiểu eager toàn bộ.** Thêm file vào
+  `app/javascript/controllers/` là nó tải trên MỌI trang của cả năm cổng, kể cả
+  PWA chạy 4G. Đừng để lại controller không dùng.
+
 ## Quy ước phải giữ
 
 - Mọi truy vấn nghiệp vụ đi qua `pool_scope(...)` hoặc lọc `pool_id` tường minh.

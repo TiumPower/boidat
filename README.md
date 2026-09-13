@@ -173,6 +173,31 @@ Ba ràng buộc cài trong `SelfEnrollmentOptions` và `RegistrationForm`:
 Đơn sinh ra mang `kind: renewal`, và sale/admin ở hồ đó nhận thông báo ngay —
 tái ký là doanh thu, không để tới lúc đối soát mới biết.
 
+## Kết quả rà soát toàn hệ thống (14/09/2026)
+
+Đã rà trên chính production, không phải môi trường dev. Sáu lỗi tìm được và đã sửa:
+
+| Lỗi | Vì sao nó quan trọng |
+|---|---|
+| Mã QR là của cả hộ, ai quét cũng thành chủ hộ | Người đưa đón cầm đúng mã ấy là đọc được toàn bộ hoá đơn — OQ-03 chỉ còn là cái nhãn |
+| `chatroom_controller` bê từ Estate, thiếu target | Chat phụ huynh (FR-407) chết hoàn toàn, đỏ console mọi lần mở |
+| 47/55 Stimulus controller là rác của Loyalty/Estate | Tải hết trên mọi trang, kể cả PWA lễ tân dùng 4G ở hồ bơi |
+| Icon PWA là toà chung cư của Estate | Ba PWA cài lên điện thoại với logo sai ngành |
+| Không khai favicon/apple-touch-icon | 404 trên mọi trang; iOS lấy ảnh chụp màn hình làm icon |
+| Seed khai `external_ref` mà chưa có vector | Rails bảo đã đăng ký, service thì rỗng — quét mãi không ra |
+
+Các hạng mục đã kiểm và **đạt**: phân quyền năm vai trò · cách ly giữa các hồ
+(truy cập thẳng bằng ID trả 404, không lộ cả sự tồn tại) · cách ly giữa các
+trung tâm (dựng trung tâm thứ hai để thử, không rò rỉ) · 17 phép kiểm toàn vẹn
+dữ liệu tiền–buổi–công · quét mặt điểm danh đầu-cuối · FR-234 service chết
+quầy vẫn sống · Sidekiq 0 job lỗi · 57 trang của năm cổng trả 200 · thời gian
+phản hồi dưới 400ms · không có N+1 trên các màn hình danh sách.
+
+Còn lại chưa xử lý, đều là dọn dẹp chứ không phải lỗi: `AppSetting` là model
+chết, và hai file locale còn ~2.400 dòng chuỗi của Estate trong khi app chỉ
+dùng 33 khoá — không cắt vì Rails dùng ngầm rất nhiều khoá (thông báo lỗi,
+định dạng ngày) nên cắt ẩu là hỏng thứ khác.
+
 ## Còn lại
 
 Ba điểm OQ chặn EPIC chấm công đều đã được khách chốt ngày 13/09/2026. Các điểm
