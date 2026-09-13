@@ -1,6 +1,8 @@
 module Customer
   # Hai cách vào cổng phụ huynh (FR-401, UX phụ huynh màn 1):
-  #   1. Quét mã QR của hộ gia đình — không cần mật khẩu, phiên không hết hạn.
+  #   1. Quét mã QR cá nhân của người giám hộ — không cần mật khẩu, phiên không
+  #      hết hạn. Mã của TỪNG NGƯỜI, không phải của cả hộ: chủ hộ và người đưa
+  #      đón có quyền khác nhau (OQ-03) nên phải phân biệt được ai đang quét.
   #   2. Người lớn tự học: số điện thoại + OTP.
   class SessionsController < BaseController
     before_action :require_workspace!, except: [:destroy]
@@ -17,8 +19,11 @@ module Customer
         start_phone_login
       else
         token = extract_token(params[:qr_token])
-        household = Household.find_by(qr_token: token) if token.present?
-        if household&.qr_active?
+        guardian  = Guardian.find_by(qr_token: token) if token.present?
+        household = Household.find_by(qr_token: token) if token.present? && guardian.nil?
+        if guardian&.qr_active?
+          sign_in_guardian_and_go(guardian)
+        elsif household&.qr_active?
           sign_in_household(household)
         else
           flash.now[:alert] = "Mã QR không hợp lệ hoặc đã bị thu hồi. Liên hệ trung tâm để cấp lại."
@@ -29,7 +34,17 @@ module Customer
     end
 
     # Quét QR trực tiếp bằng camera → điều hướng tới /q/:token.
+    # Mã QR là của TỪNG NGƯỜI giám hộ. Trước đây một hộ chỉ có một mã, và ai
+    # quét cũng được đăng nhập thành chủ hộ — nên người đưa đón cầm đúng mã ấy
+    # là đọc được toàn bộ hoá đơn, khiến OQ-03 chỉ còn là cái nhãn trên màn hình.
+    # Mã của hộ vẫn nhận, để những link đã phát ra không chết, và nó dẫn về chủ hộ.
     def qr
+      guardian = Guardian.find_by(qr_token: params[:qr_token])
+      if guardian
+        return redirect_to(member_login_path, alert: "Mã QR đã bị thu hồi.") unless guardian.qr_active?
+        return sign_in_guardian_and_go(guardian)
+      end
+
       household = Household.find_by(qr_token: params[:qr_token])
       if household&.qr_active?
         sign_in_household(household)
@@ -85,12 +100,16 @@ module Customer
       redirect_to member_verify_path
     end
 
-    # Ai cầm QR cũng vào được (OQ-02) — phiên gắn với chủ hộ của hộ đó.
+    # Mã cũ ở cấp hộ vẫn dùng được để link đã phát ra không chết; nó dẫn về chủ hộ.
     def sign_in_household(household)
       guardian = household.owner
       if guardian.nil?
         return redirect_to(member_login_path, alert: "Hộ gia đình này chưa có người giám hộ.")
       end
+      sign_in_guardian_and_go(guardian)
+    end
+
+    def sign_in_guardian_and_go(guardian)
       sign_in_guardian(guardian)
       redirect_to (session.delete(:return_to).presence || member_root_path),
                   notice: "Chào #{guardian.name} 👋"

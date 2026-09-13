@@ -15,16 +15,28 @@ module Merchant
 
       def show
         @students = @household.students.includes(:pool, :face_profile).to_a
-        @qr_url = member_qr_login_url(qr_token: @household.qr_token, host: request.host_with_port,
-                                      protocol: request.protocol, workspace_slug: current_workspace.slug)
+        # Một mã cho mỗi người giám hộ: quyền của chủ hộ và người đưa đón khác
+        # nhau (OQ-03), mà dùng chung một mã thì không thể biết ai đang quét.
+        @qr_urls = @household.guardians.to_h do |g|
+          [g.id, member_qr_login_url(qr_token: g.qr_token, host: request.host_with_port,
+                                     protocol: request.protocol, workspace_slug: current_workspace.slug)]
+        end
       end
 
-      # Cấp lại QR: mã cũ mất hiệu lực ngay, mọi phiên đang mở phải quét lại.
+      # Cấp lại QR: mã cũ mất hiệu lực ngay, người đó phải quét lại mã mới.
       def reissue_qr
-        @household.reissue_qr!
-        audit!("update", @household, summary: "Cấp lại mã QR cho #{@household.name}")
-        redirect_to merchant_ops_household_path(@household),
-                    notice: "Đã cấp mã QR mới. Mã cũ không dùng được nữa."
+        guardian = @household.guardians.find_by(id: params[:guardian_id])
+        if guardian
+          guardian.reissue_qr!
+          audit!("update", @household, summary: "Cấp lại mã QR cho #{guardian.name} (#{@household.name})")
+          notice = "Đã cấp mã QR mới cho #{guardian.name}. Mã cũ không dùng được nữa."
+        else
+          @household.reissue_qr!
+          @household.guardians.each(&:reissue_qr!)
+          audit!("update", @household, summary: "Cấp lại toàn bộ mã QR của #{@household.name}")
+          notice = "Đã cấp mã QR mới cho cả nhà. Mã cũ không dùng được nữa."
+        end
+        redirect_to merchant_ops_household_path(@household), notice: notice
       end
 
       private

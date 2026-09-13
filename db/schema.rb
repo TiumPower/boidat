@@ -316,7 +316,11 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_500001) do
     t.datetime "last_seen_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "qr_token", null: false
+    t.datetime "qr_issued_at"
+    t.datetime "qr_revoked_at"
     t.index ["household_id"], name: "index_guardians_on_household_id"
+    t.index ["qr_token"], name: "index_guardians_on_qr_token", unique: true
     t.index ["workspace_id", "phone"], name: "index_guardians_on_workspace_id_and_phone"
     t.index ["workspace_id"], name: "index_guardians_on_workspace_id"
   end
