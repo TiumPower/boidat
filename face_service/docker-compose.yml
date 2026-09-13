@@ -1,0 +1,35 @@
+# Chạy face service kèm Postgres+pgvector riêng. Cả hai chỉ bind 127.0.0.1 —
+# service này không bao giờ được lộ ra Internet.
+services:
+  face-db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: boidat_face
+      POSTGRES_USER: boidat
+      POSTGRES_PASSWORD: ${FACE_DB_PASSWORD:-boidat}
+    volumes:
+      - face-db-data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U boidat -d boidat_face"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  face-service:
+    build: .
+    depends_on:
+      face-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://boidat:${FACE_DB_PASSWORD:-boidat}@face-db:5432/boidat_face
+      FACE_SERVICE_SECRET: ${FACE_SERVICE_SECRET:?bắt buộc phải đặt, dùng chung với Rails}
+      MATCH_THRESHOLD: ${MATCH_THRESHOLD:-0.42}
+      LIVENESS_ENABLED: ${LIVENESS_ENABLED:-true}
+    ports:
+      - "127.0.0.1:8008:8008"
+    restart: unless-stopped
+
+volumes:
+  face-db-data:

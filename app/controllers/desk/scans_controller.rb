@@ -10,6 +10,42 @@ module Desk
       @candidates = @query.length >= 2 ? lookup_students(@query) : []
       @match = params[:student_id].present? ? find_student(params[:student_id]) : nil
       @context = @match ? StudentCheckInContext.new(student: @match, pool: current_pool).call : nil
+      @face_ready = FaceClient.new.healthy?
+      @score = params[:score]
+    end
+
+    # Nhận ảnh từ camera của PWA và tra cứu bằng service nhận diện.
+    #
+    # Trả JSON để màn hình quét cập nhật tại chỗ, không nạp lại trang giữa lúc
+    # camera đang mở. Service chết thì trả `fallback: true` để PWA chuyển sang
+    # ô tra cứu theo tên — quầy không bao giờ được đứng vì service.
+    def identify
+      image = decode_image(params[:image])
+      return render(json: { ok: false, error: "Ảnh không hợp lệ" }, status: :bad_request) if image.nil?
+
+      client = FaceClient.new
+      matches = client.search(workspace_id: current_workspace.id, image: image, top_k: 3)
+      if matches.empty?
+        record_scan_failure
+        return render json: { ok: false, fallback: !client.healthy?,
+                              error: "Không nhận ra khuôn mặt. Thử lại hoặc tra cứu theo tên." }
+      end
+
+      top = matches.first
+      student = Student.find_by(id: top.student_id)
+      return render(json: { ok: false, error: "Không tìm thấy hồ sơ học viên." }) if student.nil?
+
+      student.face_profile&.record_scan!(success: top.score >= current_workspace.face_match_threshold)
+
+      if top.score < current_workspace.face_match_threshold
+        # Vùng xám: đủ giống để gợi ý nhưng chưa đủ chắc để tự điểm danh — bắt
+        # lễ tân xác nhận bằng mắt thay vì trừ buổi của nhầm người.
+        render json: { ok: true, needs_confirm: true, score: top.score,
+                       redirect: desk_scan_path(student_id: student.id, score: top.score) }
+      else
+        render json: { ok: true, score: top.score,
+                       redirect: desk_scan_path(student_id: student.id, score: top.score) }
+      end
     end
 
     # Xác nhận điểm danh → trừ đúng 1 buổi (FR-233).
@@ -57,6 +93,23 @@ module Desk
     private
 
     def nav_key = :attendance
+
+    def decode_image(data_url)
+      return nil if data_url.blank?
+      encoded = data_url.include?(",") ? data_url.split(",", 2).last : data_url
+      raw = Base64.decode64(encoded)
+      raw.presence
+    rescue StandardError
+      nil
+    end
+
+    # Quét trượt cũng là dữ liệu: tỷ lệ trượt cao ở một hồ nghĩa là ánh sáng
+    # quầy có vấn đề, còn cao ở một học viên nghĩa là ảnh của em đó đã cũ.
+    def record_scan_failure
+      AuditLog.record!(action: "read_sensitive", entity: current_pool, user: current_user,
+                       pool: current_pool, summary: "Quét khuôn mặt không ra kết quả",
+                       request: request)
+    end
 
     # NGOẠI LỆ CÓ CHỦ ĐÍCH (FR-235): tra cứu chạy trên toàn bộ học viên của
     # trung tâm, KHÔNG lọc theo hồ đang trực — quét ở quầy nào cũng ra. Nhưng

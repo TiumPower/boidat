@@ -1,0 +1,20 @@
+# Service nhận diện khuôn mặt — chạy CPU, không cần GPU.
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+pydantic-settings==2.7.0
+
+# InsightFace: buffalo_l = SCRFD (phát hiện) + w600k_r50 (embedding 512 chiều).
+# onnxruntime bản CPU — đủ nhanh cho quy mô một trung tâm (xem README).
+insightface==0.7.3
+onnxruntime==1.20.1
+numpy==1.26.4
+opencv-python-headless==4.10.0.84
+
+# pgvector trên Postgres: lưu vector bền vững, lọc được theo workspace, và
+# không phải rebuild index trong RAM mỗi lần khởi động như FAISS.
+psycopg[binary]==3.2.3
+pgvector==0.3.6
+SQLAlchemy==2.0.36
+
+python-multipart==0.0.20

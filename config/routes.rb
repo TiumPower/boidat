@@ -132,7 +132,8 @@ Rails.application.routes.draw do
     get  "shift",        to: "attendance#index", as: :shift
     post "select-pool/:pool_id", to: "attendance#select_pool", as: :select_pool
     get  "scan",         to: "scans#new",     as: :scan
-    post "scan",         to: "scans#create"                     # gửi ảnh khuôn mặt
+    post "scan",          to: "scans#create"                    # xác nhận điểm danh
+    post "scan/identify", to: "scans#identify", as: :scan_identify  # gửi ảnh, nhận kết quả nhận diện
     post "scan/ticket",  to: "scans#ticket",  as: :scan_ticket   # quét vé lẻ QR một lần
     post "push/subscribe", to: "push#subscribe", as: :push_subscribe
   end

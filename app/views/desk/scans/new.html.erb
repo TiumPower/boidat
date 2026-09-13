@@ -72,17 +72,33 @@
   <% else %>
     <%# ---- Màn hình quét ---- %>
     <div style="padding:0 18px;">
-      <div style="border-radius:18px; background:#0C2229; aspect-ratio:3/4; display:grid; place-items:center; color:#fff; text-align:center; margin-bottom:14px;">
-        <div>
-          <div style="width:150px; height:150px; border:2px dashed rgba(255,255,255,.5); border-radius:20px; margin:0 auto 14px;"></div>
-          <div style="font-size:14px; font-weight:600;">Đưa khuôn mặt vào khung</div>
-          <div style="font-size:12px; opacity:.7; margin-top:4px;">
-            camera trước · quét trước khi xuống nước
+      <div data-controller="facescan"
+           data-facescan-url-value="<%= desk_scan_identify_path %>"
+           style="margin-bottom:14px;">
+        <div style="position:relative; border-radius:18px; overflow:hidden; background:#0C2229; aspect-ratio:3/4;">
+          <video data-facescan-target="video" playsinline muted
+                 style="width:100%; height:100%; object-fit:cover; transform:scaleX(-1);"></video>
+          <canvas data-facescan-target="canvas" hidden></canvas>
+          <div style="position:absolute; inset:0; display:grid; place-items:center; pointer-events:none;">
+            <div style="width:58%; aspect-ratio:1; border:2px dashed rgba(255,255,255,.65); border-radius:22px;"></div>
           </div>
-          <div style="font-size:11.5px; opacity:.55; margin-top:12px; max-width:250px;">
-            Nhận diện tự động sẽ bật khi service khuôn mặt được kết nối (P5).
-            Hiện tại tra cứu theo tên bên dưới — luồng dự phòng này luôn dùng được.
+          <div style="position:absolute; left:0; right:0; bottom:0; padding:14px; text-align:center;
+                      background:linear-gradient(to top, rgba(12,34,41,.9), transparent); color:#fff;">
+            <div data-facescan-target="status" style="font-size:13.5px; font-weight:600;">Đang mở camera…</div>
+            <div style="font-size:11.5px; opacity:.75; margin-top:3px;">
+              <%= @face_ready ? "Nhận diện tự động · liveness đang bật" : "Máy chủ nhận diện chưa sẵn sàng — dùng tra cứu tên" %>
+            </div>
           </div>
+        </div>
+
+        <div data-facescan-target="fallback" <%= "hidden" if @face_ready %>
+             style="margin-top:12px; padding:12px 14px; border-radius:12px; background:#FBF1E4; border:1px solid #E4C79A;">
+          <div style="font-weight:700; font-size:13.5px;">Không nhận ra khuôn mặt</div>
+          <p style="font-size:12.5px; color:var(--ink-2); margin:6px 0 0;">
+            Ảnh có thể đã cũ (trẻ em thay đổi nhanh) hoặc ánh sáng ngược.
+            Tra cứu theo tên bên dưới, hoặc mở bảng master data trên web và điểm danh tay —
+            hệ thống ghi nhận lượt quét lỗi để đề nghị phụ huynh chụp lại ảnh.
+          </p>
         </div>
       </div>
 
