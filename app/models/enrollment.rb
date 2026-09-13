@@ -13,6 +13,7 @@ class Enrollment < ApplicationRecord
   belongs_to :package, optional: true
   has_many :attendances, dependent: :nullify
   has_one  :order, dependent: :nullify
+  has_one  :contract, dependent: :destroy
 
   validates :status, inclusion: { in: STATUSES }
   validates :student_id, uniqueness: { scope: :swim_class_id }

@@ -97,6 +97,18 @@ Rails.application.routes.draw do
       resources :day_passes, path: "day-passes", only: [:index, :create]  # bán vé lẻ nhanh (FR-214)
       get  "timesheets", to: "timesheets#index", as: :timesheets           # tab chấm công (FR-210)
       post "timesheets/lock", to: "timesheets#lock", as: :lock_timesheets
+      resources :orders, only: [:index, :show] do
+        member do
+          patch :mark_paid
+          post  :checkout      # sinh lại link PayOS cho phụ huynh
+        end
+      end
+      resources :contracts, only: [:show, :new, :create] do
+        member { get :download }
+      end
+      resources :conversations, only: [:index, :show] do
+        resources :messages, only: [:create]
+      end
       resources :audit_logs, path: "audit", only: [:index]
     end
 
@@ -149,7 +161,9 @@ Rails.application.routes.draw do
   # Chạy trên subdomain của trung tâm ở production, hoặc /w/:slug ở dev.
   # Route helper giữ tiền tố `member_` như khung Estate/Loyalty.
   scope "(/w/:workspace_slug)", module: :customer, as: :member do
-    root "home#show", as: :root
+    # `get ""` chứ không phải `root`: với `root`, Rails sinh URL thành
+    # "/?workspace_slug=x" thay vì "/w/x" khi ở chế độ đường dẫn (dev).
+    get "", to: "home#show", as: :root
 
     # Đăng nhập: quét QR hộ gia đình, hoặc SĐT + OTP với người lớn tự học (FR-401)
     get    "login",       to: "sessions#new",         as: :login
@@ -166,6 +180,21 @@ Rails.application.routes.draw do
 
     # Học viên: tiến độ + nhận xét của giáo viên (FR-406)
     get "students/:id", to: "students#show", as: :student
+
+    # Hoá đơn & thanh toán PayOS (FR-408)
+    get  "invoices",            to: "orders#index", as: :orders
+    get  "invoices/:id",        to: "orders#show",  as: :order
+    post "invoices/:id/pay",    to: "orders#pay",   as: :pay_order
+    get  "invoices/:id/return", to: "orders#return", as: :order_return
+
+    # Cam kết điện tử — phụ huynh ký trên PWA (FR-207)
+    get  "contracts/:id",      to: "contracts#show", as: :contract
+    post "contracts/:id/sign", to: "contracts#sign", as: :sign_contract
+
+    # Chat realtime với admin (FR-407)
+    get  "chat",          to: "chat#show",          as: :chat
+    get  "chat/updates",  to: "chat#updates",       as: :chat_updates
+    post "chat/messages", to: "chat#create_message", as: :chat_messages
 
     get  "notifications",          to: "notifications#index",   as: :notifications
     post "notifications/read_all", to: "notifications#read_all", as: :read_all_notifications

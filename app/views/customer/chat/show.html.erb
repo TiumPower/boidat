@@ -1,0 +1,33 @@
+<% content_for :title, "Nhắn tin" %>
+<% content_for :tab, "chat" %>
+<%= turbo_stream_from @conversation %>
+<div class="l-screen" style="display:flex; flex-direction:column; height:100dvh;">
+  <header style="padding:16px 18px 12px; border-bottom:1px solid var(--line);">
+    <div style="font-family:var(--font-display); font-size:18px; font-weight:700;">
+      Admin <%= @conversation.pool.name %>
+    </div>
+    <div style="font-size:12.5px; color:var(--ink-2);">Nhắn tin trực tiếp với trung tâm</div>
+  </header>
+
+  <div id="messages" data-controller="chatroom"
+       data-chatroom-updates-url-value="<%= member_chat_updates_path %>"
+       style="flex:1; overflow-y:auto; padding:14px 18px;">
+    <% @messages.each do |message| %>
+      <%= render "shared/message", message: message %>
+    <% end %>
+    <% if @messages.empty? %>
+      <div style="text-align:center; color:var(--ink-2); font-size:13px; padding:30px 0;">
+        Chưa có tin nhắn nào. Nhắn cho trung tâm bất cứ điều gì bạn cần.
+      </div>
+    <% end %>
+  </div>
+
+  <div style="padding:10px 14px calc(78px + env(safe-area-inset-bottom)); border-top:1px solid var(--line); background:var(--surface);">
+    <%= form_with url: member_chat_messages_path, method: :post, data: { turbo: false },
+          style: "display:flex; gap:8px;" do %>
+      <%= text_field_tag :body, nil, class: "l-field", placeholder: "Nhập tin nhắn…", autocomplete: "off" %>
+      <%= submit_tag "Gửi", class: "l-btn l-btn-primary", style: "padding:11px 18px;" %>
+    <% end %>
+  </div>
+  <%= render "layouts/member_tabbar" %>
+</div>

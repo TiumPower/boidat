@@ -1,0 +1,66 @@
+<% content_for :title, "Ảnh khuôn mặt" %>
+<% content_for :tab, "faces" %>
+<div class="l-screen" style="padding-bottom:100px;">
+  <header style="padding:18px 18px 12px;">
+    <div style="font-family:var(--font-display); font-size:20px; font-weight:700;">Ảnh khuôn mặt để điểm danh</div>
+    <div style="font-size:13px; color:var(--ink-2);">Bắt buộc với mỗi thành viên đang là học viên</div>
+  </header>
+
+  <div style="padding:0 18px;">
+    <% @students.each do |student| %>
+      <div class="l-panel" style="margin-bottom:12px;">
+        <div style="display:flex; gap:12px; align-items:center;">
+          <div style="width:56px;height:56px;border-radius:14px;background:var(--surface-2);display:grid;place-items:center;overflow:hidden;">
+            <% if student.face_profile&.photos&.attached? %>
+              <%= image_tag rails_storage_proxy_path(student.face_profile.photos.first, only_path: true),
+                    style: "width:100%;height:100%;object-fit:cover;" %>
+            <% else %>
+              <span style="font-size:22px;">🙂</span>
+            <% end %>
+          </div>
+          <div style="flex:1; min-width:0;">
+            <div style="font-weight:700; font-size:15px;"><%= student.name %></div>
+            <div style="font-size:12.5px; color:<%= student.face_registered? ? 'var(--ink-2)' : '#B4402F' %>;">
+              <% if student.face_registered? %>
+                Đã có ảnh<%= " · cập nhật #{l(student.face_profile.captured_at.to_date, format: '%m/%Y')}" if student.face_profile.captured_at %>
+                <% if student.face_profile.recapture_flag? %>
+                  <div style="color:#8A5B12;">Tỷ lệ quét lỗi cao — nên chụp lại ảnh mới</div>
+                <% end %>
+              <% else %>
+                Chưa có ảnh — chưa điểm danh tự động được
+              <% end %>
+            </div>
+          </div>
+        </div>
+
+        <%= form_with url: member_create_face_path(student), method: :post, multipart: true,
+              data: { turbo: false }, style: "margin-top:12px;" do %>
+          <%= file_field_tag :photo, accept: "image/*", capture: "user", class: "l-field", required: true %>
+
+          <label style="display:flex; gap:9px; align-items:flex-start; margin:12px 0; font-size:12.5px; color:var(--ink-2); line-height:1.5;">
+            <%= check_box_tag :consent, "1", false, required: true, style: "margin-top:3px;" %>
+            <span>
+              Tôi là người giám hộ hợp pháp và đồng ý cho trung tâm xử lý dữ liệu sinh trắc học
+              (ảnh khuôn mặt) của <%= student.short_name %> để phục vụ điểm danh, theo
+              Nghị định 13/2023/NĐ-CP.
+            </span>
+          </label>
+
+          <%= submit_tag student.face_registered? ? "Chụp lại & xác nhận" : "Gửi ảnh & xác nhận",
+                class: "l-btn l-btn-primary l-btn-block" %>
+        <% end %>
+
+        <% if student.face_registered? %>
+          <%= button_to "Yêu cầu xoá dữ liệu sinh trắc học", member_destroy_face_path(student),
+                method: :delete, class: "l-btn l-btn-ghost l-btn-block", style: "margin-top:8px;",
+                form: { data: { turbo_confirm: "Xoá dữ liệu khuôn mặt của #{student.short_name}? Em sẽ phải điểm danh thủ công." } } %>
+        <% end %>
+      </div>
+    <% end %>
+
+    <p style="font-size:12px; color:var(--ink-2); text-align:center;">
+      Điều khoản <%= @terms_version %> · có thể yêu cầu xoá dữ liệu bất kỳ lúc nào trong mục Hồ sơ.
+      Không tích ô đồng ý thì không gửi được ảnh.
+    </p>
+  </div>
+</div>

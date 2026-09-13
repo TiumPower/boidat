@@ -1,0 +1,48 @@
+<% content_for :page_title, "Đơn hàng & thanh toán" %>
+<% content_for :page_sub, "FR-220 · FR-223 · #{current_pool.name}" %>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:16px;">
+  <div class="l-kpi"><div class="k">Doanh thu khoá học</div><div class="v" style="font-size:20px;"><%= vnd(@totals[:course]) %></div></div>
+  <div class="l-kpi"><div class="k">Doanh thu cho thuê</div><div class="v" style="font-size:20px;"><%= vnd(@totals[:rental]) %></div>
+    <div class="d" style="color:var(--ink-2);">tách riêng (OQ-26)</div></div>
+  <div class="l-kpi"><div class="k">Đang chờ thu</div><div class="v" style="font-size:20px;"><%= vnd(@totals[:unpaid]) %></div></div>
+</div>
+
+<div class="l-panel" style="margin-bottom:16px;">
+  <%= form_with url: merchant_ops_orders_path, method: :get, data: { turbo: false },
+        style: "display:flex; gap:10px; align-items:center; flex-wrap:wrap;" do %>
+    <%= search_field_tag :q, @q, class: "l-field", style: "width:auto; min-width:240px;",
+          placeholder: "Tìm mã đơn / học viên…" %>
+    <div style="display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden;">
+      <% ([[nil, "Tất cả"]] + Order::STATUSES.map { |s| [s, Order::STATUS_LABELS[s]] }).each do |key, label| %>
+        <% on = @status == key %>
+        <%= link_to "#{label}#{key ? " (#{@counts[key].to_i})" : ''}", merchant_ops_orders_path(status: key, q: @q),
+              style: "padding:6px 13px; font-size:12.5px; font-weight:700; text-decoration:none; #{on ? 'background:var(--primary); color:#fff;' : 'color:var(--ink-2);'}" %>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
+<div class="l-panel">
+  <table class="l-table">
+    <thead><tr><th>Mã đơn</th><th>Học viên</th><th>Gói</th><th>Loại</th><th>Số tiền</th><th>Sale</th><th>Trạng thái</th><th></th></tr></thead>
+    <tbody>
+      <% @orders.each do |order| %>
+        <tr>
+          <td><strong style="font-family:ui-monospace,monospace;"><%= order.code %></strong>
+            <div style="font-size:12px; color:var(--ink-2);"><%= l(order.created_at.to_date, format: "%d/%m/%Y") %></div></td>
+          <td><%= order.student&.name || order.note.presence || "—" %></td>
+          <td style="font-size:13px; color:var(--ink-2);"><%= order.package&.name %></td>
+          <td><span class="l-chip"><%= order.kind_label %></span></td>
+          <td><strong><%= vnd(order.total) %></strong></td>
+          <td style="font-size:13px; color:var(--ink-2);"><%= order.sale&.name&.split&.last %></td>
+          <td><span class="l-chip <%= 'l-chip-brand' if order.paid? %>"><%= order.status_label %></span></td>
+          <td style="text-align:right;"><%= link_to "Mở", merchant_ops_order_path(order), class: "l-btn l-btn-soft", style: "padding:5px 12px; font-size:12.5px;" %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+  <% if @orders.empty? %>
+    <p style="font-size:13.5px; color:var(--ink-2);">Chưa có đơn nào khớp bộ lọc.</p>
+  <% end %>
+</div>

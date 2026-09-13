@@ -1,0 +1,24 @@
+<% content_for :title, "Kết quả thanh toán" %>
+<% content_for :no_tabbar, true %>
+<div class="l-screen" style="display:grid; place-items:center; min-height:80dvh; padding:24px; text-align:center;">
+  <div>
+    <% if @paid %>
+      <div style="font-size:44px;">✅</div>
+      <h1 style="font-family:var(--font-display); font-size:21px; margin:12px 0 6px;">Thanh toán thành công</h1>
+      <p style="font-size:13.5px; color:var(--ink-2);">
+        Đơn <%= @order.code %> · <%= vnd(@order.total) %> đã được ghi nhận.
+      </p>
+    <% elsif @cancelled %>
+      <div style="font-size:44px;">↩️</div>
+      <h1 style="font-family:var(--font-display); font-size:21px; margin:12px 0 6px;">Đã huỷ thanh toán</h1>
+      <p style="font-size:13.5px; color:var(--ink-2);">Bạn có thể thanh toán lại bất cứ lúc nào.</p>
+    <% else %>
+      <div style="font-size:44px;">⏳</div>
+      <h1 style="font-family:var(--font-display); font-size:21px; margin:12px 0 6px;">Chưa nhận được kết quả</h1>
+      <p style="font-size:13.5px; color:var(--ink-2);">
+        Nếu bạn vừa chuyển khoản, trạng thái sẽ tự cập nhật khi PayOS báo về.
+      </p>
+    <% end %>
+    <%= link_to "Về danh sách hoá đơn", member_orders_path, class: "l-btn l-btn-primary", style: "margin-top:18px;" %>
+  </div>
+</div>

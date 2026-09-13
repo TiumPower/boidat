@@ -1,0 +1,79 @@
+<% content_for :page_title, "Đơn #{@order.code}" %>
+<% content_for :back do %><%= link_to "← Đơn hàng", merchant_ops_orders_path, class: "l-btn l-btn-ghost", style: "padding:6px 12px; font-size:13px;" %><% end %>
+
+<div style="display:grid; grid-template-columns:1fr 340px; gap:16px; align-items:start;">
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:12px;">Chi tiết đơn</div>
+    <table class="l-table">
+      <tbody>
+        <tr><td style="color:var(--ink-2);">Học viên</td><td><%= @order.student&.name || "—" %></td></tr>
+        <tr><td style="color:var(--ink-2);">Hộ gia đình</td><td><%= @order.household&.name || "—" %></td></tr>
+        <tr><td style="color:var(--ink-2);">Gói</td><td><%= @order.package&.name || "—" %></td></tr>
+        <tr><td style="color:var(--ink-2);">Loại đơn</td><td><%= @order.kind_label %> · <%= @order.customer_type == "new" ? "học viên mới" : "tái ký" %></td></tr>
+        <tr><td style="color:var(--ink-2);">Số tiền</td><td><strong><%= vnd(@order.amount) %></strong><%= " − #{vnd(@order.discount)} giảm giá" if @order.discount.positive? %></td></tr>
+        <tr><td style="color:var(--ink-2);">Phải thu</td><td><strong style="color:var(--primary); font-size:16px;"><%= vnd(@order.total) %></strong></td></tr>
+        <tr><td style="color:var(--ink-2);">Trạng thái</td><td><%= @order.status_label %></td></tr>
+        <tr><td style="color:var(--ink-2);">Sale</td><td><%= @order.sale&.name %></td></tr>
+      </tbody>
+    </table>
+
+    <% if @payments.any? %>
+      <div class="l-eyebrow" style="margin:18px 0 8px;">Lịch sử thu tiền</div>
+      <% @payments.each do |p| %>
+        <div style="display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--line); font-size:13.5px;">
+          <span><%= p.method_label %> · <%= l(p.paid_at, format: "%H:%M %d/%m/%Y") %></span>
+          <strong><%= vnd(p.amount) %></strong>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div>
+    <% if @order.unpaid? %>
+      <div class="l-panel" style="margin-bottom:14px;">
+        <div style="font-weight:700; margin-bottom:6px;">Thanh toán online</div>
+        <p style="font-size:12.5px; color:var(--ink-2); margin-bottom:12px;">
+          Phụ huynh thấy đơn này trên PWA và tự bấm thanh toán bằng mã QR PayOS.
+          Nút dưới đây sinh lại liên kết nếu cần gửi trực tiếp.
+        </p>
+        <% if @order.checkout_url.present? %>
+          <%= link_to "Mở liên kết PayOS", @order.checkout_url, target: "_blank", rel: "noopener",
+                class: "l-btn l-btn-soft l-btn-block", style: "margin-bottom:8px;" %>
+        <% end %>
+        <%= button_to "Tạo liên kết PayOS mới", checkout_merchant_ops_order_path(@order),
+              class: "l-btn l-btn-primary l-btn-block" %>
+      </div>
+
+      <div class="l-panel">
+        <div style="font-weight:700; margin-bottom:6px;">Thu ngoài hệ thống</div>
+        <p style="font-size:12.5px; color:var(--ink-2); margin-bottom:12px;">
+          Dùng khi khách trả tiền mặt hoặc chuyển khoản thẳng cho trung tâm.
+        </p>
+        <%= button_to "Đã thu tiền mặt", mark_paid_merchant_ops_order_path(@order, method: "cash"),
+              method: :patch, class: "l-btn l-btn-soft l-btn-block", style: "margin-bottom:8px;" %>
+        <%= button_to "Đã nhận chuyển khoản", mark_paid_merchant_ops_order_path(@order, method: "transfer"),
+              method: :patch, class: "l-btn l-btn-soft l-btn-block" %>
+      </div>
+    <% else %>
+      <div class="l-panel" style="text-align:center;">
+        <div style="font-size:34px;">✅</div>
+        <div style="font-weight:700; margin-top:8px;">Đã thanh toán</div>
+        <div style="font-size:13px; color:var(--ink-2);"><%= l(@order.paid_at, format: "%H:%M %d/%m/%Y") if @order.paid_at %></div>
+      </div>
+    <% end %>
+
+    <% if @order.enrollment&.contract %>
+      <div class="l-panel" style="margin-top:14px;">
+        <div style="font-weight:700; margin-bottom:8px;">Bản cam kết</div>
+        <%= link_to "Xem cam kết #{@order.enrollment.contract.number}",
+              merchant_ops_contract_path(@order.enrollment.contract), class: "l-btn l-btn-soft l-btn-block" %>
+      </div>
+    <% elsif @order.enrollment %>
+      <div class="l-panel" style="margin-top:14px;">
+        <div style="font-weight:700; margin-bottom:8px;">Bản cam kết</div>
+        <%= link_to "Ký cam kết", new_merchant_ops_contract_path(enrollment_id: @order.enrollment_id),
+              class: "l-btn l-btn-primary l-btn-block" %>
+      </div>
+    <% end %>
+  </div>
+</div>

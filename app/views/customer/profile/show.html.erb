@@ -1,0 +1,65 @@
+<% content_for :title, "Hồ sơ" %>
+<% content_for :tab, "me" %>
+<div class="l-screen" style="padding-bottom:100px;">
+  <header style="padding:18px 18px 12px;">
+    <div style="font-family:var(--font-display); font-size:20px; font-weight:700;">Hồ sơ của tôi</div>
+  </header>
+
+  <div style="padding:0 18px;">
+    <div class="l-panel" style="margin-bottom:12px;">
+      <div style="display:flex; gap:12px; align-items:center;">
+        <div style="width:52px;height:52px;border-radius:999px;background:var(--surface-2);display:grid;place-items:center;font-weight:700;">
+          <%= @guardian.initials %>
+        </div>
+        <div>
+          <div style="font-weight:700; font-size:16px;"><%= @guardian.name %></div>
+          <div style="font-size:12.5px; color:var(--ink-2);">
+            <%= @guardian.role_label %> · <%= @household.name %> · <%= @students.size %> học viên
+          </div>
+          <div style="font-size:12.5px; color:var(--ink-2);"><%= @guardian.phone %></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="l-panel" style="margin-bottom:12px;">
+      <div style="font-weight:700; margin-bottom:10px;">Cập nhật thông tin</div>
+      <%= form_with model: @guardian, url: member_profile_path, method: :patch, scope: :guardian,
+            data: { turbo: false } do |f| %>
+        <div style="margin-bottom:10px;"><%= f.text_field :name, class: "l-field", placeholder: "Họ tên" %></div>
+        <div style="margin-bottom:10px;"><%= f.text_field :phone, class: "l-field", placeholder: "Số điện thoại" %></div>
+        <div style="margin-bottom:12px;"><%= f.email_field :email, class: "l-field", placeholder: "Email" %></div>
+        <%= f.submit "Lưu", class: "l-btn l-btn-soft l-btn-block" %>
+      <% end %>
+    </div>
+
+    <div class="l-panel" style="margin-bottom:12px;">
+      <div style="font-weight:700; margin-bottom:4px;">Thông báo đẩy</div>
+      <p style="font-size:12.5px; color:var(--ink-2); margin-bottom:10px;">
+        Nhắc buổi học, nhận xét mới từ thầy, thầy nghỉ / đổi lịch, nhắc thanh toán và sắp hết buổi.
+        Trên iPhone cần thêm ứng dụng vào màn hình chính trước khi bật.
+      </p>
+      <%= render "layouts/push_toggle" %>
+    </div>
+
+    <% unless @household.individual? %>
+      <div class="l-panel" style="margin-bottom:12px; text-align:center;">
+        <div style="font-weight:700; margin-bottom:4px;">Mã QR đăng nhập của hộ</div>
+        <p style="font-size:12.5px; color:var(--ink-2);">Người nhà quét mã này là vào thẳng ứng dụng.</p>
+        <div style="margin:12px auto; width:190px;"><%= qr_svg(@qr_url, size: 190) %></div>
+        <p style="font-size:12px; color:var(--ink-2);">Mất điện thoại? Liên hệ trung tâm để thu hồi và cấp mã mới.</p>
+      </div>
+    <% end %>
+
+    <div class="l-panel">
+      <div style="font-weight:700; margin-bottom:10px;">Tài khoản & dữ liệu</div>
+      <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line); font-size:13.5px;">
+        <span>Ảnh khuôn mặt học viên</span>
+        <strong><%= @students.count(&:face_registered?) %> / <%= @students.size %> đã có</strong>
+      </div>
+      <%= link_to "Quản lý ảnh khuôn mặt", member_faces_path,
+            style: "display:block; padding:10px 0; border-bottom:1px solid var(--line); font-size:13.5px; text-decoration:none; color:inherit;" %>
+      <%= button_to "Đăng xuất thiết bị này", member_logout_path, method: :delete,
+            class: "l-btn l-btn-ghost l-btn-block", style: "margin-top:12px;" %>
+    </div>
+  </div>
+</div>

@@ -452,6 +452,41 @@ ActsAsTenant.with_tenant(ws) do
     end
   end
 
+
+  # ---- Chat & cam kết ----------------------------------------------------
+  puts "→ Chat & cam kết"
+  admin_user = User.find_by(email: "hoang@boidat.vn")
+  CHAT_SAMPLES = [
+    ["guardian", "Chào em, bé Bảo tuần sau đi công tác với gia đình, xin nghỉ thứ 4 được không?"],
+    ["staff",    "Dạ được ạ. Chị vào mục “Xin vắng” trên app để đổi buổi, buổi đó sẽ không bị trừ ạ."],
+    ["staff",    "Em gửi chị lịch trống của thầy Minh thứ 6 nhé."],
+    ["guardian", "Chị làm được rồi, cảm ơn em nhé!"]
+  ].freeze
+
+  Household.where(id: Student.where(pool: q7, kind: "center").select(:household_id)).limit(4).each_with_index do |hh, idx|
+    conv = Conversation.for_household(hh, q7)
+    next if conv.messages.any?
+    CHAT_SAMPLES.first(idx.zero? ? 4 : 2).each_with_index do |(kind, body), i|
+      msg = conv.messages.create!(workspace: ws, sender_kind: kind, body: body,
+                                  user: kind == "staff" ? admin_user : nil,
+                                  guardian: kind == "guardian" ? hh.owner : nil,
+                                  created_at: (4 - i).hours.ago)
+      conv.update!(last_message_at: msg.created_at, last_preview: body.truncate(80))
+    end
+    conv.update!(staff_unread: conv.messages.where(sender_kind: "guardian").count > 1 ? 0 : 1)
+  end
+
+  # Cam kết đã ký cho các lớp đã chạy được một thời gian.
+  Enrollment.active.includes(:student, swim_class: :teacher).limit(4).each do |enr|
+    next if enr.contract
+    contract = Contract.create!(workspace: ws, pool: enr.pool, enrollment: enr,
+                                household: enr.student.household,
+                                guardian_name: enr.student.household.owner&.name)
+    contract.update!(status: "signed", signed_at: enr.starts_on, signed_by: admin_user,
+                     snapshot: contract.build_snapshot,
+                     sha256: Digest::SHA256.hexdigest("#{contract.number}-seed"))
+  end
+
   puts "   #{Pool.count} hồ · #{Teacher.count} giáo viên · #{Course.count} khoá · #{Package.count} gói · " \
        "#{Household.count} hộ · #{Student.count} học viên · #{SwimClass.count} lớp · #{Lesson.count} buổi · " \
        "#{TeacherAvailability.count} ca đăng ký · #{Attendance.count} lượt điểm danh · " \

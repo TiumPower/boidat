@@ -10,6 +10,8 @@ class Household < ApplicationRecord
   has_many :guardians, dependent: :destroy
   has_many :students,  dependent: :restrict_with_error
   has_many :orders,    dependent: :nullify
+  has_many :conversations, dependent: :destroy
+  has_many :contracts, dependent: :destroy
 
   validates :name, presence: true
   validates :kind, inclusion: { in: KINDS }

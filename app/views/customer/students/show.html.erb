@@ -1,0 +1,85 @@
+<% content_for :title, @student.name %>
+<% content_for :tab, "home" %>
+<div class="l-screen" style="padding-bottom:100px;">
+  <header style="padding:16px 18px 12px;">
+    <%= link_to "← Trang chủ", member_root_path, style: "font-size:13px; color:var(--ink-2); text-decoration:none;" %>
+    <div style="font-family:var(--font-display); font-size:21px; font-weight:700; margin-top:8px;"><%= @student.name %></div>
+    <% if @enrollment %>
+      <div style="font-size:13px; color:var(--ink-2);">
+        Lớp 1:<%= @enrollment.swim_class.class_type %> · <%= @enrollment.swim_class.teacher.display_name %> ·
+        <%= @student.pool.name %>
+      </div>
+    <% end %>
+  </header>
+
+  <% if @enrollment %>
+    <div style="padding:0 18px 14px;">
+      <div class="l-panel">
+        <div style="display:flex; justify-content:space-between; align-items:baseline;">
+          <div>
+            <div class="l-eyebrow">Tiến độ khoá học</div>
+            <div style="font-family:var(--font-display); font-size:26px; font-weight:700;">
+              <%= @enrollment.progress_label %>
+            </div>
+          </div>
+          <div style="text-align:right; font-size:12.5px; color:var(--ink-2);">
+            Còn <strong style="color:var(--ink);"><%= @enrollment.sessions_left %> buổi</strong><br>
+            Hạn <%= @enrollment.expires_on ? l(@enrollment.expires_on, format: "%d/%m/%Y") : "—" %>
+          </div>
+        </div>
+        <% pct = @enrollment.total_available.positive? ? (@enrollment.sessions_used * 100.0 / @enrollment.total_available).round : 0 %>
+        <div style="height:8px; border-radius:999px; background:var(--surface-2); margin-top:12px; overflow:hidden;">
+          <div style="height:100%; width:<%= pct %>%; background:var(--primary);"></div>
+        </div>
+        <div style="font-size:12px; color:var(--ink-2); margin-top:8px;">
+          Thi tốt nghiệp ở buổi <%= @enrollment.swim_class.course&.exam_session || current_workspace.exam_session_index %>
+          <% if @enrollment.exam_eligible? %>
+            · <strong style="color:var(--primary);">đã đủ điều kiện thi</strong>
+          <% end %>
+          <% if @enrollment.exam_result %> · kết quả: <strong><%= @enrollment.exam_result_label %></strong><% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <% if @upcoming.any? %>
+    <div style="padding:0 18px 14px;">
+      <div class="l-eyebrow" style="margin-bottom:8px;">Buổi học sắp tới</div>
+      <div class="l-panel">
+        <% @upcoming.each do |lesson| %>
+          <div style="display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--line); font-size:13.5px;">
+            <span><%= %w[Chủ\ nhật Thứ\ 2 Thứ\ 3 Thứ\ 4 Thứ\ 5 Thứ\ 6 Thứ\ 7][lesson.date.wday] %> ·
+              <%= l(lesson.date, format: "%d/%m") %> · <%= lesson.time_label %></span>
+            <span style="color:var(--ink-2);"><%= lesson.teacher.display_name %></span>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <div style="padding:0 18px;">
+    <div class="l-eyebrow" style="margin-bottom:8px;">Nhận xét của giáo viên</div>
+    <% if @feedbacks.empty? %>
+      <div class="l-panel" style="text-align:center; padding:24px;">
+        <div style="font-weight:700;">Chưa có nhận xét nào</div>
+        <p style="font-size:13px; color:var(--ink-2); margin-top:6px;">
+          Sau mỗi buổi, giáo viên sẽ ghi nhận xét riêng cho <%= @student.short_name %>.
+        </p>
+      </div>
+    <% end %>
+    <% @feedbacks.each do |fb| %>
+      <div class="l-panel" style="margin-bottom:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:baseline;">
+          <div style="font-weight:700; font-size:14px;">
+            Buổi <%= fb.lesson.session_index %> · <%= fb.lesson.title %>
+          </div>
+          <div style="font-size:12px; color:var(--ink-2);"><%= l(fb.lesson.date, format: "%d/%m") %></div>
+        </div>
+        <p style="font-size:13.5px; color:var(--ink-2); margin:8px 0 0; line-height:1.55;"><%= fb.body %></p>
+        <% if fb.tag %>
+          <span class="l-chip l-chip-brand" style="margin-top:8px;"><%= fb.tag_label %></span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

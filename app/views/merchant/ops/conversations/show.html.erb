@@ -1,0 +1,36 @@
+<% content_for :page_title, @conversation.household.name %>
+<% content_for :back do %><%= link_to "← Hộp thư", merchant_ops_conversations_path, class: "l-btn l-btn-ghost", style: "padding:6px 12px; font-size:13px;" %><% end %>
+<%= turbo_stream_from @conversation %>
+
+<div style="display:grid; grid-template-columns:280px 1fr; gap:16px; align-items:start;">
+  <div class="l-panel" style="max-height:70vh; overflow:auto;">
+    <div class="l-eyebrow" style="margin-bottom:10px;">Hội thoại</div>
+    <% @conversations.each do |c| %>
+      <%= link_to merchant_ops_conversation_path(c),
+            style: "display:block; padding:9px 8px; border-radius:10px; text-decoration:none; color:inherit; #{'background:var(--surface-2);' if c.id == @conversation.id}" do %>
+        <div style="font-weight:600; font-size:13.5px;"><%= c.household.name %></div>
+        <div style="font-size:12px; color:var(--ink-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+          <%= c.last_preview %>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="l-panel" style="display:flex; flex-direction:column; height:70vh;">
+    <div id="messages" style="flex:1; overflow-y:auto; padding-right:6px;">
+      <% @messages.each do |message| %>
+        <%= render "shared/message", message: message, viewer: "staff" %>
+      <% end %>
+      <% if @messages.empty? %>
+        <p style="font-size:13.5px; color:var(--ink-2); text-align:center; padding-top:40px;">
+          Chưa có tin nhắn nào.
+        </p>
+      <% end %>
+    </div>
+    <%= form_with url: merchant_ops_conversation_messages_path(@conversation), method: :post,
+          data: { turbo: false }, style: "display:flex; gap:8px; padding-top:12px; border-top:1px solid var(--line);" do %>
+      <%= text_field_tag :body, nil, class: "l-field", placeholder: "Nhập tin nhắn…", autocomplete: "off" %>
+      <%= submit_tag "Gửi", class: "l-btn l-btn-primary" %>
+    <% end %>
+  </div>
+</div>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_13_300002) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_13_400001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -148,6 +148,48 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_300002) do
     t.index ["created_by_id"], name: "index_broadcasts_on_created_by_id"
     t.index ["pool_id"], name: "index_broadcasts_on_pool_id"
     t.index ["workspace_id"], name: "index_broadcasts_on_workspace_id"
+  end
+
+  create_table "contracts", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "pool_id", null: false
+    t.bigint "enrollment_id", null: false
+    t.bigint "household_id", null: false
+    t.bigint "signed_by_id"
+    t.string "number", null: false
+    t.string "status", default: "draft", null: false
+    t.string "guardian_name"
+    t.datetime "signed_at"
+    t.string "sha256"
+    t.string "ip"
+    t.string "user_agent"
+    t.jsonb "snapshot", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["enrollment_id"], name: "index_contracts_on_enrollment_id"
+    t.index ["household_id"], name: "index_contracts_on_household_id"
+    t.index ["number"], name: "index_contracts_on_number", unique: true
+    t.index ["pool_id"], name: "index_contracts_on_pool_id"
+    t.index ["signed_by_id"], name: "index_contracts_on_signed_by_id"
+    t.index ["workspace_id", "status"], name: "index_contracts_on_workspace_id_and_status"
+    t.index ["workspace_id"], name: "index_contracts_on_workspace_id"
+  end
+
+  create_table "conversations", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "pool_id", null: false
+    t.bigint "household_id", null: false
+    t.integer "staff_unread", default: 0, null: false
+    t.integer "guardian_unread", default: 0, null: false
+    t.datetime "last_message_at"
+    t.string "last_preview"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["household_id"], name: "index_conversations_on_household_id"
+    t.index ["pool_id", "household_id"], name: "index_conversations_on_pool_id_and_household_id", unique: true
+    t.index ["pool_id"], name: "index_conversations_on_pool_id"
+    t.index ["workspace_id", "last_message_at"], name: "index_conversations_on_workspace_id_and_last_message_at"
+    t.index ["workspace_id"], name: "index_conversations_on_workspace_id"
   end
 
   create_table "course_sessions", force: :cascade do |t|
@@ -365,6 +407,23 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_300002) do
     t.index ["user_id"], name: "index_memberships_on_user_id"
     t.index ["workspace_id", "role"], name: "index_memberships_on_workspace_id_and_role"
     t.index ["workspace_id"], name: "index_memberships_on_workspace_id"
+  end
+
+  create_table "messages", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "conversation_id", null: false
+    t.bigint "user_id"
+    t.bigint "guardian_id"
+    t.string "sender_kind", default: "staff", null: false
+    t.text "body"
+    t.datetime "read_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["conversation_id", "created_at"], name: "index_messages_on_conversation_id_and_created_at"
+    t.index ["conversation_id"], name: "index_messages_on_conversation_id"
+    t.index ["guardian_id"], name: "index_messages_on_guardian_id"
+    t.index ["user_id"], name: "index_messages_on_user_id"
+    t.index ["workspace_id"], name: "index_messages_on_workspace_id"
   end
 
   create_table "notifications", force: :cascade do |t|
@@ -824,6 +883,14 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_300002) do
   add_foreign_key "broadcasts", "pools"
   add_foreign_key "broadcasts", "users", column: "created_by_id"
   add_foreign_key "broadcasts", "workspaces"
+  add_foreign_key "contracts", "enrollments"
+  add_foreign_key "contracts", "households"
+  add_foreign_key "contracts", "pools"
+  add_foreign_key "contracts", "users", column: "signed_by_id"
+  add_foreign_key "contracts", "workspaces"
+  add_foreign_key "conversations", "households"
+  add_foreign_key "conversations", "pools"
+  add_foreign_key "conversations", "workspaces"
   add_foreign_key "course_sessions", "courses"
   add_foreign_key "course_sessions", "workspaces"
   add_foreign_key "courses", "workspaces"
@@ -851,6 +918,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_300002) do
   add_foreign_key "lessons", "workspaces"
   add_foreign_key "memberships", "users"
   add_foreign_key "memberships", "workspaces"
+  add_foreign_key "messages", "conversations"
+  add_foreign_key "messages", "guardians"
+  add_foreign_key "messages", "users"
+  add_foreign_key "messages", "workspaces"
   add_foreign_key "notifications", "broadcasts"
   add_foreign_key "notifications", "workspaces"
   add_foreign_key "orders", "enrollments"

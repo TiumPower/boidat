@@ -21,7 +21,7 @@ module StaffScoped
 
     helper_method :current_workspace, :current_membership, :current_pool,
                   :accessible_pools, :accessible_workspaces, :nav_key,
-                  :feature_locked?, :impersonating?
+                  :feature_locked?, :impersonating?, :staff_chat_unread
   end
 
   private
@@ -124,6 +124,12 @@ module StaffScoped
   end
 
   def feature_locked?(feature) = current_workspace && !current_workspace.plan_allows?(feature)
+
+  # Badge tin chưa đọc trên sidebar — đếm theo hồ đang chọn, vì hộp thư là của hồ.
+  def staff_chat_unread
+    return 0 unless current_pool
+    @staff_chat_unread ||= Conversation.where(pool_id: current_pool.id).sum(:staff_unread)
+  end
 
   def require_role!(*roles)
     return if current_membership && roles.map(&:to_s).include?(current_membership.role)

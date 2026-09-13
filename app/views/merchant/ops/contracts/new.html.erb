@@ -1,0 +1,54 @@
+<% content_for :page_title, "Bản cam kết" %>
+<% content_for :page_sub, "FR-207 · #{@enrollment.student.name}" %>
+
+<div style="display:grid; grid-template-columns:1fr 360px; gap:16px; align-items:start;">
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:12px;">Nội dung điền sẵn</div>
+    <table class="l-table">
+      <tbody>
+        <% @contract.build_snapshot.each do |key, value| %>
+          <tr><td style="color:var(--ink-2); width:150px;">
+            <%= { "student" => "Học viên", "birthdate" => "Ngày sinh", "guardian" => "Phụ huynh",
+                  "pool" => "Cơ sở", "teacher" => "Giáo viên", "class_code" => "Mã lớp",
+                  "class_type" => "Loại lớp", "schedule" => "Lịch học", "package" => "Gói",
+                  "sessions" => "Số buổi", "amount" => "Học phí", "expires_on" => "Hạn dùng" }[key] || key %>
+          </td><td><%= value %></td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:6px;">Ký điện tử</div>
+    <p style="font-size:12.5px; color:var(--ink-2); margin-bottom:12px;">
+      Hai bên ký bằng cách vẽ trên khung dưới. File PDF đã ký được lưu gắn với lớp học,
+      kèm mã băm SHA-256, thời điểm, IP và thiết bị.
+    </p>
+
+    <%= form_with url: merchant_ops_contracts_path(enrollment_id: @enrollment.id), method: :post,
+          data: { turbo: false, controller: "signpad" } do %>
+      <div style="margin-bottom:10px;">
+        <label class="l-label">Tên người ký (bên phụ huynh)</label>
+        <%= text_field_tag :guardian_name, @contract.guardian_name, class: "l-field" %>
+      </div>
+
+      <% [["center", "Đại diện trung tâm"], ["guardian", "Phụ huynh / học viên"]].each do |kind, label| %>
+        <div style="margin-bottom:12px;">
+          <label class="l-label"><%= label %></label>
+          <canvas data-signpad-target="pad" data-kind="<%= kind %>"
+                  style="width:100%; height:120px; border:1.5px dashed var(--line); border-radius:12px; background:#fff; touch-action:none;"></canvas>
+          <input type="hidden" name="<%= kind %>_signature" data-signpad-target="field" data-kind="<%= kind %>">
+          <button type="button" data-action="signpad#clear" data-kind="<%= kind %>"
+                  class="l-btn l-btn-ghost" style="padding:4px 10px; font-size:12px; margin-top:6px;">Xoá chữ ký</button>
+        </div>
+      <% end %>
+
+      <%= submit_tag "Lưu bản cam kết đã ký", class: "l-btn l-btn-primary l-btn-block" %>
+    <% end %>
+
+    <p style="font-size:11.5px; color:var(--ink-2); margin-top:12px;">
+      Lưu ý pháp lý: chữ ký vẽ tay trên màn hình là <strong>bằng chứng điện tử</strong>,
+      không phải chữ ký số theo Luật Giao dịch điện tử.
+    </p>
+  </div>
+</div>

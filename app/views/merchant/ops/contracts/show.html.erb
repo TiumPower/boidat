@@ -1,0 +1,39 @@
+<% content_for :page_title, "Cam kết #{@contract.number}" %>
+<% content_for :page_sub, @contract.student.name %>
+<% content_for :actions do %>
+  <% if @contract.pdf.attached? %>
+    <%= link_to "Mở file PDF", download_merchant_ops_contract_path(@contract), target: "_blank",
+          rel: "noopener", class: "l-btn l-btn-primary" %>
+  <% end %>
+<% end %>
+
+<div style="display:grid; grid-template-columns:1fr 340px; gap:16px; align-items:start;">
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:12px;">Thông tin đã chốt tại thời điểm ký</div>
+    <table class="l-table">
+      <tbody>
+        <% @contract.snapshot.each do |key, value| %>
+          <tr><td style="color:var(--ink-2); width:150px;"><%= key %></td><td><%= value %></td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:10px;">Audit trail</div>
+    <table class="l-table">
+      <tbody>
+        <tr><td style="color:var(--ink-2);">Trạng thái</td><td><%= @contract.signed? ? "Đã ký" : "Nháp" %></td></tr>
+        <tr><td style="color:var(--ink-2);">Người ký</td><td><%= @contract.guardian_name %></td></tr>
+        <tr><td style="color:var(--ink-2);">Thời điểm</td><td><%= @contract.signed_at ? l(@contract.signed_at, format: "%H:%M %d/%m/%Y") : "—" %></td></tr>
+        <tr><td style="color:var(--ink-2);">IP</td><td><%= @contract.ip %></td></tr>
+        <tr><td style="color:var(--ink-2);">Thiết bị</td><td style="font-size:11px; word-break:break-all;"><%= @contract.user_agent %></td></tr>
+        <tr><td style="color:var(--ink-2);">SHA-256</td><td style="font-size:10.5px; font-family:ui-monospace,monospace; word-break:break-all;"><%= @contract.sha256 %></td></tr>
+      </tbody>
+    </table>
+    <p style="font-size:11.5px; color:var(--ink-2); margin-top:12px;">
+      Mã băm tính trên file PDF cuối cùng, sau khi đã nhúng cả hai chữ ký — đủ để chứng minh
+      file không bị sửa sau khi ký.
+    </p>
+  </div>
+</div>

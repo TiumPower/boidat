@@ -26,6 +26,9 @@ class Workspace < ApplicationRecord
   has_many :session_feedbacks, dependent: :destroy
   has_many :timesheet_entries, dependent: :destroy
   has_many :payroll_periods, dependent: :destroy
+  has_many :conversations, dependent: :destroy
+  has_many :messages, dependent: :destroy
+  has_many :contracts, dependent: :destroy
   has_many :households, dependent: :destroy
   has_many :guardians, dependent: :destroy
   has_many :students, dependent: :destroy

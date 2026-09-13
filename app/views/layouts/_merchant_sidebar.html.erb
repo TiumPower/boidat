@@ -85,6 +85,13 @@
     <%= link_to merchant_ops_day_passes_path, class: "l-nav-item #{'active' if nav == :day_passes}" do %>
       <span>🎟</span><span>Vé lẻ</span>
     <% end %>
+    <%= link_to merchant_ops_orders_path, class: "l-nav-item #{'active' if nav == :orders}" do %>
+      <span>🧾</span><span>Đơn hàng &amp; thanh toán</span>
+    <% end %>
+    <%= link_to merchant_ops_conversations_path, class: "l-nav-item #{'active' if nav == :chat}" do %>
+      <span>💬</span><span style="flex:1;">Hộp thư chat</span>
+      <%= render "layouts/chat_tab_badge", count: staff_chat_unread %>
+    <% end %>
     <%= link_to merchant_ops_packages_path, class: "l-nav-item #{'active' if nav == :packages}" do %>
       <span>🏷</span><span>Gói &amp; bảng giá</span>
     <% end %>
