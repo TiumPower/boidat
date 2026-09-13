@@ -563,25 +563,25 @@ ActsAsTenant.with_tenant(ws) do
     h.reason = "Bảo trì hệ thống lọc nước"
   end
 
-  # Ảnh khuôn mặt: phần lớn đã đăng ký, vài em chưa (để PWA phụ huynh có việc
-  # phải làm), một em bị gắn cờ chụp lại vì tỷ lệ quét lỗi cao (OQ-01).
-  Student.where(kind: "center").order(:id).each_with_index do |student, idx|
-    next if idx % 5 == 3 # cứ 5 em thì để 1 em chưa có ảnh
-    profile = FaceProfile.find_or_initialize_by(workspace: ws, student: student)
-    next unless profile.new_record?
-    profile.assign_attributes(external_ref: "#{ws.id}:#{student.id}", embedding_version: "buffalo_l",
-                              quality: (0.72 + rand * 0.2).round(3), samples_count: 3,
-                              captured_at: rand(1..10).months.ago,
-                              scan_count: rand(6..20), fail_count: 0)
-    profile.save!
-    profile.update!(fail_count: (profile.scan_count * 0.4).round, recapture_flag: true) if idx == 6
-    BiometricConsent.find_or_create_by!(workspace: ws, student: student) do |c|
-      c.guardian = student.household.owner
-      c.terms_version = BiometricConsent::CURRENT_TERMS_VERSION
-      c.consented_at = profile.captured_at
-      c.ip = "113.161.0.#{rand(2..250)}"
-      c.user_agent = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X)"
-    end
+  # Ảnh khuôn mặt — seed CỐ TÌNH để trống, và đây là quyết định có lý do.
+  #
+  # Bản seed cũ gán sẵn `external_ref` cho gần hết học viên mà không hề đẩy
+  # vector nào sang face service. Hậu quả: Rails tin là đã đăng ký (nút hiện
+  # "Đã có ảnh", quầy coi như quét được), còn service thì rỗng — quét ai cũng
+  # không ra, và người vận hành không thể biết là service hỏng hay em đó chưa
+  # đăng ký. Đúng cái bẫy này đã làm hỏng buổi thử nghiệm đầu tiên.
+  #
+  # Không thể seed dữ liệu sinh trắc thật: muốn có vector thì phải có ảnh mặt
+  # thật của người thật, không được phép đóng gói vào repo. Nên trạng thái
+  # trung thực của một trung tâm mới tinh là: chưa ai có ảnh. Muốn thử quét,
+  # vào PWA phụ huynh gửi một ảnh lên — mất mười giây và chạy đúng luồng thật.
+  #
+  # `registered?` = `external_ref.present?`, nên đừng bao giờ gán external_ref
+  # ở seed: nó là lời khai "vector này có thật trong service".
+  # Dọn tàn dư của bản seed cũ: profile khai đã đăng ký nhưng không có ảnh nào
+  # kèm theo thì chắc chắn là hàng giả, xoá đi cho khớp với service.
+  FaceProfile.where.not(external_ref: nil).find_each do |profile|
+    profile.update!(external_ref: nil, recapture_flag: false) unless profile.photos.attached?
   end
 
   # Học viên đã đủ điều kiện thi tốt nghiệp (FR-208) — cần đúng mốc buổi.
