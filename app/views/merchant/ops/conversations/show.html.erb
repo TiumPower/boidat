@@ -17,7 +17,7 @@
   </div>
 
   <div class="l-panel" style="display:flex; flex-direction:column; height:70vh;">
-    <div id="messages" style="flex:1; overflow-y:auto; padding-right:6px;">
+    <div id="messages" data-controller="chatroom" style="flex:1; overflow-y:auto; padding-right:6px;">
       <% @messages.each do |message| %>
         <%= render "shared/message", message: message, viewer: "staff" %>
       <% end %>

@@ -1,48 +1,45 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Keeps the chat scrolled to the newest message, previews pending attachments,
-// and clears the composer after send. New messages arrive live via
-// turbo_stream_from (Turbo appends to #messages).
+// Khung chat (FR-224 hộp thư admin, FR-407 chat phụ huynh).
+//
+// Controller gắn thẳng lên khung cuộn, nên KHÔNG khai target nào. Bản trước
+// bê nguyên từ Estate: nó khai sáu target và gọi `this.scrollTarget` ngay
+// trong connect(), mà view lại không khai target nào — Stimulus ném lỗi ở
+// connect nên toàn bộ controller chết. Hệ quả là chat không tự cuộn, không
+// nhận tin mới khi WebSocket hỏng, và lỗi đỏ hiện trên console mọi lần mở.
+// Ai cầm target là chuyện của view, nên cách chắc chắn nhất là đừng cần target.
+//
+// Việc căn trái/phải "tin của tôi" do server làm trong shared/_message
+// (`sender_kind == viewer`), không phải việc của JS.
 export default class extends Controller {
-  static targets = ["scroll", "input", "form", "file", "atts", "send"]
-  static values = { updatesUrl: String, msgPath: String }
+  static values = { updatesUrl: String }
 
   connect() {
-    this.markMine()
-    // Land on the newest message with no visible jump: keep the list hidden
-    // until we've scrolled to the bottom on the next frame.
-    this.scrollTarget.style.visibility = "hidden"
+    // Vào thẳng tin mới nhất, không để người dùng thấy cú nhảy: giấu danh sách
+    // cho tới khi đã cuộn xong ở khung hình kế tiếp.
+    this.element.style.visibility = "hidden"
     this.scrollToBottom()
     requestAnimationFrame(() => {
       this.scrollToBottom()
-      this.scrollTarget.style.visibility = ""
+      this.element.style.visibility = ""
     })
-    // Images change the height as they load — re-pin to the bottom.
-    this.scrollTarget.querySelectorAll("img").forEach((img) => {
+    // Ảnh tải xong làm đổi chiều cao — ghim lại đáy.
+    this.element.querySelectorAll("img").forEach((img) => {
       if (!img.complete) img.addEventListener("load", () => this.scrollToBottom(), { once: true })
     })
-    this.observer = new MutationObserver(() => { this.dedupe(); this.markMine(); this.scrollToBottom() })
-    this.observer.observe(this.scrollTarget, { childList: true })
+    this.observer = new MutationObserver(() => { this.dedupe(); this.scrollToBottom() })
+    this.observer.observe(this.element, { childList: true })
     this.startPolling()
   }
 
-  // Mark each message as "mine" (the viewer's own) vs. someone else's. For a
-  // tenant we compare the actual sender member, so a co-tenant's message stays
-  // on the left with their name. Runs for broadcast/polled messages too.
-  markMine() {
-    const as = this.element.dataset.as
-    const vm = this.element.dataset.viewerMember
-    this.scrollTarget.querySelectorAll(".msg").forEach((el) => {
-      const sk = el.dataset.sk
-      const mine = as === "landlord" ? sk === "landlord" : (sk === "tenant" && vm && el.dataset.sm === vm)
-      el.classList.toggle("msg--mine", !!mine)
-    })
+  disconnect() {
+    this.observer?.disconnect()
+    if (this.poll) clearInterval(this.poll)
   }
 
-  // Fallback for when the /cable WebSocket is unavailable (e.g. a proxy that
-  // doesn't upgrade WebSockets): poll for messages newer than the last one we
-  // have. No-ops whenever the Turbo cable stream is actually connected, so once
-  // WebSockets work this costs nothing. dedupe() guards against double-adds.
+  // Dự phòng khi WebSocket /cable không dùng được (proxy không upgrade chẳng
+  // hạn): hỏi tin mới hơn tin cuối cùng đang có. Tự tắt khi cable đang sống,
+  // nên lúc WebSocket chạy tốt thì nó không tốn gì.
   startPolling() {
     if (!this.hasUpdatesUrlValue || !this.updatesUrlValue) return
     this.poll = setInterval(() => this.pollOnce(), 5000)
@@ -50,7 +47,7 @@ export default class extends Controller {
 
   pollOnce() {
     const src = document.querySelector("turbo-cable-stream-source")
-    if (src && src.hasAttribute("connected")) return   // realtime is live
+    if (src && src.hasAttribute("connected")) return
     if (document.hidden) return
     fetch(`${this.updatesUrlValue}?after=${this.lastId()}`, {
       headers: { Accept: "text/vnd.turbo-stream.html" }, credentials: "same-origin"
@@ -61,106 +58,22 @@ export default class extends Controller {
   }
 
   lastId() {
-    const ids = Array.from(this.scrollTarget.querySelectorAll("[id^='message_']"))
+    const ids = Array.from(this.element.querySelectorAll("[id^='message_']"))
       .map((e) => parseInt(e.id.replace("message_", ""), 10) || 0)
     return ids.length ? Math.max(...ids) : 0
   }
 
-  // The sender gets their message from the POST response AND (when the WebSocket
-  // is connected) the broadcast — keep only the first node per message id.
+  // Người gửi nhận tin của chính mình hai lần: một từ phản hồi POST, một từ
+  // bản tin broadcast. Giữ lại node đầu tiên của mỗi id.
   dedupe() {
     const seen = new Set()
-    this.scrollTarget.querySelectorAll("[id^='message_']").forEach((el) => {
+    this.element.querySelectorAll("[id^='message_']").forEach((el) => {
       if (seen.has(el.id)) el.remove()
       else seen.add(el.id)
     })
   }
 
-  disconnect() { this.observer?.disconnect(); if (this.poll) clearInterval(this.poll) }
-
-  // ---- Edit / delete own message (server broadcasts the DOM change) ----
-  _msgId(el) { const m = el.closest(".msg"); return m ? m.id.replace("message_", "") : null }
-  _url(id) { return (this.msgPathValue || "").replace("MSGID", id) }
-
-  async deleteMsg(e) {
-    const id = this._msgId(e.currentTarget)
-    if (!id || !this.msgPathValue) return
-    if (!confirm("Xoá tin nhắn này?")) return
-    await this._req(this._url(id), "DELETE")
-    e.currentTarget.closest(".msg")?.remove() // instant feedback; broadcast confirms
-  }
-
-  async editMsg(e) {
-    const id = this._msgId(e.currentTarget)
-    if (!id || !this.msgPathValue) return
-    const body = e.currentTarget.closest(".msg")?.querySelector(".msg-body")
-    const cur = body ? body.textContent.trim() : ""
-    const val = prompt("Sửa tin nhắn:", cur)
-    if (val == null || !val.trim()) return
-    await this._req(this._url(id), "PATCH", { body: val.trim() })
-  }
-
-  async _req(url, method, payload) {
-    const token = document.querySelector('meta[name="csrf-token"]')?.content
-    try {
-      await fetch(url, {
-        method, credentials: "same-origin",
-        headers: { "Content-Type": "application/json", "X-CSRF-Token": token || "" },
-        body: payload ? JSON.stringify(payload) : null,
-      })
-    } catch (e) {}
-  }
-
-  // Don't submit an empty message (no text and no files).
-  guard(event) {
-    const hasText = this.hasInputTarget && this.inputTarget.value.trim().length > 0
-    const hasFiles = this.hasFileTarget && this.fileTarget.files.length > 0
-    if (!hasText && !hasFiles) event.preventDefault()
-  }
-
-  // Show the send button only when there is text or an attachment (Zalo-style).
-  toggleSend() {
-    if (!this.hasSendTarget) return
-    const hasText = this.hasInputTarget && this.inputTarget.value.trim().length > 0
-    const hasFiles = this.hasFileTarget && this.fileTarget.files.length > 0
-    this.sendTarget.hidden = !(hasText || hasFiles)
-  }
-
-  filesPicked() {
-    this.toggleSend()
-    if (!this.hasAttsTarget) return
-    const files = Array.from(this.fileTarget.files || [])
-    this.attsTarget.innerHTML = ""
-    this.attsTarget.hidden = files.length === 0
-    files.forEach((f) => {
-      const chip = document.createElement("div")
-      chip.className = "att"
-      if (f.type.startsWith("image/")) {
-        const img = document.createElement("img")
-        img.src = URL.createObjectURL(f)
-        chip.appendChild(img)
-      } else {
-        const ic = document.createElement("span")
-        ic.textContent = "📄"
-        chip.appendChild(ic)
-      }
-      const name = document.createElement("span")
-      name.textContent = f.name
-      chip.appendChild(name)
-      this.attsTarget.appendChild(chip)
-    })
-  }
-
-  sent(event) {
-    if (event.detail?.success !== false) {
-      if (this.hasInputTarget) { this.inputTarget.value = ""; this.inputTarget.focus() }
-      if (this.hasFileTarget) this.fileTarget.value = ""
-      if (this.hasAttsTarget) { this.attsTarget.innerHTML = ""; this.attsTarget.hidden = true }
-      this.toggleSend()
-    }
-  }
-
   scrollToBottom() {
-    this.scrollTarget.scrollTop = this.scrollTarget.scrollHeight
+    this.element.scrollTop = this.element.scrollHeight
   }
 }
