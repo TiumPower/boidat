@@ -25,13 +25,24 @@ class CatalogTest < ActiveSupport::TestCase
     end
   end
 
-  test "sinh khung giáo án đủ số buổi và đánh dấu buổi thi" do
+  test "sinh khung giáo án đủ số buổi, mặc định không buổi nào là buổi thi (OQ-25)" do
     with_tenant(@ws) do
       course = Course.create!(workspace: @ws, name: "Bơi cơ bản")
       course.ensure_session_plan!
       assert_equal course.total_sessions, course.course_sessions.count
-      exam = course.course_sessions.find_by(position: course.exam_session)
-      assert exam.exam, "buổi cuối phải được đánh dấu là buổi thi"
+      assert_nil course.exam_session, "kỳ thi xếp riêng ngoài khoá"
+      assert_equal 0, course.course_sessions.where(exam: true).count
+    end
+  end
+
+  test "khoá nào muốn gộp buổi thi vào trong thì khai exam_session_index" do
+    with_tenant(@ws) do
+      course = Course.create!(workspace: @ws, name: "Khoá có buổi thi", sessions_count: 10,
+                              exam_session_index: 10)
+      course.ensure_session_plan!
+      exam = course.course_sessions.find_by(position: 10)
+      assert exam.exam
+      assert_equal "Thi tốt nghiệp", exam.title
     end
   end
 

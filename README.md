@@ -73,10 +73,10 @@ hình **Cấu hình hệ thống** của BOD:
 
 | Điểm | Mặc định đang chạy |
 |---|---|
-| `OQ-05` công lớp 1:4 | 2.0 công (tuyến tính) — đổi thành 1.5 nếu khách muốn đặt trần |
-| `OQ-06` học viên vắng | Tính công theo **sĩ số đăng ký** — trung tâm chịu phần thiệt |
+| `OQ-05` ✅ đã chốt | Mỗi học viên trong một tiết = 0.5 công → lớp 1:4 = **2.0 công**, không đặt trần |
+| `OQ-06` ✅ đã chốt | Tính công theo **sĩ số CÓ MẶT** — học viên vắng thì giáo viên không được tính công cho suất đó |
 | `OQ-22` nhận xét | **Không** chặn lương, chỉ có deadline 24h và job nhắc |
-| `OQ-25` 11 hay 12 buổi | Khoá 12 buổi = 11 buổi học + buổi 12 là buổi thi; buổi thi không trừ gói nhưng vẫn tính công |
+| `OQ-25` ✅ đã chốt | Khoá có đủ **12 buổi học**, buổi 12 KHÔNG phải buổi thi. Kỳ thi xếp riêng ở màn hình "Chuẩn bị thi tốt nghiệp" |
 | `OQ-07` danh sách thi | Cờ "đủ điều kiện" là cờ **dính** — học sang buổi sau vẫn không rớt khỏi danh sách |
 | `OQ-13` vé lẻ | Mã QR một lần, không đăng ký khuôn mặt |
 | `OQ-26` doanh thu thuê hồ | Tách thành dòng riêng trên dashboard |
@@ -142,11 +142,20 @@ Order trước nên hai dải không được chồng nhau.
 | `FeedbackReminderJob` | 19:00 hằng ngày | Nhắc giáo viên nộp nhận xét quá hạn |
 | `BillingRenewalJob` | 10:30 hằng ngày | Hoá đơn thuê bao nền tảng + tạm ngưng trung tâm quá hạn |
 
-## Còn lại cần khách quyết
+### Hệ quả của OQ-06 cần theo dõi khi chạy thật
 
-Ba điểm đang chạy theo mặc định ở trên nhưng nên xác nhận sớm, vì đổi thì phải
-chạy lại số liệu đã tính: `OQ-05` (công lớp 1:4), `OQ-06` (cơ sở tính công khi có
-học viên vắng), `OQ-25` (buổi 12 có phải buổi thi không).
+Nghỉ không báo thì học viên **không** bị trừ buổi (BR-12), và giáo viên cũng
+**không** được tính công cho suất đó. Buổi ấy vừa không có doanh thu vừa không
+có chi phí công — phần thiệt dồn về phía giáo viên vì một lý do ngoài tầm kiểm
+soát của họ. Chỉ số **vắng không báo** trên dashboard BOD chính là để nhìn thấy
+nếu điều này thành vấn đề; nếu tỷ lệ lên cao thì nên cân nhắc chính sách phạt
+vắng không báo, hoặc đổi `credit_basis` sang `registered`.
+
+## Còn lại
+
+Ba điểm OQ chặn EPIC chấm công đều đã được khách chốt ngày 13/09/2026. Các điểm
+OQ còn lại (`OQ-13` vé lẻ, `OQ-26` doanh thu thuê hồ, `OQ-03` quyền trong hộ,
+`OQ-22` nhận xét) đang chạy theo mặc định ghi ở bảng trên, đổi được bằng cấu hình.
 
 Hai phụ thuộc bên ngoài: tài khoản **merchant PayOS** đã kích hoạt, và **VPS**
 cho `boidat.czin.net` + wildcard DNS.

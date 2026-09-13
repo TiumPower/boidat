@@ -8,24 +8,32 @@ module BusinessSettings
   extend ActiveSupport::Concern
 
   DEFAULTS = {
-    # BR-02 + OQ-05 — công của giáo viên trong 1 tiết theo sĩ số.
-    # Mức 4 học viên khách chưa chốt: mặc định suy tuyến tính (2.0).
+    # BR-02 + OQ-05 — ĐÃ CHỐT 13/09/2026: công tuyến tính, mỗi học viên trong một
+    # tiết là 0.5 công, nên lớp 1:4 = 2.0 công. Không đặt trần.
     "credit_table" => { "1" => 0.5, "2" => 1.0, "3" => 1.5, "4" => 2.0 },
 
-    # OQ-06 — tính công theo sĩ số ĐĂNG KÝ hay sĩ số CÓ MẶT.
-    # Mặc định "registered": giáo viên không bị phạt vì phụ huynh vắng.
-    "credit_basis" => "registered", # registered | present
+    # OQ-06 — ĐÃ CHỐT 13/09/2026: tính theo sĩ số CÓ MẶT. Học viên vắng thì
+    # giáo viên không được tính công cho suất đó.
+    #
+    # Hệ quả cần theo dõi: nghỉ không báo cũng không trừ buổi của học viên
+    # (BR-12), nên buổi đó vừa không có doanh thu vừa không trả công — phần
+    # thiệt dồn hết về phía giáo viên vì một lý do ngoài tầm kiểm soát của họ.
+    # Dashboard có chỉ số "vắng không báo" chính là để nhìn thấy nếu nó thành
+    # vấn đề.
+    "credit_basis" => "present", # present | registered
 
     # OQ-22 — nhận xét của giáo viên KHÔNG chặn chấm công, chỉ có deadline.
     "feedback_blocks_payroll" => false,
     "feedback_deadline_hours" => 24,
 
-    # BR-11 / FR-212b / OQ-25 — một khoá 12 buổi: 11 buổi học + buổi 12 là buổi thi.
+    # BR-11 / FR-212b / OQ-25 — ĐÃ CHỐT 13/09/2026: khoá có ĐỦ 12 BUỔI HỌC,
+    # buổi 12 KHÔNG phải buổi thi. Kỳ thi tốt nghiệp là sự kiện xếp riêng, nằm
+    # ngoài gói — admin đặt lịch thi ở màn hình "Chuẩn bị thi tốt nghiệp".
     "course_sessions"        => 12,
-    "graduation_at_session"  => 11,   # FR-208: đủ ĐÚNG 11 buổi thì vào danh sách thi
-    "exam_session_index"     => 12,
-    "exam_deducts_session"   => false, # buổi thi không trừ khỏi gói
-    "exam_pays_credit"       => true,  # nhưng giáo viên vẫn được tính công
+    "graduation_at_session"  => 11,   # FR-208: đủ ĐÚNG 11 buổi thì vào danh sách chuẩn bị thi
+    "exam_session_index"     => nil,  # nil = không buổi nào trong khoá là buổi thi
+    "exam_deducts_session"   => false, # buổi thi xếp riêng nên không trừ khỏi gói 12 buổi
+    "exam_pays_credit"       => true,  # giáo viên coi thi vẫn được tính công cho buổi thi riêng
     "exam_eligible_sticky"   => true,  # OQ-07: đã vào danh sách thì không rớt ra
 
     # BR-11 — hạn dùng gói.
@@ -96,7 +104,11 @@ module BusinessSettings
   def credit_basis_registered? = setting("credit_basis").to_s == "registered"
   def course_session_count     = setting("course_sessions").to_i
   def graduation_at_session    = setting("graduation_at_session").to_i
-  def exam_session_index       = setting("exam_session_index").to_i
+  # nil = kỳ thi xếp riêng, không buổi nào trong khoá bị đánh dấu là buổi thi.
+  def exam_session_index
+    value = setting("exam_session_index")
+    value.presence&.to_i
+  end
   def exam_deducts_session?    = !!setting("exam_deducts_session")
   def exam_pays_credit?        = !!setting("exam_pays_credit")
   def exam_eligible_sticky?    = !!setting("exam_eligible_sticky")

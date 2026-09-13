@@ -76,8 +76,8 @@ class TeacherPortalTest < ActionDispatch::IntegrationTest
     with_tenant(@ws) do
       entry = @lesson.reload.timesheet_entry
       assert entry, "phải có dòng công sau khi điểm danh"
-      assert_equal 1.0, entry.credits.to_f,
-                   "tính theo sĩ số đăng ký (OQ-06): 2 em đăng ký → 1.0 công dù chỉ 1 em đến"
+      assert_equal 0.5, entry.credits.to_f,
+                   "tính theo sĩ số có mặt (OQ-06): 2 em đăng ký nhưng chỉ 1 em đến → 0.5 công"
     end
   end
 

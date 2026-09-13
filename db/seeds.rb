@@ -151,7 +151,7 @@ ActsAsTenant.with_tenant(ws) do
     ["Tăng cự ly tự do",       "Bơi 15m liên tục"],
     ["Đạp chân ếch",           "Đạp đúng kỹ thuật"],
     ["Ôn tập & an toàn nước",  "Đủ điều kiện thi"],
-    ["Thi tốt nghiệp",         "Bơi 25m liên tục"]
+    ["Hoàn thiện & kiểm tra thử", "Bơi 25m liên tục"]
   ].freeze
 
   courses_data = [
@@ -168,7 +168,8 @@ ActsAsTenant.with_tenant(ws) do
     if c[:plan]
       c[:plan].each_with_index do |(title, goal), i|
         cs = CourseSession.find_by(workspace: ws, course: course, position: i + 1)
-        cs&.update!(title: title, goal: goal, exam: (i + 1) == course.exam_session)
+        # OQ-25 đã chốt: cả 12 buổi đều là buổi học, kỳ thi xếp riêng.
+        cs&.update!(title: title, goal: goal, exam: false)
       end
     end
     course
@@ -264,7 +265,23 @@ ActsAsTenant.with_tenant(ws) do
       students: [{ name: "Phan Linh Đan", birthdate: "2018-08-08", gender: "nữ" }] },
     { household: "Gia đình Trương Hữu Phước", pool: go_vap,
       guardians: [{ name: "Trương Hữu Phước", phone: "0933112322", role: "owner", relation: "Bố" }],
-      students: [{ name: "Trương Quốc Bảo", birthdate: "2016-02-14", gender: "nam" }] }
+      students: [{ name: "Trương Quốc Bảo", birthdate: "2016-02-14", gender: "nam" }] },
+    { household: "Gia đình Nguyễn Văn Dũng", pool: thu_duc,
+      guardians: [{ name: "Nguyễn Văn Dũng", phone: "0933112333", role: "owner", relation: "Bố" },
+                  { name: "Lê Thị Yến", phone: "0933112334", role: "pickup", relation: "Bà" }],
+      students: [{ name: "Nguyễn Gia Bảo (TĐ)", birthdate: "2017-01-09", gender: "nam" }] },
+    { household: "Gia đình Mai Xuân Hùng", pool: thu_duc,
+      guardians: [{ name: "Mai Xuân Hùng", phone: "0933112344", role: "owner", relation: "Bố" }],
+      students: [{ name: "Mai Đức Anh", birthdate: "2016-06-21", gender: "nam" }] },
+    { household: "Gia đình Tạ Công Sơn", pool: thu_duc,
+      guardians: [{ name: "Tạ Công Sơn", phone: "0933112355", role: "owner", relation: "Bố" }],
+      students: [{ name: "Tạ Phương Vy", birthdate: "2018-11-02", gender: "nữ" }] },
+    { household: "Gia đình Lê Hoài Nam", pool: go_vap,
+      guardians: [{ name: "Lê Hoài Nam", phone: "0933112366", role: "owner", relation: "Bố" }],
+      students: [{ name: "Lê Nam Phong", birthdate: "2015-04-17", gender: "nam" }] },
+    { household: "Gia đình Đinh Thảo Nguyên", pool: go_vap,
+      guardians: [{ name: "Đinh Thảo Nguyên", phone: "0933112377", role: "owner", relation: "Mẹ" }],
+      students: [{ name: "Ngô Bảo Trâm", birthdate: "2017-09-28", gender: "nữ" }] }
   ]
 
   households_data.each do |h|
@@ -400,6 +417,31 @@ ActsAsTenant.with_tenant(ws) do
               class_type: 2, weekdays: [5], hour: 19, start_date: 3.weeks.ago.to_date.beginning_of_week,
               students: [by_name["Phạm Quốc Duy"]], used: 5)
 
+  # Lớp ở hai hồ còn lại — để chuyển hồ trên sidebar là thấy dữ liệu ngay.
+  td_by_name = Student.where(pool: thu_duc, kind: "center").index_by(&:name)
+  gv_by_name = Student.where(pool: go_vap, kind: "center").index_by(&:name)
+  yen     = Teacher.joins(:user).find_by(users: { email: "yen@boidat.vn" })
+  truong  = Teacher.joins(:user).find_by(users: { email: "truong@boidat.vn" })
+  van     = Teacher.joins(:user).find_by(users: { email: "van@boidat.vn" })
+  phuc    = Teacher.joins(:user).find_by(users: { email: "phuc@boidat.vn" })
+
+  open_class!(ws: ws, pool: thu_duc, teacher: yen, course: basic_course, package: pkg_1v2,
+              class_type: 2, weekdays: [1, 4], hour: 17, start_date: 6.weeks.ago.to_date.beginning_of_week,
+              students: [td_by_name["Hồ Thanh Trúc"], td_by_name["Nguyễn Gia Bảo (TĐ)"]], used: 6)
+
+  open_class!(ws: ws, pool: thu_duc, teacher: truong, course: basic_course, package: pkg_1v3,
+              class_type: 3, weekdays: [2, 5], hour: 18, start_date: 3.weeks.ago.to_date.beginning_of_week,
+              students: [td_by_name["Lý Gia Huy"], td_by_name["Mai Đức Anh"], td_by_name["Tạ Phương Vy"]],
+              used: 3)
+
+  open_class!(ws: ws, pool: go_vap, teacher: van, course: basic_course, package: pkg_1v2,
+              class_type: 2, weekdays: [3, 6], hour: 16, start_date: 9.weeks.ago.to_date.beginning_of_week,
+              students: [gv_by_name["Phan Linh Đan"], gv_by_name["Trương Quốc Bảo"]], used: 9)
+
+  open_class!(ws: ws, pool: go_vap, teacher: phuc, course: basic_course, package: pkg_1v2,
+              class_type: 2, weekdays: [1, 4], hour: 19, start_date: 11.weeks.ago.to_date.beginning_of_week,
+              students: [gv_by_name["Lê Nam Phong"], gv_by_name["Ngô Bảo Trâm"]], used: 11)
+
   # Giờ giáo viên thuê hồ chiếm chỗ trên bảng lịch (FR-225) — không chấm công,
   # không giáo án, chỉ để slot đó hiện là "đã bận".
   rental_students = Student.where(pool: q7, kind: "renter").to_a
@@ -486,6 +528,144 @@ ActsAsTenant.with_tenant(ws) do
     contract.update!(status: "signed", signed_at: enr.starts_on, signed_by: admin_user,
                      snapshot: contract.build_snapshot,
                      sha256: Digest::SHA256.hexdigest("#{contract.number}-seed"))
+  end
+
+
+  # ---- Dữ liệu demo cho các luồng còn lại --------------------------------
+  # Mục tiêu: mỗi cổng mở lên là có việc để xem, không màn hình nào trống.
+  puts "→ Dữ liệu demo cho từng cổng"
+
+  # Ngày nghỉ lễ sắp tới ở một hồ — để thấy lịch bị chặn đúng chỗ.
+  PoolHoliday.find_or_create_by!(workspace: ws, pool: q7, date: Date.current + 12) do |h|
+    h.reason = "Bảo trì hệ thống lọc nước"
+  end
+
+  # Ảnh khuôn mặt: phần lớn đã đăng ký, vài em chưa (để PWA phụ huynh có việc
+  # phải làm), một em bị gắn cờ chụp lại vì tỷ lệ quét lỗi cao (OQ-01).
+  Student.where(kind: "center").order(:id).each_with_index do |student, idx|
+    next if idx % 5 == 3 # cứ 5 em thì để 1 em chưa có ảnh
+    profile = FaceProfile.find_or_initialize_by(workspace: ws, student: student)
+    next unless profile.new_record?
+    profile.assign_attributes(external_ref: "#{ws.id}:#{student.id}", embedding_version: "buffalo_l",
+                              quality: (0.72 + rand * 0.2).round(3), samples_count: 3,
+                              captured_at: rand(1..10).months.ago,
+                              scan_count: rand(6..20), fail_count: 0)
+    profile.save!
+    profile.update!(fail_count: (profile.scan_count * 0.4).round, recapture_flag: true) if idx == 6
+    BiometricConsent.find_or_create_by!(workspace: ws, student: student) do |c|
+      c.guardian = student.household.owner
+      c.terms_version = BiometricConsent::CURRENT_TERMS_VERSION
+      c.consented_at = profile.captured_at
+      c.ip = "113.161.0.#{rand(2..250)}"
+      c.user_agent = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X)"
+    end
+  end
+
+  # Học viên đã đủ điều kiện thi tốt nghiệp (FR-208) — cần đúng mốc buổi.
+  target = ws.graduation_at_session
+  Enrollment.active.includes(:student).order(:id).first(3).each_with_index do |enr, i|
+    enr.update!(sessions_used: target + i - 1)
+    enr.check_exam_eligibility!
+  end
+  # Một em đã có kết quả thi để màn hình kết quả không trống.
+  if (graded = Enrollment.active.where.not(exam_eligible_at: nil).first)
+    graded.update!(exam_date: 5.days.ago.to_date, exam_result: "passed")
+  end
+
+  # Đơn xin nghỉ đang chờ Admin duyệt (FR-211) — mở cổng vận hành là thấy việc.
+  upcoming = Lesson.where(teacher: minh, status: "scheduled")
+                   .where("date >= ?", Date.current).order(:date, :start_hour).limit(2).pluck(:id)
+  if upcoming.any? && LeaveRequest.where(teacher: minh, status: "pending").none?
+    LeaveRequest.create!(workspace: ws, teacher: minh, lesson_ids: upcoming,
+                         reason: "Việc gia đình, em nhờ trung tâm sắp xếp lịch bù giúp học viên ạ.",
+                         status: "pending", submitted_at: 1.day.ago)
+  end
+  # Một đơn đã duyệt trước đó, kèm yêu cầu học bù phụ huynh chưa chọn phương án.
+  past_lesson = Lesson.where(teacher: hanh, status: "done").order(:date).last
+  if past_lesson && LeaveRequest.where(teacher: hanh).none?
+    approved = LeaveRequest.create!(workspace: ws, teacher: hanh, lesson_ids: [past_lesson.id],
+                                    reason: "Tập huấn cứu hộ", status: "approved",
+                                    submitted_at: 10.days.ago, reviewed_at: 9.days.ago,
+                                    reviewed_by: User.find_by(email: "hoang@boidat.vn"))
+    past_lesson.swim_class.active_enrollments.each do |enr|
+      MakeupRequest.find_or_create_by!(workspace: ws, enrollment: enr, from_lesson: past_lesson) do |m|
+        m.pool = past_lesson.pool
+        m.student = enr.student
+        m.leave_request = approved
+        m.origin = "teacher_leave"
+        m.status = "pending"
+        m.reason = approved.reason
+      end
+    end
+  end
+
+  # Thông báo cho phụ huynh, gồm một cái BẮT BUỘC XÁC NHẬN còn treo (OQ-16) —
+  # để màn hình "cần gọi điện" của admin có dữ liệu thật.
+  Guardian.where(role: "owner").limit(6).each_with_index do |g, i|
+    next if Notification.where(recipient: g).exists?
+    Notification.create!(workspace: ws, recipient: g, kind: "lesson_reminder",
+                         title: "Nhắc buổi học ngày mai",
+                         body: "Đến sớm 15 phút và quét khuôn mặt tại quầy trước khi xuống nước.",
+                         deep_link: "/", created_at: 1.day.ago)
+    next unless i < 3
+    Notification.create!(workspace: ws, recipient: g, kind: "teacher_leave",
+                         title: "Cô Hạnh nghỉ buổi #{I18n.l(Date.current + 3, format: '%d/%m')}",
+                         body: "Buổi này không bị trừ. Chọn một phương án cho con.",
+                         requires_ack: true, deep_link: "/notifications", created_at: 6.hours.ago)
+  end
+
+  # Vé lẻ trong ngày (FR-214) — một vé đã dùng, một vé còn hiệu lực.
+  day_pass = Package.find_by(kind: "day_pass")
+  if day_pass && DayPassTicket.where(pool: q7, valid_on: Date.current).none?
+    2.times do |i|
+      order = Order.create!(workspace: ws, pool: q7, package: day_pass,
+                            sale: User.find_by(email: "tram@boidat.vn"),
+                            amount: day_pass.price_for(q7).to_i * (i + 1), kind: "day_pass",
+                            status: "paid", paid_at: Time.current - (i + 1).hours,
+                            note: ["Khách vãng lai", "Nhóm 2 khách"][i])
+      order.payments.create!(workspace: ws, amount: order.amount, method: "cash",
+                             paid_at: order.paid_at)
+      ticket = DayPassTicket.create!(workspace: ws, pool: q7, order: order,
+                                     issued_by: order.sale, quantity: i + 1,
+                                     guest_name: ["Anh Hoàng", "Chị Ngân"][i],
+                                     guest_phone: ["0912888111", "0912888222"][i],
+                                     valid_on: Date.current)
+      ticket.redeem! if i.zero?
+    end
+  end
+
+  # Doanh thu cho thuê hồ (OQ-26) — dòng riêng trên dashboard.
+  if Order.where(kind: "rental").none?
+    rental_order = Order.create!(workspace: ws, pool: q7, sale: User.find_by(email: "hoang@boidat.vn"),
+                                 amount: 12_000_000, kind: "rental", status: "paid",
+                                 paid_at: Date.current.beginning_of_month + 4.days,
+                                 note: "CLB Cá Heo · 40 giờ × 300.000đ")
+    rental_order.payments.create!(workspace: ws, amount: rental_order.amount, method: "transfer",
+                                  paid_at: rental_order.paid_at)
+  end
+
+  # Đơn đã thanh toán phải có bản ghi thu tiền tương ứng, nếu không màn hình chi
+  # tiết đơn hiện "đã thanh toán" mà lịch sử thu tiền trống — nhìn như lỗi.
+  Order.paid.includes(:payments).each do |order|
+    next if order.payments.any?
+    order.payments.create!(workspace: ws, amount: order.total,
+                           method: %w[payos cash transfer].sample,
+                           paid_at: order.paid_at || order.created_at)
+  end
+
+  # Kỳ chốt công đã khoá (FR-210) — giáo viên thấy lịch sử kỳ lương.
+  period_start = Date.current.beginning_of_month
+  period_end = [period_start + 14, Date.current - 1].min
+  if period_end > period_start && PayrollPeriod.where(pool: q7, starts_on: period_start).none?
+    period = PayrollPeriod.create!(workspace: ws, pool: q7, starts_on: period_start, ends_on: period_end)
+    period.lock!(by: bod)
+  end
+
+  # Bản nháp xếp lịch tháng sau (FR-205) — mở màn hình là có cái để duyệt.
+  next_month = Date.current.next_month.beginning_of_month
+  if ScheduleRun.where(pool: q7, month: next_month).none?
+    AutoScheduler.new(pool: q7, month: next_month, workspace: ws)
+                 .build_draft(created_by: User.find_by(email: "hoang@boidat.vn"))
   end
 
   puts "   #{Pool.count} hồ · #{Teacher.count} giáo viên · #{Course.count} khoá · #{Package.count} gói · " \

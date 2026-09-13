@@ -28,12 +28,24 @@ class SchedulingTest < ActiveSupport::TestCase
     end
   end
 
-  test "buổi cuối được đánh dấu là buổi thi" do
+  test "mặc định không buổi nào trong khoá bị đánh dấu là buổi thi (OQ-25)" do
     cls = make_class
     with_tenant(@ws) do
       LessonGenerator.new(cls).call
-      exam = cls.lessons.find_by(session_index: cls.course.exam_session)
-      assert exam.exam?
+      assert_equal 0, cls.lessons.where(exam: true).count
+      assert_equal cls.total_sessions, cls.lessons.count
+    end
+  end
+
+  test "khoá có khai buổi thi thì buổi đó được đánh dấu" do
+    with_tenant(@ws) do
+      course = Course.create!(workspace: @ws, name: "Khoá có thi", sessions_count: 8, exam_session_index: 8)
+      course.ensure_session_plan!
+      cls = SwimClass.create!(workspace: @ws, pool: @pool, teacher: @c.teacher, course: course,
+                              class_type: 2, start_hour: 17, weekdays: [1, 3],
+                              start_date: Date.current.next_week, status: "running")
+      LessonGenerator.new(cls).call
+      assert cls.lessons.find_by(session_index: 8).exam?
     end
   end
 

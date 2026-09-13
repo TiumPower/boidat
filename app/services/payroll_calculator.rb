@@ -4,8 +4,10 @@
 # cấu hình của trung tâm, không hard-code (OQ-04/05).
 #
 # Hai quyết định nghiệp vụ được cài ở đây, cả hai đều đọc từ cấu hình:
-#   · Tính theo sĩ số ĐĂNG KÝ hay sĩ số CÓ MẶT (OQ-06). Mặc định "đăng ký":
-#     giáo viên không bị phạt vì phụ huynh vắng, phần thiệt thuộc về trung tâm.
+#   · Tính theo sĩ số ĐĂNG KÝ hay sĩ số CÓ MẶT (OQ-06). Khách đã chốt **CÓ MẶT**:
+#     học viên vắng thì giáo viên không được tính công cho suất đó. Vì vậy công
+#     của một buổi thay đổi theo từng lượt điểm danh, và buổi không ai đến thì
+#     không phát sinh dòng công nào.
 #   · Nhận xét có chặn lương không (OQ-22). Mặc định KHÔNG — gộp hai nghiệp vụ
 #     không liên quan sẽ gây tranh chấp lương khi thầy quên nhận xét.
 #
@@ -28,8 +30,16 @@ class PayrollCalculator
 
     count = headcount
     credits = @workspace.credits_for(count)
-    rate = @teacher.pay_rate
 
+    # Không ai đến thì không có công (OQ-06 — tính theo sĩ số có mặt). Xoá luôn
+    # dòng cũ thay vì để lại một dòng 0 công: bảng công của giáo viên phải là
+    # danh sách buổi thực sự có tiền, không phải nhật ký mọi buổi từng xếp.
+    if credits.zero?
+      entry.destroy if entry.persisted?
+      return nil
+    end
+
+    rate = @teacher.pay_rate
     entry.assign_attributes(
       pool: @lesson.pool, headcount: count, basis: basis, credits: credits,
       rate: rate, amount: (credits * rate).round, status: "pending"
@@ -38,7 +48,7 @@ class PayrollCalculator
     entry
   end
 
-  # Sĩ số dùng để tính công.
+  # Sĩ số dùng để tính công. Mặc định là số học viên CÓ MẶT.
   def headcount
     if @workspace.credit_basis_registered?
       @lesson.swim_class.seats_taken

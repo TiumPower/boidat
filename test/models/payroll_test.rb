@@ -24,36 +24,53 @@ class PayrollTest < ActiveSupport::TestCase
     end
   end
 
-  test "công = hệ số theo sĩ số × đơn giá cấp độ (BR-02)" do
+  test "công = 0.5 × số học viên CÓ MẶT × đơn giá cấp độ (BR-02, OQ-06)" do
     with_tenant(@ws) do
-      entry = PayrollCalculator.new(@lesson).call
-      assert_equal 3, entry.headcount
-      assert_equal 1.5, entry.credits.to_f, "3 học viên = 1.5 công"
-      assert_equal 135_000, entry.amount, "1.5 công × 90.000đ"
-    end
-  end
-
-  test "mặc định tính theo sĩ số ĐĂNG KÝ, học viên vắng không làm giảm công (OQ-06)" do
-    with_tenant(@ws) do
-      AttendanceRecorder.new(lesson: @lesson, student: @students.first).check_in!
+      @students.each { |st| AttendanceRecorder.new(lesson: @lesson, student: st).check_in! }
       entry = @lesson.reload.timesheet_entry
-      assert_equal 3, entry.headcount, "vẫn tính theo 3 học viên đã đăng ký"
-      assert_equal 1.5, entry.credits.to_f
-      assert_equal "registered", entry.basis
+      assert_equal 3, entry.headcount
+      assert_equal 1.5, entry.credits.to_f, "3 em có mặt = 1.5 công"
+      assert_equal 135_000, entry.amount, "1.5 công × 90.000đ"
+      assert_equal "present", entry.basis
     end
   end
 
-  test "đổi sang tính theo số có mặt thì công giảm theo" do
+  test "học viên vắng thì giáo viên không được tính công cho suất đó (OQ-06)" do
     with_tenant(@ws) do
-      @ws.update_business_settings!("credit_basis" => "present")
+      # Lớp 1:3 nhưng chỉ một em tới.
       AttendanceRecorder.new(lesson: @lesson, student: @students.first).check_in!
       entry = @lesson.reload.timesheet_entry
       assert_equal 1, entry.headcount
-      assert_equal 0.5, entry.credits.to_f
+      assert_equal 0.5, entry.credits.to_f, "chỉ tính suất của em đã đến"
     end
   end
 
-  test "lớp 1:4 dùng đúng mức cấu hình, đặt trần được mà không sửa code (OQ-05)" do
+  test "công cộng dồn theo từng lượt điểm danh" do
+    with_tenant(@ws) do
+      AttendanceRecorder.new(lesson: @lesson, student: @students.first).check_in!
+      assert_equal 0.5, @lesson.reload.timesheet_entry.credits.to_f
+      AttendanceRecorder.new(lesson: @lesson, student: @students.second).check_in!
+      assert_equal 1.0, @lesson.reload.timesheet_entry.credits.to_f
+    end
+  end
+
+  test "không ai đến thì không phát sinh dòng công nào" do
+    with_tenant(@ws) do
+      assert_nil PayrollCalculator.new(@lesson).call
+      assert_nil @lesson.reload.timesheet_entry
+    end
+  end
+
+  test "bỏ điểm danh em cuối cùng thì dòng công biến mất" do
+    with_tenant(@ws) do
+      AttendanceRecorder.new(lesson: @lesson, student: @students.first).check_in!
+      assert @lesson.reload.timesheet_entry.present?
+      AttendanceRecorder.new(lesson: @lesson, student: @students.first).undo!
+      assert_nil @lesson.reload.timesheet_entry, "không còn ai có mặt thì không còn công"
+    end
+  end
+
+  test "lớp 1:4 = 2.0 công, và đổi chính sách vẫn không phải sửa code (OQ-05)" do
     with_tenant(@ws) do
       assert_equal 2.0, @ws.credits_for(4)
       @ws.update_business_settings!("credit_table" => { "1" => 0.5, "2" => 1.0, "3" => 1.5, "4" => 1.5 })
@@ -85,7 +102,8 @@ class PayrollTest < ActiveSupport::TestCase
 
   test "chốt kỳ khoá dòng công lại, tính lại không đổi số đã chốt" do
     with_tenant(@ws) do
-      PayrollCalculator.new(@lesson).call
+      @students.each { |st| AttendanceRecorder.new(lesson: @lesson, student: st).check_in! }
+      PayrollCalculator.new(@lesson.reload).call
       period = PayrollPeriod.create!(workspace: @ws, pool: @pool,
                                      starts_on: @lesson.date, ends_on: @lesson.date)
       period.lock!(by: @c.users[:bod])
@@ -101,13 +119,12 @@ class PayrollTest < ActiveSupport::TestCase
     end
   end
 
-  test "buổi thi vẫn tính công dù không trừ buổi của học viên (OQ-25)" do
+  test "OQ-25: cả 12 buổi đều là buổi học, không buổi nào bị đánh dấu là buổi thi" do
     with_tenant(@ws) do
-      exam = @class.lessons.find_by(exam: true)
-      assert @ws.exam_pays_credit?
-      entry = PayrollCalculator.new(exam).call
-      assert entry.present?
-      assert_equal 1.5, entry.credits.to_f
+      assert_equal 12, @class.lessons.count
+      assert_equal 0, @class.lessons.where(exam: true).count,
+                   "kỳ thi xếp riêng ngoài khoá nên không buổi nào trong khoá là buổi thi"
+      assert @class.lessons.order(:session_index).last.session_index == 12
     end
   end
 end

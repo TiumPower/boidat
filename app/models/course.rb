@@ -24,6 +24,7 @@ class Course < ApplicationRecord
   # của trung tâm (BusinessSettings) — để mở khoá mới không phải khai lại từ đầu.
   def total_sessions      = sessions_count.presence || workspace.course_session_count
   def graduation_session  = graduation_at_session.presence || workspace.graduation_at_session
+  # nil = kỳ thi tốt nghiệp xếp riêng, không buổi nào trong khoá là buổi thi (OQ-25).
   def exam_session        = exam_session_index.presence || workspace.exam_session_index
   def expiry_days         = validity_days.presence || workspace.package_validity_days
 
@@ -35,12 +36,18 @@ class Course < ApplicationRecord
   def plan_for(index) = course_sessions.find { |s| s.position == index }
 
   # Tạo sẵn khung giáo án trống cho đủ số buổi, để admin điền dần.
+  #
+  # Chỉ đánh dấu buổi thi khi khoá thực sự có buổi thi NẰM TRONG khoá. Theo
+  # quyết định OQ-25 thì mặc định không có: cả 12 buổi đều là buổi học, kỳ thi
+  # được xếp riêng ở màn hình "Chuẩn bị thi tốt nghiệp".
   def ensure_session_plan!
+    exam_index = exam_session
     (1..total_sessions).each do |i|
       next if course_sessions.exists?(position: i)
+      is_exam = exam_index.present? && i == exam_index
       course_sessions.create!(workspace: workspace, position: i,
-                              title: i == exam_session ? "Thi tốt nghiệp" : "Buổi #{i}",
-                              exam: i == exam_session)
+                              title: is_exam ? "Thi tốt nghiệp" : "Buổi #{i}",
+                              exam: is_exam)
     end
   end
 end

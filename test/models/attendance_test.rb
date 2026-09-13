@@ -65,13 +65,28 @@ class AttendanceTest < ActiveSupport::TestCase
     end
   end
 
-  test "buổi thi không trừ khỏi gói nhưng vẫn ghi nhận có mặt (OQ-25)" do
+  test "OQ-25: cả 12 buổi đều là buổi học và đều bị trừ khỏi gói" do
     with_tenant(@ws) do
-      exam_lesson = @class.lessons.find_by(exam: true)
+      assert_equal 0, @class.lessons.where(exam: true).count,
+                   "kỳ thi xếp riêng nên không buổi nào trong khoá là buổi thi"
+      last = @class.lessons.order(:session_index).last
       @enrollment.update!(sessions_used: 11)
-      result = AttendanceRecorder.new(lesson: exam_lesson, student: @c.student).check_in!
+      result = AttendanceRecorder.new(lesson: last, student: @c.student).check_in!
       assert result.ok?
-      assert_equal 11, @enrollment.reload.sessions_used, "buổi thi không bị trừ"
+      assert_equal 12, @enrollment.reload.sessions_used, "buổi 12 là buổi học nên vẫn trừ"
+      assert last.attendances.first.deducted
+    end
+  end
+
+  test "trung tâm nào gộp buổi thi vào khoá thì buổi đó không trừ gói" do
+    with_tenant(@ws) do
+      @ws.update_business_settings!("exam_session_index" => 12)
+      exam_lesson = @class.lessons.order(:session_index).last
+      exam_lesson.update!(exam: true)
+      @enrollment.update!(sessions_used: 11)
+
+      AttendanceRecorder.new(lesson: exam_lesson, student: @c.student).check_in!
+      assert_equal 11, @ws.reload && @enrollment.reload.sessions_used
       refute exam_lesson.attendances.first.deducted
     end
   end

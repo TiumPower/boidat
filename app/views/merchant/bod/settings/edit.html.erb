@@ -20,19 +20,20 @@
         <% end %>
       </div>
       <div style="padding:10px 12px; border-radius:10px; background:var(--surface-2); font-size:12.5px; color:var(--ink-2); margin-bottom:14px;">
-        <strong style="color:var(--ink);">OQ-05 chưa chốt với khách.</strong>
-        Lớp 1:4 đang để 2.0 công (suy tuyến tính) — gấp 4 lần lớp 1:1 cho cùng một giờ đứng lớp,
-        trong khi doanh thu lớp nhóm không gấp 4. Muốn đặt trần thì sửa ô “4 HV” thành 1.5.
+        <strong style="color:var(--ink);">Đã chốt:</strong> mỗi học viên trong một tiết là 0.5 công,
+        nên lớp 1:4 = 2.0 công, không đặt trần. Sửa các ô trên nếu sau này chính sách thay đổi.
       </div>
 
       <label class="l-label">Khi có học viên vắng thì tính công theo</label>
       <%= select_tag "settings[credit_basis]",
-            options_for_select([["Sĩ số đăng ký — trung tâm chịu phần thiệt", "registered"],
-                                ["Số có mặt thực tế — giáo viên chịu phần thiệt", "present"]],
+            options_for_select([["Số có mặt thực tế — học viên vắng thì không tính công", "present"],
+                                ["Sĩ số đăng ký — trung tâm chịu phần thiệt", "registered"]],
                                @settings["credit_basis"]), class: "l-field" %>
       <div style="font-size:12.5px; color:var(--ink-2); margin-top:6px;">
-        OQ-06. Học viên vắng không báo thì không bị trừ buổi (BR-12), nên buổi đó không có doanh thu:
-        lựa chọn này quyết định ai chịu phần thiệt.
+        <strong style="color:var(--ink);">Đã chốt: tính theo số có mặt.</strong>
+        Học viên vắng không báo thì không bị trừ buổi (BR-12) và giáo viên cũng không được tính
+        công cho suất đó — buổi ấy vừa không có doanh thu vừa không có chi phí công.
+        Theo dõi chỉ số <em>vắng không báo</em> trên dashboard để biết nếu tỷ lệ này lên cao.
       </div>
 
       <label style="display:flex; gap:8px; align-items:center; font-size:13.5px; margin-top:14px;">
@@ -53,24 +54,28 @@
     <div class="l-panel">
       <div style="font-weight:700;">Khoá học & thi tốt nghiệp</div>
       <p style="font-size:12.5px; color:var(--ink-2); margin:4px 0 14px;">
-        Cách hiểu hiện tại: 11 buổi học + buổi 12 là buổi thi (OQ-25 cần khách xác nhận một câu).
+        <strong style="color:var(--ink);">Đã chốt:</strong> khoá có đủ <strong>12 buổi học</strong>,
+        buổi 12 không phải buổi thi. Kỳ thi tốt nghiệp xếp riêng ở màn hình
+        “Chuẩn bị thi tốt nghiệp” của cổng vận hành.
       </p>
       <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:12px;">
         <div><label class="l-label">Số buổi / khoá</label>
           <%= number_field_tag "settings[course_sessions]", @settings["course_sessions"], class: "l-field" %></div>
         <div><label class="l-label">Vào danh sách thi ở buổi</label>
           <%= number_field_tag "settings[graduation_at_session]", @settings["graduation_at_session"], class: "l-field" %></div>
-        <div><label class="l-label">Buổi thi là buổi số</label>
-          <%= number_field_tag "settings[exam_session_index]", @settings["exam_session_index"], class: "l-field" %></div>
+        <div><label class="l-label">Buổi thi nằm trong khoá (để trống = thi riêng)</label>
+          <%= number_field_tag "settings[exam_session_index]", @settings["exam_session_index"],
+                class: "l-field", placeholder: "để trống" %></div>
       </div>
       <div style="display:flex; flex-direction:column; gap:8px; font-size:13.5px; margin-bottom:14px;">
         <label style="display:flex; gap:8px;"><%= check_box_tag "settings[exam_deducts_session]", "1", @settings["exam_deducts_session"] %> Buổi thi bị trừ khỏi gói</label>
-        <label style="display:flex; gap:8px;"><%= check_box_tag "settings[exam_pays_credit]", "1", @settings["exam_pays_credit"] %> Buổi thi vẫn tính công cho giáo viên</label>
+        <label style="display:flex; gap:8px;"><%= check_box_tag "settings[exam_pays_credit]", "1", @settings["exam_pays_credit"] %> Giáo viên coi thi được tính công</label>
         <label style="display:flex; gap:8px;"><%= check_box_tag "settings[exam_eligible_sticky]", "1", @settings["exam_eligible_sticky"] %> Giữ học viên trong danh sách thi cho tới khi có kết quả</label>
       </div>
       <div style="font-size:12.5px; color:var(--ink-2); margin-bottom:14px;">
-        Điều kiện thi là <strong>bằng đúng</strong> số buổi đã đặt, nên nếu không giữ cờ thì học viên
-        học sang buổi kế tiếp sẽ biến mất khỏi danh sách — admin bận một tuần là mất dấu (OQ-07).
+        Điều kiện vào danh sách là <strong>bằng đúng</strong> số buổi đã đặt (mặc định 11), nên nếu
+        không giữ cờ thì học viên học sang buổi 12 sẽ biến mất khỏi danh sách — admin bận một tuần
+        là mất dấu (OQ-07). Vào danh sách ở buổi 11 cho admin một buổi lead time để xếp lịch thi.
       </div>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">

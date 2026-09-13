@@ -83,6 +83,8 @@ class LessonGenerator
   end
 
   def build_lesson(date, index)
+    # nil khi kỳ thi được xếp riêng ngoài khoá (OQ-25) — khi đó không buổi nào
+    # trong khoá được đánh dấu là buổi thi.
     exam_index = @course&.exam_session || @swim_class.workspace.exam_session_index
     Row.new(
       workspace_id: @swim_class.workspace_id,
@@ -92,7 +94,7 @@ class LessonGenerator
       date: date,
       start_hour: @swim_class.start_hour,
       session_index: index,
-      exam: index == exam_index,
+      exam: exam_index.present? && index == exam_index,
       status: "scheduled"
     )
   end
