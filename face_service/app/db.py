@@ -16,7 +16,7 @@ from sqlalchemy.orm import sessionmaker
 from .config import get_settings
 
 _settings = get_settings()
-engine = create_engine(_settings.database_url, pool_pre_ping=True, future=True)
+engine = create_engine(_settings.face_database_url, pool_pre_ping=True, future=True)
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False, future=True)
 
 SCHEMA = """

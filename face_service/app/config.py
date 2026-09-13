@@ -11,7 +11,10 @@ class Settings(BaseSettings):
     # Cho phép lệch đồng hồ bao nhiêu giây — chống replay.
     signature_max_skew: int = 60
 
-    database_url: str = "postgresql+psycopg://localhost/boidat_face"
+    # Cố tình KHÔNG dùng tên DATABASE_URL: Rails và face service dùng chung file
+    # .env trên máy chủ, mà Rails cũng đọc DATABASE_URL — chuỗi SQLAlchemy
+    # (postgresql+psycopg://) sẽ làm Rails không parse được và app không khởi động.
+    face_database_url: str = "postgresql+psycopg://localhost/boidat_face"
 
     # Ngưỡng khớp mặc định. Rails cũng có ngưỡng riêng trong cấu hình trung tâm
     # và gửi kèm theo request; giá trị ở đây chỉ là mức sàn của service.

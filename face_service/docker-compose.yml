@@ -23,7 +23,7 @@ services:
       face-db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql+psycopg://boidat:${FACE_DB_PASSWORD:-boidat}@face-db:5432/boidat_face
+      FACE_DATABASE_URL: postgresql+psycopg://boidat:${FACE_DB_PASSWORD:-boidat}@face-db:5432/boidat_face
       FACE_SERVICE_SECRET: ${FACE_SERVICE_SECRET:?bắt buộc phải đặt, dùng chung với Rails}
       MATCH_THRESHOLD: ${MATCH_THRESHOLD:-0.42}
       LIVENESS_ENABLED: ${LIVENESS_ENABLED:-true}
