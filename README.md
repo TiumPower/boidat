@@ -18,7 +18,7 @@ có nhiều **hồ bơi (Pool)**. Xây theo SRS v1.7 và bộ UX/UI 5 cổng và
 | Cổng vận hành (S2) | `/merchant/ops` | Admin · Sale | Bảng master data lịch, đăng ký học viên, đơn hàng, chấm công, chat |
 | Quầy điểm danh (S3) | `/desk` | Lễ tân tại hồ | Quét khuôn mặt, vé lẻ, danh sách ca trực |
 | Cổng giáo viên (S4) | `/teacher` | Giáo viên | Lịch dạy, giáo án, nhận xét, bảng công, đăng ký lịch, xin nghỉ |
-| Cổng phụ huynh (S5) | `<subdomain>` hoặc `/w/:slug` | Phụ huynh · học viên | Hộ gia đình, tiến độ, nhận xét, hoá đơn, xin vắng, chat, ảnh khuôn mặt |
+| Cổng phụ huynh (S5) | `<subdomain>` hoặc `/w/:slug` | Phụ huynh · học viên | Hộ gia đình, tiến độ, nhận xét, hoá đơn, **tái ký**, xin vắng, chat, ảnh khuôn mặt |
 
 > Namespace controller của cổng giáo viên là **`Coach::`**, không phải `Teacher::` —
 > model `Teacher` và module `Teacher::` va nhau dưới Zeitwerk. Route helper vẫn là
@@ -98,13 +98,19 @@ tên, hoặc admin điểm danh tay trên bảng master data (`FR-234`).
 ## Test
 
 ```bash
-bin/rails test                                   # 139 test Ruby
+bin/rails test                                   # 160 test Ruby
 cd face_service && .venv/bin/python -m pytest -q # 10 test Python
 ```
 
 Lưới an toàn tập trung vào những chỗ hỏng là mất tiền hoặc mất niềm tin:
 rò rỉ dữ liệu giữa các hồ, trừ buổi, chấm công, idempotency thanh toán, ngoại lệ
 tra cứu khuôn mặt, và vòng đời khoá học.
+
+`test/integration/end_to_end_test.rb` chạy hai kịch bản xuyên suốt bằng HTTP thật
+qua cả năm cổng — sale chốt slot → ký cam kết → phụ huynh quét QR → gửi ảnh khuôn
+mặt → webhook PayOS (gửi hai lần để chắc không ghi nhận trùng) → lễ tân điểm danh
+→ giáo viên nhận xét và công tự lên → BOD thấy doanh thu → phụ huynh tái ký; và
+kịch bản thầy xin nghỉ → duyệt → hoàn buổi → phụ huynh đặt lịch bù.
 
 ## Deploy
 
@@ -150,6 +156,22 @@ có chi phí công — phần thiệt dồn về phía giáo viên vì một lý
 soát của họ. Chỉ số **vắng không báo** trên dashboard BOD chính là để nhìn thấy
 nếu điều này thành vấn đề; nếu tỷ lệ lên cao thì nên cân nhắc chính sách phạt
 vắng không báo, hoặc đổi `credit_basis` sang `registered`.
+
+## Tái ký tự phục vụ
+
+Phụ huynh của học viên cũ mở `/students/:id/enroll` trên PWA và tự đăng ký khoá
+mới: chọn gói, rồi **chọn lớp** — hoặc vào một lớp nhóm đang chạy còn chỗ, hoặc
+mở lớp mới ở khung giờ giáo viên đã đăng ký dạy mà chưa có ai. Không cần gọi sale.
+
+Ba ràng buộc cài trong `SelfEnrollmentOptions` và `RegistrationForm`:
+
+- Chỉ **chủ hộ** thấy màn này — người đưa đón thì không (OQ-03).
+- Dùng lại đúng hồ sơ học viên đang có. Nhân bản học viên là cách nhanh nhất để
+  mất dấu lịch sử học và làm hỏng mọi thống kê.
+- Gói phải khớp sĩ số của lớp: không cho gói 1:1 rơi vào lớp 1:3.
+
+Đơn sinh ra mang `kind: renewal`, và sale/admin ở hồ đó nhận thông báo ngay —
+tái ký là doanh thu, không để tới lúc đối soát mới biết.
 
 ## Còn lại
 

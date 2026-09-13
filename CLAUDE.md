@@ -17,6 +17,11 @@
   gọi trong view sẽ nổ `NoMethodError`.
 - Chạy `bin/rails tailwindcss:build` sau khi sửa CSS, hoặc dùng `bin/dev`.
   `rails server` trần KHÔNG biên dịch Tailwind.
+- **Helper `member_*` phải truyền tham số bằng keyword** (`member_student_path(id:)`),
+  không truyền vị trí. Segment `(/w/:workspace_slug)` là tuỳ chọn, nên ở chế độ
+  subdomain nó nuốt mất đối số vị trí đầu tiên → sinh sai URL rồi nổ 500 ĐÚNG TRÊN
+  PRODUCTION mà dev không tái hiện được. `customer_subdomain_test.rb` chạy ở chế độ
+  subdomain chính là để bắt lỗi này.
 
 ## Quy ước phải giữ
 
