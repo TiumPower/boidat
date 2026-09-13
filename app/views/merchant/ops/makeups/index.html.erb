@@ -1,0 +1,49 @@
+<% content_for :page_title, "Học bù & đổi buổi" %>
+<% content_for :page_sub, "FR-404 · #{current_pool.name}" %>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start;">
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:4px;">Chờ phụ huynh chọn (<%= @pending.size %>)</div>
+    <p style="font-size:12.5px; color:var(--ink-2); margin-bottom:12px;">
+      Đây là nhóm cần gọi điện nếu để lâu — hệ thống không gửi SMS/Zalo.
+    </p>
+    <% @pending.each do |req| %>
+      <div style="padding:9px 0; border-bottom:1px solid var(--line);">
+        <div style="font-weight:600; font-size:13.5px;"><%= req.student.name %></div>
+        <div style="font-size:12.5px; color:var(--ink-2);">
+          <%= req.origin == "teacher_leave" ? "Thầy nghỉ" : "Phụ huynh xin vắng" %>
+          <% if req.from_lesson %> · buổi <%= l(req.from_lesson.date, format: "%d/%m") %> <%= req.from_lesson.time_label %><% end %>
+        </div>
+      </div>
+    <% end %>
+    <% if @pending.empty? %>
+      <p style="font-size:13.5px; color:var(--ink-2);">Không có yêu cầu nào đang chờ.</p>
+    <% end %>
+  </div>
+
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:12px;">Đã đặt buổi bù</div>
+    <table class="l-table">
+      <thead><tr><th>Học viên</th><th>Phương án</th><th>Buổi bù</th></tr></thead>
+      <tbody>
+        <% @booked.each do |req| %>
+          <tr>
+            <td><%= req.student.name %></td>
+            <td style="font-size:13px;"><%= req.choice_label %></td>
+            <td style="font-size:13px; color:var(--ink-2);">
+              <% if req.to_lesson %>
+                <%= l(req.to_lesson.date, format: "%d/%m") %> · <%= req.to_lesson.time_label %> ·
+                <%= req.to_lesson.teacher.display_name %>
+              <% else %>
+                Chờ trung tâm sắp lịch
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <% if @booked.empty? %>
+      <p style="font-size:13.5px; color:var(--ink-2);">Chưa có buổi bù nào được đặt.</p>
+    <% end %>
+  </div>
+</div>

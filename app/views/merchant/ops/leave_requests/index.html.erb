@@ -1,0 +1,69 @@
+<% content_for :page_title, "Đơn xin nghỉ của giáo viên" %>
+<% content_for :page_sub, "FR-211 · #{current_pool.name}" %>
+
+<div style="display:grid; grid-template-columns:1fr 360px; gap:16px; align-items:start;">
+  <div>
+    <div class="l-panel" style="margin-bottom:16px;">
+      <div style="font-weight:700; margin-bottom:12px;">Chờ duyệt (<%= @pending.size %>)</div>
+      <% if @pending.empty? %>
+        <p style="font-size:13.5px; color:var(--ink-2);">Không có đơn nào đang chờ.</p>
+      <% end %>
+      <% @pending.each do |req| %>
+        <div style="padding:12px 0; border-bottom:1px solid var(--line);">
+          <div style="display:flex; justify-content:space-between; align-items:baseline;">
+            <div>
+              <div style="font-weight:700; font-size:14.5px;"><%= req.teacher.display_name %></div>
+              <div style="font-size:12.5px; color:var(--ink-2);">
+                <%= req.lesson_ids.size %> buổi · gửi <%= l(req.created_at.to_date, format: "%d/%m") %>
+              </div>
+            </div>
+            <%= link_to "Xem chi tiết", merchant_ops_leave_request_path(req), class: "l-btn l-btn-soft",
+                  style: "padding:5px 12px; font-size:12.5px;" %>
+          </div>
+          <p style="font-size:13px; color:var(--ink-2); margin:8px 0 0;"><%= req.reason %></p>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="l-panel">
+      <div style="font-weight:700; margin-bottom:12px;">Đơn đã xử lý</div>
+      <table class="l-table">
+        <tbody>
+          <% @recent.each do |req| %>
+            <tr>
+              <td><%= req.teacher.display_name %></td>
+              <td style="font-size:13px; color:var(--ink-2);"><%= req.label %></td>
+              <td style="text-align:right;"><span class="l-chip <%= 'l-chip-brand' if req.approved? %>"><%= req.status_label %></span></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+      <% if @recent.empty? %>
+        <p style="font-size:13.5px; color:var(--ink-2);">Chưa có đơn nào được xử lý.</p>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Danh sách gọi điện — bù cho quyết định bỏ Zalo ZNS/SMS (OQ-16). %>
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:4px;">Cần gọi điện</div>
+    <p style="font-size:12.5px; color:var(--ink-2); margin-bottom:12px;">
+      Phụ huynh đã được đẩy thông báo nhưng <strong>chưa xác nhận</strong> phương án.
+      Vì hệ thống không gửi SMS/Zalo, đây là nhóm phải gọi.
+    </p>
+    <% if @callback_list.empty? %>
+      <p style="font-size:13.5px; color:var(--ink-2);">Tất cả phụ huynh đã xác nhận. 👌</p>
+    <% end %>
+    <% @callback_list.each do |note| %>
+      <div style="padding:9px 0; border-bottom:1px solid var(--line);">
+        <div style="font-weight:600; font-size:13.5px;"><%= note.recipient.name %></div>
+        <div style="font-size:12px; color:var(--ink-2);">
+          <%= note.recipient.phone %> · <%= note.title %>
+        </div>
+        <div style="font-size:11.5px; color:var(--ink-2);">
+          gửi <%= time_ago_in_words(note.created_at) %> trước
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

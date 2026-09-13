@@ -1,0 +1,67 @@
+<% content_for :title, "Xin vắng & học bù" %>
+<% content_for :tab, "makeups" %>
+<div class="l-screen" style="padding-bottom:100px;">
+  <header style="padding:18px 18px 12px;">
+    <div style="font-family:var(--font-display); font-size:20px; font-weight:700;">Xin vắng & học bù</div>
+    <div style="font-size:13px; color:var(--ink-2);">
+      Nghỉ không báo thì buổi vẫn còn nguyên, nhưng lớp sẽ trống chỗ — báo trước giúp trung tâm sắp lịch.
+    </div>
+  </header>
+
+  <div style="padding:0 18px;">
+    <% if @pending.any? %>
+      <div class="l-eyebrow" style="margin-bottom:8px;">Cần chọn phương án</div>
+      <% @pending.each do |req| %>
+        <%= link_to member_makeup_path(req), class: "l-panel",
+              style: "display:block; margin-bottom:10px; text-decoration:none; color:inherit; border-color:var(--primary);" do %>
+          <div style="font-weight:700; font-size:14px;">
+            <%= req.student.name %> ·
+            <%= req.from_lesson ? l(req.from_lesson.date, format: "%d/%m") : "buổi chưa xác định" %>
+          </div>
+          <div style="font-size:12.5px; color:var(--ink-2); margin-top:4px;">
+            <%= req.origin == "teacher_leave" ? "#{req.from_lesson&.teacher&.display_name} nghỉ buổi này" : "Bạn đã xin vắng" %>
+            · buổi này không bị trừ
+          </div>
+          <div style="font-size:12.5px; color:var(--primary); font-weight:600; margin-top:8px;">Chọn phương án →</div>
+        <% end %>
+      <% end %>
+    <% end %>
+
+    <div class="l-eyebrow" style="margin:18px 0 8px;">Buổi học sắp tới</div>
+    <% @upcoming.each do |lesson| %>
+      <div class="l-panel" style="margin-bottom:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-weight:600; font-size:13.5px;">
+              <%= %w[CN T2 T3 T4 T5 T6 T7][lesson.date.wday] %> · <%= l(lesson.date, format: "%d/%m") %> · <%= lesson.time_label %>
+            </div>
+            <div style="font-size:12px; color:var(--ink-2);"><%= lesson.teacher.display_name %> · <%= lesson.title %></div>
+          </div>
+          <%= button_to "Xin vắng", member_absences_path(lesson_id: lesson.id),
+                class: "l-btn l-btn-soft", style: "padding:6px 12px; font-size:12.5px;",
+                form: { data: { turbo_confirm: "Xin vắng buổi #{l(lesson.date, format: '%d/%m')}? Buổi này sẽ không bị trừ." } } %>
+        </div>
+      </div>
+    <% end %>
+    <% if @upcoming.empty? %>
+      <p style="font-size:13.5px; color:var(--ink-2);">Chưa có buổi học nào sắp tới.</p>
+    <% end %>
+
+    <% if @booked.any? %>
+      <div class="l-eyebrow" style="margin:18px 0 8px;">Đã đặt buổi bù</div>
+      <% @booked.each do |req| %>
+        <div class="l-panel" style="margin-bottom:8px;">
+          <div style="font-weight:600; font-size:13.5px;"><%= req.student.name %> · <%= req.choice_label %></div>
+          <div style="font-size:12.5px; color:var(--ink-2);">
+            <% if req.to_lesson %>
+              <%= l(req.to_lesson.date, format: "%d/%m") %> · <%= req.to_lesson.time_label %> ·
+              <%= req.to_lesson.teacher.display_name %>
+            <% else %>
+              Trung tâm sẽ báo lịch bù với thầy cũ.
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</div>

@@ -1,5 +1,9 @@
 <% content_for :page_title, "Bảng điều khiển tổng hợp" %>
-<% content_for :page_sub, "FR-101 · FR-102 · #{@pools.size} hồ" %>
+<% content_for :page_sub, "FR-101 · FR-102 · #{@scope_pool.blank? || @scope_pool == 'all' ? "toàn bộ #{@pools.size} hồ" : report_pools.first&.name}" %>
+<% content_for :actions do %>
+  <%= link_to "Báo cáo & xuất file", merchant_bod_reports_path(period: @period.key, pool_id: @scope_pool),
+        class: "l-btn l-btn-soft" %>
+<% end %>
 
 <%# ---- Bộ lọc phạm vi & kỳ (FR-101) ---- %>
 <div class="l-panel" style="margin-bottom:16px;">
@@ -18,43 +22,175 @@
               style: "padding:6px 14px; font-size:12.5px; font-weight:700; text-decoration:none; #{on ? 'background:var(--primary); color:#fff;' : 'color:var(--ink-2);'}" %>
       <% end %>
     </div>
+    <% if @period.key == "custom" %>
+      <%= date_field_tag :from, @period.from, class: "l-field", style: "width:auto;" %>
+      <%= date_field_tag :to, @period.to, class: "l-field", style: "width:auto;" %>
+      <%= hidden_field_tag :period, "custom" %>
+      <%= submit_tag "Áp dụng", class: "l-btn l-btn-soft" %>
+    <% end %>
     <div style="margin-left:auto; font-size:12.5px; color:var(--ink-2);">
-      Kỳ đang xem: <strong style="color:var(--ink);"><%= @period.range_label %></strong> · so với kỳ liền trước
+      <strong style="color:var(--ink);"><%= @period.range_label %></strong> · so với kỳ liền trước
     </div>
   <% end %>
 </div>
 
+<% delta = ->(value) do %>
+  <% next "" if value.nil? %>
+  <% up = value.to_f >= 0 %>
+  <span style="color:<%= up ? 'var(--good)' : 'var(--warn)' %>; font-weight:600;">
+    <%= up ? "▲" : "▼" %> <%= value.abs %>%
+  </span>
+<% end %>
+
 <%# ---- Nhóm chỉ số (FR-102) ---- %>
-<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:20px;">
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(165px,1fr)); gap:14px; margin-bottom:18px;">
   <div class="l-kpi" style="outline:2px solid var(--primary); outline-offset:-1px;">
-    <div class="k">Doanh thu kỳ</div><div class="v" style="font-size:24px; color:var(--primary);">—</div>
-    <div class="d" style="color:var(--ink-2);">nối vào ở P4 (đơn hàng &amp; PayOS)</div>
+    <div class="k">Doanh thu khoá học</div>
+    <div class="v" style="font-size:21px; color:var(--primary);"><%= vnd(@stats[:revenue_course]) %></div>
+    <div class="d"><%= delta.call(@stats[:deltas][:revenue_course]) %> so kỳ trước</div>
   </div>
-  <div class="l-kpi"><div class="k">Học viên đang học</div><div class="v"><%= @stats[:students] %></div>
-    <div class="d" style="color:var(--ink-2);">+<%= @stats[:new_students] %> mới trong kỳ</div></div>
-  <div class="l-kpi"><div class="k">Giáo viên</div><div class="v"><%= @stats[:teachers] %></div></div>
-  <div class="l-kpi"><div class="k">Số tiết đã dạy</div><div class="v">—</div>
-    <div class="d" style="color:var(--ink-2);">1 tiết = 60 phút</div></div>
-  <div class="l-kpi"><div class="k">Công giáo viên</div><div class="v">—</div>
-    <div class="d" style="color:var(--ink-2);">P3</div></div>
-  <div class="l-kpi"><div class="k">Tỷ lệ lấp đầy</div><div class="v">—</div>
-    <div class="d" style="color:var(--ink-2);">tiết có HV ÷ tiết đã phân lịch</div></div>
+  <div class="l-kpi">
+    <div class="k">Doanh thu cho thuê</div>
+    <div class="v" style="font-size:21px;"><%= vnd(@stats[:revenue_rental]) %></div>
+    <div class="d" style="color:var(--ink-2);">tách dòng riêng</div>
+  </div>
+  <div class="l-kpi">
+    <div class="k">Học viên đang học</div>
+    <div class="v"><%= @stats[:students_active] %></div>
+    <div class="d" style="color:var(--ink-2);">+<%= @stats[:students_new] %> mới trong kỳ</div>
+  </div>
+  <div class="l-kpi">
+    <div class="k">Số khoá học</div>
+    <div class="v"><%= @stats[:courses_running] %></div>
+    <div class="d" style="color:var(--ink-2);">đang chạy</div>
+  </div>
+  <div class="l-kpi">
+    <div class="k">Số tiết đã dạy</div>
+    <div class="v"><%= @stats[:lessons_taught] %></div>
+    <div class="d"><%= delta.call(@stats[:deltas][:lessons_taught]) %> 1 tiết = 60 phút</div>
+  </div>
+  <div class="l-kpi">
+    <div class="k">Công giáo viên</div>
+    <div class="v"><%= @stats[:credits] %></div>
+    <div class="d"><%= delta.call(@stats[:deltas][:credits]) %></div>
+  </div>
+  <div class="l-kpi">
+    <div class="k">Tỷ lệ lấp đầy</div>
+    <div class="v"><%= @stats[:fill_rate] %>%</div>
+    <div class="d" style="color:var(--ink-2);"><%= @stats[:fill_detail] %></div>
+  </div>
+  <div class="l-kpi">
+    <div class="k">Vắng không báo</div>
+    <div class="v"><%= @stats[:no_show_rate] %>%</div>
+    <div class="d" style="color:var(--ink-2);">slot trống mà không trừ buổi</div>
+  </div>
 </div>
 
-<div class="l-panel">
-  <div style="font-weight:700; margin-bottom:12px;">Hồ bơi</div>
-  <table class="l-table">
-    <thead><tr><th>Hồ</th><th>Địa chỉ</th><th>Học viên</th><th>Giáo viên</th><th></th></tr></thead>
-    <tbody>
-      <% @pools.each do |pool| %>
-        <tr>
-          <td><strong><%= pool.name %></strong></td>
-          <td style="color:var(--ink-2);"><%= pool.address %></td>
-          <td><%= Student.where(pool_id: pool.id, status: "active").count %></td>
-          <td><%= pool.teachers.count %></td>
-          <td style="text-align:right;"><%= link_to "Cấu hình", merchant_bod_pool_path(pool), class: "l-btn l-btn-soft" %></td>
-        </tr>
+<%# ---- Biểu đồ doanh thu hai dòng ---- %>
+<div class="l-panel" style="margin-bottom:16px;">
+  <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px;">
+    <div style="font-weight:700;">Doanh thu theo kỳ · tách 2 dòng</div>
+    <div style="font-size:12.5px; color:var(--ink-2);">
+      <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--primary);"></span> Khoá học
+      &nbsp;
+      <span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--primary-2);"></span> Cho thuê hồ
+    </div>
+  </div>
+  <% max = [@series.map { |s| s[:course] + s[:rental] }.max.to_i, 1].max %>
+  <div style="display:flex; align-items:flex-end; gap:4px; height:150px;">
+    <% @series.each do |point| %>
+      <% total = point[:course] + point[:rental] %>
+      <div style="flex:1; display:flex; flex-direction:column; justify-content:flex-end; height:100%;"
+           title="<%= l(point[:date], format: '%d/%m') %>: <%= vnd(total) %>">
+        <div style="background:var(--primary-2); height:<%= (point[:rental] * 100.0 / max).round(1) %>%; border-radius:3px 3px 0 0;"></div>
+        <div style="background:var(--primary); height:<%= (point[:course] * 100.0 / max).round(1) %>%;"></div>
+      </div>
+    <% end %>
+  </div>
+  <div style="display:flex; justify-content:space-between; font-size:11px; color:var(--ink-2); margin-top:6px;">
+    <span><%= l(@period.from, format: "%d/%m") %></span>
+    <span><%= l(@period.to, format: "%d/%m") %></span>
+  </div>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start;">
+  <%# ---- Tỷ lệ lấp đầy theo hồ ---- %>
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:4px;">Tỷ lệ lấp đầy theo hồ</div>
+    <p style="font-size:12px; color:var(--ink-2); margin-bottom:14px;">
+      Tiết có học viên ÷ tiết đã phân lịch cho giáo viên
+    </p>
+    <% @by_pool.each do |row| %>
+      <div style="margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; font-size:13.5px; margin-bottom:5px;">
+          <span style="font-weight:600;"><%= row[:pool].name %></span>
+          <span style="color:var(--ink-2);"><%= row[:fill_rate] %>% · <%= row[:detail] %></span>
+        </div>
+        <div style="height:8px; border-radius:999px; background:var(--surface-2); overflow:hidden;">
+          <div style="height:100%; width:<%= row[:fill_rate] %>%; background:var(--primary);"></div>
+        </div>
+      </div>
+    <% end %>
+
+    <div style="margin-top:18px; padding-top:14px; border-top:1px solid var(--line); display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+      <div>
+        <div class="l-eyebrow">Khoá sắp hết hạn 30 ngày</div>
+        <div style="font-size:20px; font-weight:700;"><%= @stats[:expiring_soon] %></div>
+      </div>
+      <div>
+        <div class="l-eyebrow">Chênh lệch công cùng level</div>
+        <div style="font-size:20px; font-weight:700; color:<%= @stats[:credit_spread] > 10 ? 'var(--warn)' : 'inherit' %>;">
+          <%= @stats[:credit_spread] %>%
+        </div>
+        <div style="font-size:11.5px; color:var(--ink-2);">Mục tiêu ≤10%</div>
+      </div>
+    </div>
+  </div>
+
+  <%# ---- Bảng xếp hạng (FR-104) ---- %>
+  <div class="l-panel">
+    <div style="display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden; margin-bottom:14px;">
+      <% [["teachers", "Giáo viên"], ["pools", "Hồ"], ["packages", "Gói bán chạy"]].each do |key, label| %>
+        <% on = @tab == key %>
+        <%= link_to label, merchant_bod_root_path(tab: key, period: @period.key, pool_id: @scope_pool),
+              style: "padding:6px 14px; font-size:12.5px; font-weight:700; text-decoration:none; #{on ? 'background:var(--primary); color:#fff;' : 'color:var(--ink-2);'}" %>
       <% end %>
-    </tbody>
-  </table>
+    </div>
+
+    <% if @tab == "teachers" %>
+      <% @teachers.each_with_index do |row, i| %>
+        <div style="display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:1px solid var(--line);">
+          <div style="font-family:var(--font-display); font-weight:700; color:var(--ink-2); width:22px;"><%= format("%02d", i + 1) %></div>
+          <div style="flex:1;">
+            <div style="font-weight:600; font-size:13.5px;"><%= row[:teacher].display_name %></div>
+            <div style="font-size:12px; color:var(--ink-2);"><%= row[:teacher].level_label %></div>
+          </div>
+          <div style="font-weight:700;"><%= row[:credits] %></div>
+        </div>
+      <% end %>
+      <% if @teachers.empty? %><p style="font-size:13.5px; color:var(--ink-2);">Chưa có dữ liệu công trong kỳ.</p><% end %>
+
+    <% elsif @tab == "pools" %>
+      <% @by_pool.sort_by { |r| -r[:revenue] }.each_with_index do |row, i| %>
+        <div style="display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:1px solid var(--line);">
+          <div style="font-family:var(--font-display); font-weight:700; color:var(--ink-2); width:22px;"><%= format("%02d", i + 1) %></div>
+          <div style="flex:1; font-weight:600; font-size:13.5px;"><%= row[:pool].name %></div>
+          <div style="font-weight:700;"><%= vnd(row[:revenue]) %></div>
+        </div>
+      <% end %>
+
+    <% else %>
+      <% @packages.each_with_index do |row, i| %>
+        <div style="display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:1px solid var(--line);">
+          <div style="font-family:var(--font-display); font-weight:700; color:var(--ink-2); width:22px;"><%= format("%02d", i + 1) %></div>
+          <div style="flex:1;">
+            <div style="font-weight:600; font-size:13.5px;"><%= row[:package].name %></div>
+            <div style="font-size:12px; color:var(--ink-2);"><%= row[:sold] %> đơn</div>
+          </div>
+          <div style="font-weight:700;"><%= vnd(row[:revenue]) %></div>
+        </div>
+      <% end %>
+      <% if @packages.empty? %><p style="font-size:13.5px; color:var(--ink-2);">Chưa có đơn nào đã thanh toán trong kỳ.</p><% end %>
+    <% end %>
+  </div>
 </div>

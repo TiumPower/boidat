@@ -5,6 +5,7 @@ class WorkspacePurge
   # Order matters: a table must be listed before any table it references.
   DELETE_ORDER = %w[
     audit_logs notifications push_subscriptions broadcasts
+    makeup_requests schedule_runs leave_requests
     contracts messages conversations
     day_pass_tickets timesheet_entries payroll_periods session_feedbacks
     payments orders attendances enrollments lessons swim_classes teacher_availabilities

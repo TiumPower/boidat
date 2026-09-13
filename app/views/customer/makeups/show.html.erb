@@ -1,0 +1,66 @@
+<% content_for :title, "Chọn buổi bù" %>
+<% content_for :no_tabbar, true %>
+<div class="l-screen" style="padding-bottom:40px;">
+  <header style="padding:16px 18px 12px;">
+    <%= link_to "← Xin vắng & học bù", member_makeups_path, style: "font-size:13px; color:var(--ink-2); text-decoration:none;" %>
+    <div style="font-family:var(--font-display); font-size:19px; font-weight:700; margin-top:8px;">
+      <%= @request.origin == "teacher_leave" ? "#{@request.from_lesson&.teacher&.display_name} nghỉ buổi #{l(@request.from_lesson.date, format: '%d/%m')}" : "Đổi buổi cho #{@request.student.short_name}" %>
+    </div>
+    <div style="font-size:13px; color:var(--ink-2);">
+      Buổi này không bị trừ. Chọn một phương án cho <%= @request.student.short_name %>.
+    </div>
+  </header>
+
+  <div style="padding:0 18px;">
+    <%# ① Nghỉ theo thầy — ưu tiên 1 theo đúng thứ tự khách chốt %>
+    <div class="l-panel" style="margin-bottom:12px; border-color:var(--primary);">
+      <div style="display:flex; justify-content:space-between; align-items:baseline;">
+        <div style="font-weight:700; font-size:15px;">Nghỉ theo thầy</div>
+        <span class="l-chip l-chip-brand">Ưu tiên 1</span>
+      </div>
+      <p style="font-size:12.5px; color:var(--ink-2); margin:6px 0 12px;">
+        Giữ nguyên thầy và lớp cũ, trung tâm sắp lịch bù rồi báo lại bạn.
+      </p>
+      <%= button_to "Xác nhận nghỉ theo thầy", member_book_makeup_path(@request, choice: "follow_teacher"),
+            class: "l-btn l-btn-primary l-btn-block" %>
+    </div>
+
+    <% grouped = @options.group_by(&:priority) %>
+    <% [[1, "Khung giờ khác của thầy"], [2, "Giáo viên khác cùng cấp độ"], [3, "Khoá học tương tự"]].each do |priority, heading| %>
+      <% options = grouped[priority] %>
+      <% next if options.blank? %>
+      <div class="l-eyebrow" style="margin:16px 0 8px;"><%= heading %></div>
+      <% options.each do |option| %>
+        <div class="l-panel" style="margin-bottom:8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-weight:600; font-size:13.5px;">
+                <%= %w[CN T2 T3 T4 T5 T6 T7][option.lesson.date.wday] %> ·
+                <%= l(option.lesson.date, format: "%d/%m") %> · <%= option.lesson.time_label %>
+              </div>
+              <div style="font-size:12px; color:var(--ink-2);">
+                <%= option.teacher.display_name %> · lớp 1:<%= option.lesson.swim_class.class_type %> ·
+                còn <%= option.seats_left %> chỗ
+              </div>
+            </div>
+            <%= button_to "Chọn", member_book_makeup_path(@request, lesson_id: option.lesson.id),
+                  class: "l-btn l-btn-soft", style: "padding:7px 14px; font-size:12.5px;" %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+
+    <% if @options.empty? %>
+      <div class="l-panel" style="text-align:center; padding:24px;">
+        <div style="font-weight:700;">Chưa có buổi trống phù hợp trong 3 tuần tới</div>
+        <p style="font-size:13px; color:var(--ink-2); margin-top:6px;">
+          Chọn “Nghỉ theo thầy” để trung tâm sắp lịch bù, hoặc nhắn tin cho admin.
+        </p>
+      </div>
+    <% end %>
+
+    <p style="font-size:12px; color:var(--ink-2); margin-top:14px;">
+      Đổi thầy chỉ áp dụng cho riêng buổi này; các buổi sau vẫn học với thầy cũ.
+    </p>
+  </div>
+</div>

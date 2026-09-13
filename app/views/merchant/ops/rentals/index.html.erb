@@ -1,0 +1,60 @@
+<% content_for :page_title, "Lớp thuê hồ" %>
+<% content_for :page_sub, "FR-225 · mô hình kinh doanh thứ hai" %>
+<% content_for :actions do %>
+  <%= link_to "+ Lịch thuê mới", new_merchant_ops_rental_path, class: "l-btn l-btn-primary" %>
+<% end %>
+
+<div class="l-panel" style="margin-bottom:16px; background:var(--surface-2);">
+  <p style="font-size:13px; color:var(--ink-2); margin:0;">
+    Giáo viên không thuộc trung tâm là <strong>khách thuê hồ</strong>, không phải nhân sự.
+    Trung tâm chỉ giữ khung giờ họ thuê (để slot hiện “đã bận” trên bảng lịch), danh sách học viên
+    của họ, và điểm danh trừ buổi. Không có giáo án, chấm công hay nhận xét cho nhóm này.
+  </p>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 300px; gap:16px; align-items:start;">
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:12px;">Khung giờ đã thuê</div>
+    <table class="l-table">
+      <thead><tr><th>Người thuê</th><th>Khung giờ</th><th>Học viên</th><th></th></tr></thead>
+      <tbody>
+        <% @rentals.each do |rental| %>
+          <tr>
+            <td><strong><%= rental.teacher.display_name %></strong>
+              <div style="font-size:12px; color:var(--ink-2);"><%= rental.teacher.org_name %></div></td>
+            <td><%= rental.slot_label %></td>
+            <td><%= rental.seats_taken %></td>
+            <td style="text-align:right;"><%= link_to "Xem", merchant_ops_rental_path(rental), class: "l-btn l-btn-soft", style: "padding:5px 12px; font-size:12.5px;" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <% if @rentals.empty? %>
+      <p style="font-size:13.5px; color:var(--ink-2);">Chưa có lịch thuê hồ nào.</p>
+    <% end %>
+
+    <div class="l-eyebrow" style="margin:20px 0 8px;">Học viên của khách thuê</div>
+    <table class="l-table">
+      <thead><tr><th>Học viên</th><th>Ảnh khuôn mặt</th></tr></thead>
+      <tbody>
+        <% @students.each do |st| %>
+          <tr>
+            <td><%= st.name %></td>
+            <td><%= st.face_registered? ? "Đã đăng ký" : "Chưa có ảnh — chưa điểm danh được" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="l-panel">
+    <div class="l-eyebrow">Doanh thu cho thuê tháng này</div>
+    <div style="font-family:var(--font-display); font-size:26px; font-weight:700; color:var(--primary);">
+      <%= vnd(@revenue_month) %>
+    </div>
+    <p style="font-size:12.5px; color:var(--ink-2); margin-top:8px;">
+      Ghi thành dòng doanh thu riêng, tách khỏi doanh thu khoá học — hai mô hình có biên lợi nhuận
+      rất khác nhau nên BOD cần nhìn tách bạch (OQ-26).
+    </p>
+  </div>
+</div>

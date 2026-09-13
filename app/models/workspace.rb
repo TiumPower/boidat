@@ -29,6 +29,9 @@ class Workspace < ApplicationRecord
   has_many :conversations, dependent: :destroy
   has_many :messages, dependent: :destroy
   has_many :contracts, dependent: :destroy
+  has_many :schedule_runs, dependent: :destroy
+  has_many :makeup_requests, dependent: :destroy
+  has_many :leave_requests, dependent: :destroy
   has_many :households, dependent: :destroy
   has_many :guardians, dependent: :destroy
   has_many :students, dependent: :destroy

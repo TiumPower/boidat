@@ -8,6 +8,7 @@ class LeaveRequest < ApplicationRecord
   belongs_to :workspace
   belongs_to :teacher
   belongs_to :reviewed_by, class_name: "User", optional: true
+  has_many :makeup_requests, dependent: :nullify
 
   validates :status, inclusion: { in: STATUSES }
 

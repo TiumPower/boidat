@@ -14,6 +14,7 @@ class Enrollment < ApplicationRecord
   has_many :attendances, dependent: :nullify
   has_one  :order, dependent: :nullify
   has_one  :contract, dependent: :destroy
+  has_many :makeup_requests, dependent: :destroy
 
   validates :status, inclusion: { in: STATUSES }
   validates :student_id, uniqueness: { scope: :swim_class_id }

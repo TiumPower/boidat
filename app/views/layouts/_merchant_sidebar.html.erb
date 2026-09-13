@@ -73,6 +73,15 @@
     <%= link_to merchant_ops_students_path, class: "l-nav-item #{'active' if nav == :students}" do %>
       <span>🧒</span><span>Học viên &amp; gia đình</span>
     <% end %>
+    <%= link_to merchant_ops_schedule_runs_path, class: "l-nav-item #{'active' if nav == :auto_schedule}" do %>
+      <span>🤖</span><span>Xếp lịch tự động</span>
+    <% end %>
+    <%= link_to merchant_ops_leave_requests_path, class: "l-nav-item #{'active' if nav == :leaves}" do %>
+      <span>📝</span><span>Đơn xin nghỉ</span>
+    <% end %>
+    <%= link_to merchant_ops_rentals_path, class: "l-nav-item #{'active' if nav == :rentals}" do %>
+      <span>🔑</span><span>Lớp thuê hồ</span>
+    <% end %>
     <%= link_to merchant_ops_graduations_path, class: "l-nav-item #{'active' if nav == :graduations}" do %>
       <span>🏅</span><span>Thi tốt nghiệp</span>
     <% end %>

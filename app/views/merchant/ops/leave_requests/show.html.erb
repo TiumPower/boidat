@@ -1,0 +1,48 @@
+<% content_for :page_title, "Đơn nghỉ · #{@request.teacher.display_name}" %>
+<% content_for :back do %><%= link_to "← Đơn xin nghỉ", merchant_ops_leave_requests_path, class: "l-btn l-btn-ghost", style: "padding:6px 12px; font-size:13px;" %><% end %>
+
+<div style="display:grid; grid-template-columns:1fr 340px; gap:16px; align-items:start;">
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:6px;">Buổi xin nghỉ (<%= @lessons.size %>)</div>
+    <p style="font-size:12.5px; color:var(--ink-2); margin-bottom:12px;">
+      Duyệt là hệ thống huỷ các buổi này, <strong>không trừ buổi</strong> của học viên,
+      rồi bắn thông báo yêu cầu phụ huynh chọn phương án học bù.
+    </p>
+    <table class="l-table">
+      <thead><tr><th>Buổi</th><th>Lớp</th><th>Học viên</th></tr></thead>
+      <tbody>
+        <% @lessons.each do |lesson| %>
+          <tr>
+            <td><%= %w[CN T2 T3 T4 T5 T6 T7][lesson.date.wday] %> · <%= l(lesson.date, format: "%d/%m") %> · <%= lesson.time_label %></td>
+            <td>1:<%= lesson.swim_class.class_type %> <%= lesson.swim_class.code %></td>
+            <td style="font-size:13px; color:var(--ink-2);">
+              <%= lesson.swim_class.active_enrollments.map { |e| e.student.short_name }.join(", ") %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <p style="font-size:13px; color:var(--ink-2); margin-top:12px;"><strong>Lý do:</strong> <%= @request.reason %></p>
+  </div>
+
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:10px;">Quyết định</div>
+    <div style="font-size:13px; color:var(--ink-2); margin-bottom:12px;">
+      <%= @students.size %> học viên bị ảnh hưởng.
+    </div>
+    <% if @request.pending? %>
+      <%= form_with url: approve_merchant_ops_leave_request_path(@request), method: :patch, data: { turbo: false } do %>
+        <%= text_area_tag :note, nil, class: "l-field", rows: 2, placeholder: "Ghi chú cho giáo viên (không bắt buộc)" %>
+        <%= submit_tag "Duyệt đơn", class: "l-btn l-btn-primary l-btn-block", style: "margin-top:10px;",
+              data: { turbo_confirm: "Duyệt đơn? #{@lessons.size} buổi sẽ bị huỷ và phụ huynh được thông báo ngay." } %>
+      <% end %>
+      <%= form_with url: reject_merchant_ops_leave_request_path(@request), method: :patch, data: { turbo: false } do %>
+        <%= hidden_field_tag :note, "" %>
+        <%= submit_tag "Từ chối", class: "l-btn l-btn-ghost l-btn-block", style: "margin-top:8px;" %>
+      <% end %>
+    <% else %>
+      <span class="l-chip <%= 'l-chip-brand' if @request.approved? %>"><%= @request.status_label %></span>
+      <p style="font-size:13px; color:var(--ink-2); margin-top:10px;"><%= @request.review_note %></p>
+    <% end %>
+  </div>
+</div>

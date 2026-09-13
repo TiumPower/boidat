@@ -52,7 +52,7 @@ Rails.application.routes.draw do
     # Cổng điều hành — BOD
     namespace :bod do
       root "dashboard#show"
-      get  "reports", to: "reports#index", as: :reports
+      get  "reports", to: "reports#index", as: :reports, defaults: { format: :html }
       resources :pools do
         resources :holidays, only: [:create, :destroy]
         member { patch :assign_staff }
@@ -109,6 +109,20 @@ Rails.application.routes.draw do
       resources :conversations, only: [:index, :show] do
         resources :messages, only: [:create]
       end
+      resources :leave_requests, path: "leave-requests", only: [:index, :show] do
+        member do
+          patch :approve
+          patch :reject
+        end
+      end
+      resources :schedule_runs, path: "auto-schedule", only: [:index, :show, :create] do
+        member do
+          patch :apply
+          patch :discard
+        end
+      end
+      resources :rentals, only: [:index, :new, :create, :show]
+      resources :makeups, only: [:index]
       resources :audit_logs, path: "audit", only: [:index]
     end
 
@@ -191,6 +205,12 @@ Rails.application.routes.draw do
     # Cam kết điện tử — phụ huynh ký trên PWA (FR-207)
     get  "contracts/:id",      to: "contracts#show", as: :contract
     post "contracts/:id/sign", to: "contracts#sign", as: :sign_contract
+
+    # Học bù: phụ huynh chọn phương án khi thầy nghỉ hoặc chủ động xin vắng (FR-404)
+    get  "makeups",              to: "makeups#index",  as: :makeups
+    get  "makeups/:id",          to: "makeups#show",   as: :makeup
+    post "makeups/:id/book",     to: "makeups#book",   as: :book_makeup
+    post "absences",             to: "makeups#create", as: :absences
 
     # Chat realtime với admin (FR-407)
     get  "chat",          to: "chat#show",          as: :chat

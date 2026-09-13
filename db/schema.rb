@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_13_400001) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_13_500001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -396,6 +396,34 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_400001) do
     t.index ["workspace_id"], name: "index_lessons_on_workspace_id"
   end
 
+  create_table "makeup_requests", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "pool_id", null: false
+    t.bigint "enrollment_id", null: false
+    t.bigint "student_id", null: false
+    t.bigint "from_lesson_id"
+    t.bigint "to_lesson_id"
+    t.bigint "leave_request_id"
+    t.bigint "decided_by_id"
+    t.string "origin", default: "guardian_absence", null: false
+    t.string "choice"
+    t.string "status", default: "pending", null: false
+    t.text "reason"
+    t.datetime "decided_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["decided_by_id"], name: "index_makeup_requests_on_decided_by_id"
+    t.index ["enrollment_id", "from_lesson_id"], name: "index_makeup_requests_on_enrollment_id_and_from_lesson_id"
+    t.index ["enrollment_id"], name: "index_makeup_requests_on_enrollment_id"
+    t.index ["from_lesson_id"], name: "index_makeup_requests_on_from_lesson_id"
+    t.index ["leave_request_id"], name: "index_makeup_requests_on_leave_request_id"
+    t.index ["pool_id"], name: "index_makeup_requests_on_pool_id"
+    t.index ["student_id"], name: "index_makeup_requests_on_student_id"
+    t.index ["to_lesson_id"], name: "index_makeup_requests_on_to_lesson_id"
+    t.index ["workspace_id", "status"], name: "index_makeup_requests_on_workspace_id_and_status"
+    t.index ["workspace_id"], name: "index_makeup_requests_on_workspace_id"
+  end
+
   create_table "memberships", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "workspace_id", null: false
@@ -672,6 +700,25 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_400001) do
     t.index ["workspace_id"], name: "index_push_subscriptions_on_workspace_id"
   end
 
+  create_table "schedule_runs", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "pool_id", null: false
+    t.bigint "created_by_id"
+    t.bigint "applied_by_id"
+    t.date "month", null: false
+    t.string "status", default: "draft", null: false
+    t.jsonb "proposals", default: [], null: false
+    t.jsonb "metrics", default: {}, null: false
+    t.datetime "applied_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["applied_by_id"], name: "index_schedule_runs_on_applied_by_id"
+    t.index ["created_by_id"], name: "index_schedule_runs_on_created_by_id"
+    t.index ["pool_id"], name: "index_schedule_runs_on_pool_id"
+    t.index ["workspace_id", "pool_id", "month"], name: "index_schedule_runs_on_workspace_id_and_pool_id_and_month"
+    t.index ["workspace_id"], name: "index_schedule_runs_on_workspace_id"
+  end
+
   create_table "session_feedbacks", force: :cascade do |t|
     t.bigint "workspace_id", null: false
     t.bigint "pool_id", null: false
@@ -916,6 +963,14 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_400001) do
   add_foreign_key "lessons", "swim_classes"
   add_foreign_key "lessons", "teachers"
   add_foreign_key "lessons", "workspaces"
+  add_foreign_key "makeup_requests", "enrollments"
+  add_foreign_key "makeup_requests", "guardians", column: "decided_by_id"
+  add_foreign_key "makeup_requests", "leave_requests"
+  add_foreign_key "makeup_requests", "lessons", column: "from_lesson_id"
+  add_foreign_key "makeup_requests", "lessons", column: "to_lesson_id"
+  add_foreign_key "makeup_requests", "pools"
+  add_foreign_key "makeup_requests", "students"
+  add_foreign_key "makeup_requests", "workspaces"
   add_foreign_key "memberships", "users"
   add_foreign_key "memberships", "workspaces"
   add_foreign_key "messages", "conversations"
@@ -956,6 +1011,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_13_400001) do
   add_foreign_key "push_subscriptions", "guardians"
   add_foreign_key "push_subscriptions", "users"
   add_foreign_key "push_subscriptions", "workspaces"
+  add_foreign_key "schedule_runs", "pools"
+  add_foreign_key "schedule_runs", "users", column: "applied_by_id"
+  add_foreign_key "schedule_runs", "users", column: "created_by_id"
+  add_foreign_key "schedule_runs", "workspaces"
   add_foreign_key "session_feedbacks", "lessons"
   add_foreign_key "session_feedbacks", "pools"
   add_foreign_key "session_feedbacks", "students"

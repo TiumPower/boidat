@@ -5,6 +5,15 @@
       <span class="ce-tab-ic"><%= ui_icon(:home, size: 22) %></span>
       <span><%= current_household&.individual? ? "Khoá của tôi" : "Gia đình" %></span>
     <% end %>
+    <%= link_to member_makeups_path, class: ("active" if key == "makeups") do %>
+      <span class="ce-tab-ic"><%= ui_icon(:calendar, size: 22) %></span><span>Xin vắng</span>
+    <% end %>
+    <%= link_to member_orders_path, class: ("active" if key == "invoices") do %>
+      <span class="ce-tab-ic"><%= ui_icon(:receipt, size: 22) %></span><span>Hoá đơn</span>
+    <% end %>
+    <%= link_to member_chat_path, class: ("active" if key == "chat") do %>
+      <span class="ce-tab-ic"><%= ui_icon(:chat, size: 22) %></span><span>Nhắn tin</span>
+    <% end %>
     <%= link_to member_notifications_path, class: ("active" if key == "notifications") do %>
       <span class="ce-tab-ic">
         <%= ui_icon(:bell, size: 22) %>

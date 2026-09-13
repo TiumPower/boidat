@@ -1,0 +1,60 @@
+<% content_for :page_title, "Báo cáo & xuất file" %>
+<% content_for :page_sub, "FR-103 · #{@period.range_label}" %>
+<% content_for :actions do %>
+  <%= link_to "Tải CSV", merchant_bod_reports_path(format: :csv, period: @period.key,
+        from: @period.from, to: @period.to, pool_id: @scope_pool),
+        class: "l-btn l-btn-primary", data: { turbo: false } %>
+<% end %>
+
+<div class="l-panel" style="margin-bottom:16px;">
+  <%= form_with url: merchant_bod_reports_path, method: :get, data: { turbo: false },
+        style: "display:flex; gap:12px; align-items:end; flex-wrap:wrap;" do %>
+    <div>
+      <label class="l-label">Phạm vi</label>
+      <select name="pool_id" class="l-field" style="width:auto;">
+        <option value="all">Tất cả hồ</option>
+        <% @pools.each do |pool| %>
+          <option value="<%= pool.id %>" <%= "selected" if @scope_pool == pool.id.to_s %>><%= pool.name %></option>
+        <% end %>
+      </select>
+    </div>
+    <div><label class="l-label">Kỳ</label>
+      <%= select_tag :period, options_for_select(PeriodFilter::KEYS.map { |k| [PeriodFilter::LABELS[k], k] }, @period.key), class: "l-field", style: "width:auto;" %></div>
+    <div><label class="l-label">Từ ngày</label><%= date_field_tag :from, @period.from, class: "l-field", style: "width:auto;" %></div>
+    <div><label class="l-label">Đến ngày</label><%= date_field_tag :to, @period.to, class: "l-field", style: "width:auto;" %></div>
+    <%= submit_tag "Xem", class: "l-btn l-btn-soft" %>
+  <% end %>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start;">
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:12px;">Tổng hợp kỳ</div>
+    <table class="l-table">
+      <tbody>
+        <tr><td style="color:var(--ink-2);">Doanh thu khoá học</td><td><strong><%= vnd(@stats[:revenue_course]) %></strong></td></tr>
+        <tr><td style="color:var(--ink-2);">Doanh thu cho thuê hồ</td><td><strong><%= vnd(@stats[:revenue_rental]) %></strong></td></tr>
+        <tr><td style="color:var(--ink-2);">Đang chờ thu</td><td><%= vnd(@stats[:unpaid_amount]) %></td></tr>
+        <tr><td style="color:var(--ink-2);">Học viên đang học</td><td><%= @stats[:students_active] %></td></tr>
+        <tr><td style="color:var(--ink-2);">Học viên mới</td><td><%= @stats[:students_new] %></td></tr>
+        <tr><td style="color:var(--ink-2);">Khoá đang chạy</td><td><%= @stats[:courses_running] %></td></tr>
+        <tr><td style="color:var(--ink-2);">Số tiết đã dạy</td><td><%= @stats[:lessons_taught] %></td></tr>
+        <tr><td style="color:var(--ink-2);">Tổng công giáo viên</td><td><%= @stats[:credits] %></td></tr>
+        <tr><td style="color:var(--ink-2);">Tỷ lệ lấp đầy</td><td><%= @stats[:fill_rate] %>% · <%= @stats[:fill_detail] %></td></tr>
+        <tr><td style="color:var(--ink-2);">Vắng không báo</td><td><%= @stats[:no_show_rate] %>%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:12px;">Công theo giáo viên</div>
+    <table class="l-table">
+      <thead><tr><th>Giáo viên</th><th>Cấp độ</th><th>Công</th></tr></thead>
+      <tbody>
+        <% @teachers.each do |row| %>
+          <tr><td><%= row[:teacher].display_name %></td><td><%= row[:teacher].level_label %></td><td><strong><%= row[:credits] %></strong></td></tr>
+        <% end %>
+      </tbody>
+    </table>
+    <% if @teachers.empty? %><p style="font-size:13.5px; color:var(--ink-2);">Chưa có dữ liệu.</p><% end %>
+  </div>
+</div>
