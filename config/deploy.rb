@@ -1,7 +1,9 @@
 lock "~> 3.18"
 
 set :application, "boidat"
-set :repo_url,    "git@github.com:vietlee/boidat.git"
+# Chưa đưa lên GitHub — deploy từ bare repo nằm ngay trên máy chủ. Đổi sang
+# git@github.com:vietlee/boidat.git khi tạo repo trên GitHub.
+set :repo_url,    ENV.fetch("REPO_URL", "/home/deploy/repos/boidat.git")
 
 set :deploy_to,   "/var/www/boidat"
 set :branch,      ENV.fetch("BRANCH", "main")
