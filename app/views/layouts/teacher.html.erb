@@ -17,7 +17,11 @@
          data-controller="pwa"
          data-pwa-vapid-value="<%= PushSender.public_key %>"
          data-pwa-subscribe-url-value="<%= teacher_push_subscribe_path %>"
-         data-pwa-unsubscribe-url-value="<%= teacher_push_unsubscribe_path %>">
+         data-pwa-unsubscribe-url-value="<%= teacher_push_unsubscribe_path %>"
+         data-pwa-on-text="<%= t('customer.pwa.push_on') %>"
+         data-pwa-off-text="<%= t('customer.pwa.push_off') %>"
+         data-pwa-blocked-text="<%= t('customer.pwa.push_blocked') %>"
+         data-pwa-unsupported-text="<%= t('customer.pwa.push_unsupported') %>">
       <%= yield %>
       <% unless content_for?(:no_tabbar) %>
         <%= render "layouts/teacher_tabbar" %>

@@ -414,9 +414,48 @@ ActsAsTenant.with_tenant(ws) do
     enr.save!
   end
 
+
+  # ---- Điểm danh & công cho các buổi đã qua ------------------------------
+  puts "→ Điểm danh & chấm công"
+  receptionist = User.find_by(email: "ngan@boidat.vn")
+  SwimClass.classes.running.includes(:lessons, enrollments: :student).find_each do |cls|
+    cls.lessons.where("date < ?", Date.current).order(:session_index).each do |lesson|
+      cls.enrollments.select { |e| e.status == "active" }.each do |enr|
+        next if lesson.attendances.exists?(student_id: enr.student_id)
+        # 92% đi học — phần còn lại là vắng không báo, để dashboard có số liệu thật.
+        next if rand > 0.92
+        Attendance.create!(workspace: ws, pool: cls.pool, lesson: lesson, student: enr.student,
+                           enrollment: enr, actor: receptionist, status: "present",
+                           method: %w[face face face manual].sample, deducted: true,
+                           checked_in_at: lesson.starts_at - rand(5..25).minutes)
+      end
+      lesson.update!(status: "done", completed_at: lesson.starts_at + 1.hour) if lesson.attendances.any?
+      PayrollCalculator.new(lesson.reload).call
+    end
+  end
+
+  # Nhận xét của giáo viên cho các buổi gần nhất.
+  FEEDBACK_SAMPLES = [
+    ["progress",   "Đã thở nghiêng được 15m liên tục, tay vào nước còn hơi rộng."],
+    ["progress",   "Bắt đầu quen nhịp thở, không còn sặc nước."],
+    ["needs_work", "Phối hợp còn gấp, cần thả lỏng vai. Đã bơi được 10m không phao."],
+    ["progress",   "Tay quạt đúng kỹ thuật, chân còn yếu."]
+  ].freeze
+  Lesson.where(status: "done").where("date >= ?", 3.weeks.ago).includes(:attendances, :swim_class).find_each do |lesson|
+    next if lesson.swim_class.rental?
+    lesson.attendances.select { |a| a.status == "present" }.each do |att|
+      next if SessionFeedback.exists?(lesson: lesson, student_id: att.student_id)
+      tag, body = FEEDBACK_SAMPLES.sample
+      SessionFeedback.create!(workspace: ws, pool: lesson.pool, lesson: lesson,
+                              student_id: att.student_id, teacher: lesson.teacher,
+                              tag: tag, body: body, sent_at: lesson.starts_at + 2.hours)
+    end
+  end
+
   puts "   #{Pool.count} hồ · #{Teacher.count} giáo viên · #{Course.count} khoá · #{Package.count} gói · " \
        "#{Household.count} hộ · #{Student.count} học viên · #{SwimClass.count} lớp · #{Lesson.count} buổi · " \
-       "#{TeacherAvailability.count} ca đăng ký"
+       "#{TeacherAvailability.count} ca đăng ký · #{Attendance.count} lượt điểm danh · " \
+       "#{TimesheetEntry.count} dòng công"
 end
 
 puts <<~INFO

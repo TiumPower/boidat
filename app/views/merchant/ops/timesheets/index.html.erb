@@ -1,0 +1,75 @@
+<% content_for :page_title, "Chấm công · #{current_pool.name}" %>
+<% content_for :page_sub, "FR-210 · hệ thống tự tính từ dữ liệu điểm danh" %>
+
+<div class="l-panel" style="margin-bottom:16px;">
+  <%= form_with url: merchant_ops_timesheets_path, method: :get, data: { turbo: false },
+        style: "display:flex; gap:10px; align-items:end; flex-wrap:wrap;" do %>
+    <div><label class="l-label">Từ ngày</label><%= date_field_tag :from, @from, class: "l-field", style: "width:auto;" %></div>
+    <div><label class="l-label">Đến ngày</label><%= date_field_tag :to, @to, class: "l-field", style: "width:auto;" %></div>
+    <%= submit_tag "Xem", class: "l-btn l-btn-soft" %>
+    <div style="margin-left:auto; font-size:12.5px; color:var(--ink-2);">
+      Công tính theo <strong><%= current_workspace.credit_basis_registered? ? "sĩ số đăng ký" : "số có mặt" %></strong>
+      · bảng hệ số: <%= current_workspace.setting("credit_table").map { |k, v| "#{k} HV = #{v}" }.join(" · ") %>
+    </div>
+  <% end %>
+</div>
+
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:16px;">
+  <div class="l-kpi"><div class="k">Tổng công</div><div class="v"><%= @totals[:credits].to_f.round(1) %></div></div>
+  <div class="l-kpi"><div class="k">Số tiết</div><div class="v"><%= @totals[:lessons] %></div></div>
+  <div class="l-kpi"><div class="k">Tạm tính</div><div class="v" style="font-size:20px;"><%= vnd(@totals[:amount]) %></div></div>
+  <div class="l-kpi"><div class="k">Chưa chốt</div><div class="v"><%= @totals[:pending] %></div></div>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 320px; gap:16px; align-items:start;">
+  <div class="l-panel">
+    <table class="l-table">
+      <thead><tr><th>Giáo viên</th><th>Cấp độ</th><th>Số tiết</th><th>Công</th><th>Thành tiền</th><th>Đã chốt</th></tr></thead>
+      <tbody>
+        <% @by_teacher.each do |row| %>
+          <tr>
+            <td><strong><%= row[:teacher].display_name %></strong></td>
+            <td><%= row[:teacher].level_label %></td>
+            <td><%= row[:lessons] %></td>
+            <td><strong><%= row[:credits].to_f.round(1) %></strong></td>
+            <td><%= vnd(row[:amount]) %></td>
+            <td><%= row[:locked] %>/<%= row[:lessons] %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <% if @by_teacher.empty? %>
+      <p style="font-size:13.5px; color:var(--ink-2);">Chưa có công nào trong khoảng này.</p>
+    <% end %>
+  </div>
+
+  <div>
+    <div class="l-panel" style="margin-bottom:16px;">
+      <div style="font-weight:700; margin-bottom:6px;">Chốt công kỳ</div>
+      <p style="font-size:12.5px; color:var(--ink-2); margin-bottom:12px;">
+        Chốt xong thì các dòng công trong kỳ khoá lại — sửa điểm danh sau đó không làm
+        thay đổi số tiền đã chốt. Giáo viên nhận thông báo ngay.
+      </p>
+      <%= form_with url: merchant_ops_lock_timesheets_path, method: :post, data: { turbo: false } do %>
+        <%= hidden_field_tag :from, @from %>
+        <%= hidden_field_tag :to, @to %>
+        <%= submit_tag "Chốt kỳ #{l(@from, format: '%d/%m')} – #{l(@to, format: '%d/%m')}",
+              class: "l-btn l-btn-primary l-btn-block",
+              data: { turbo_confirm: "Chốt công kỳ này? Sau khi chốt không sửa được." } %>
+      <% end %>
+    </div>
+
+    <div class="l-panel">
+      <div style="font-weight:700; margin-bottom:10px;">Kỳ đã chốt</div>
+      <% @periods.each do |p| %>
+        <div style="display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--line); font-size:13px;">
+          <span><%= p.label %></span>
+          <span><%= p.total_credits.to_f.round(1) %> công · <%= vnd(p.total_amount) %></span>
+        </div>
+      <% end %>
+      <% if @periods.empty? %>
+        <p style="font-size:13px; color:var(--ink-2);">Chưa chốt kỳ nào.</p>
+      <% end %>
+    </div>
+  </div>
+</div>

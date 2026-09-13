@@ -1,0 +1,70 @@
+<% content_for :title, "Bảng công" %>
+<% content_for :tab, "timesheet" %>
+<div class="l-screen" style="padding-bottom:100px;">
+  <header style="padding:18px 18px 12px;">
+    <div style="font-family:var(--font-display); font-size:20px; font-weight:700;">Bảng công</div>
+    <div style="display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden; margin-top:10px;">
+      <% [["day", "Ngày"], ["week", "Tuần"], ["month", "Tháng #{@anchor.month}"]].each do |key, label| %>
+        <% on = @range == key %>
+        <%= link_to label, teacher_timesheet_path(range: key, date: @anchor),
+              style: "padding:6px 14px; font-size:12.5px; font-weight:700; text-decoration:none; #{on ? 'background:var(--primary); color:#fff;' : 'color:var(--ink-2);'}" %>
+      <% end %>
+    </div>
+  </header>
+
+  <div style="padding:0 18px 14px;">
+    <div class="l-panel" style="text-align:center;">
+      <div class="l-eyebrow">Tổng công <%= @from == @to ? l(@from, format: "%d/%m") : "#{l(@from, format: '%d/%m')} – #{l(@to, format: '%d/%m')}" %></div>
+      <div style="font-family:var(--font-display); font-size:38px; font-weight:700; color:var(--primary);">
+        <%= @summary[:credits].to_f.round(1) %>
+      </div>
+      <div style="font-size:12.5px; color:var(--ink-2);">
+        <%= @summary[:lessons] %> tiết · sĩ số trung bình <%= @summary[:avg_headcount] %> HV
+      </div>
+      <% if @summary[:amount].positive? %>
+        <div style="margin-top:10px; font-size:17px; font-weight:700;"><%= vnd(@summary[:amount]) %></div>
+        <div style="font-size:12px; color:var(--ink-2);">tạm tính theo đơn giá cấp độ</div>
+      <% end %>
+    </div>
+  </div>
+
+  <div style="padding:0 18px;">
+    <% @by_day.each do |date, entries| %>
+      <div class="l-panel" style="margin-bottom:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:baseline;">
+          <div>
+            <div style="font-weight:700; font-size:14px;">
+              <%= %w[CN T2 T3 T4 T5 T6 T7][date.wday] %> · <%= l(date, format: "%d/%m") %>
+            </div>
+            <div style="font-size:12px; color:var(--ink-2);">
+              <%= entries.size %> tiết · <%= entries.map { |e| "1:#{e.lesson.swim_class.class_type}" }.join(", ") %>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:19px; font-weight:700;"><%= entries.sum(&:credits).to_f.round(1) %></div>
+            <div style="font-size:11px; color:var(--ink-2);">công</div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <% if @by_day.empty? %>
+      <div class="l-panel" style="text-align:center; padding:28px;">
+        <div style="font-weight:700;">Chưa có công trong kỳ này</div>
+        <p style="font-size:13px; color:var(--ink-2); margin-top:6px;">
+          Công được tính tự động ngay sau khi học viên được điểm danh — không phải chờ cuối tháng.
+        </p>
+      </div>
+    <% end %>
+
+    <% if @locked_periods.any? %>
+      <div class="l-eyebrow" style="margin:20px 0 8px;">Kỳ đã chốt</div>
+      <% @locked_periods.each do |p| %>
+        <div style="display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--line); font-size:13.5px;">
+          <span><%= p.label %></span>
+          <strong><%= vnd(@locked_totals[p.id].to_i) %></strong>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</div>

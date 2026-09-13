@@ -1,0 +1,74 @@
+<% content_for :page_title, "Chuẩn bị thi tốt nghiệp" %>
+<% content_for :page_sub, "FR-208 · điều kiện: đã học đúng #{@target} buổi" %>
+
+<div class="l-panel" style="margin-bottom:16px; background:var(--surface-2);">
+  <p style="font-size:13px; color:var(--ink-2); margin:0;">
+    Điều kiện vào danh sách là <strong>bằng đúng <%= @target %> buổi</strong>, nên hệ thống gắn cờ
+    ngay khi học viên chạm mốc và giữ các em ở đây cho tới khi có kết quả thi —
+    học sang buổi kế tiếp cũng không biến mất khỏi danh sách.
+  </p>
+</div>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start;">
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:12px;">Đủ điều kiện · chờ xếp lịch thi (<%= @eligible.size %>)</div>
+    <% if @eligible.empty? %>
+      <p style="font-size:13.5px; color:var(--ink-2);">Chưa có học viên nào đủ điều kiện.</p>
+    <% end %>
+    <% @eligible.each do |e| %>
+      <div style="padding:10px 0; border-bottom:1px solid var(--line);">
+        <div style="display:flex; justify-content:space-between; align-items:baseline;">
+          <div>
+            <div style="font-weight:600; font-size:14px;"><%= e.student.name %></div>
+            <div style="font-size:12px; color:var(--ink-2);">
+              <%= e.progress_label %> · <%= e.swim_class.teacher.display_name %> · lớp <%= e.swim_class.code %>
+            </div>
+          </div>
+          <span class="l-chip l-chip-brand">Đủ điều kiện</span>
+        </div>
+        <%= form_with url: merchant_ops_graduation_path(e), method: :patch, data: { turbo: false },
+              style: "display:flex; gap:8px; margin-top:8px;" do %>
+          <%= date_field_tag :exam_date, e.exam_date, class: "l-field", style: "width:auto;" %>
+          <%= submit_tag "Xếp lịch thi", class: "l-btn l-btn-soft", style: "padding:6px 12px; font-size:12.5px;" %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <div>
+    <div class="l-panel" style="margin-bottom:16px;">
+      <div style="font-weight:700; margin-bottom:12px;">Đã xếp lịch thi (<%= @scheduled.size %>)</div>
+      <% @scheduled.each do |e| %>
+        <div style="padding:10px 0; border-bottom:1px solid var(--line);">
+          <div style="font-weight:600; font-size:14px;"><%= e.student.name %></div>
+          <div style="font-size:12px; color:var(--ink-2); margin-bottom:8px;">
+            Thi ngày <%= l(e.exam_date, format: "%d/%m/%Y") %>
+          </div>
+          <%= form_with url: merchant_ops_graduation_path(e), method: :patch, data: { turbo: false },
+                style: "display:flex; gap:6px;" do %>
+            <% [["passed", "Đạt"], ["failed", "Chưa đạt"], ["retake", "Thi lại"]].each do |val, label| %>
+              <%= submit_tag label, name: "exam_result", value: val, class: "l-btn l-btn-soft",
+                    style: "padding:6px 12px; font-size:12.5px;" %>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
+      <% if @scheduled.empty? %>
+        <p style="font-size:13.5px; color:var(--ink-2);">Chưa xếp lịch thi cho ai.</p>
+      <% end %>
+    </div>
+
+    <div class="l-panel">
+      <div style="font-weight:700; margin-bottom:12px;">Kết quả gần đây</div>
+      <% @results.each do |e| %>
+        <div style="display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--line); font-size:13.5px;">
+          <span><%= e.student.name %></span>
+          <span class="l-chip <%= 'l-chip-brand' if e.exam_result == 'passed' %>"><%= e.exam_result_label %></span>
+        </div>
+      <% end %>
+      <% if @results.empty? %>
+        <p style="font-size:13.5px; color:var(--ink-2);">Chưa có kết quả nào.</p>
+      <% end %>
+    </div>
+  </div>
+</div>

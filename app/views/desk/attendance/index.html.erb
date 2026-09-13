@@ -1,13 +1,11 @@
-<%# Trang chính quầy điểm danh — cố tình KHÔNG có menu: chỉ danh sách ca trực và
-    một nút quét thật to (UX quầy điểm danh, màn 6). %>
 <% content_for :title, "Quầy điểm danh" %>
-<div class="l-screen" style="padding-bottom:96px;">
+<div class="l-screen" style="padding-bottom:110px;">
   <header style="padding:18px 18px 12px;">
-    <div style="display:flex; align-items:center; justify-content:space-between;">
+    <div style="display:flex; align-items:flex-start; justify-content:space-between;">
       <div>
         <div style="font-family:var(--font-display); font-size:20px; font-weight:700;">Ca trực hôm nay</div>
         <div style="font-size:13px; color:var(--ink-2);">
-          <%= current_pool&.name %> · <%= l(@today, format: "%A · %d/%m") %>
+          <%= current_pool&.name %> · <%= l(@today, format: "%A · %d/%m") %> · Lễ tân <%= current_user.name.split.last %>
         </div>
       </div>
       <%= link_to current_user.initials, merchant_account_path,
@@ -19,8 +17,7 @@
         <% accessible_pools.each do |pool| %>
           <%= button_to pool.short_name, desk_select_pool_path(pool),
                 class: "l-chip #{'l-chip-brand' if pool.id == current_pool&.id}",
-                form: { style: "display:inline;" },
-                style: "border:none; cursor:pointer; white-space:nowrap;" %>
+                form: { style: "display:inline;" }, style: "border:none; cursor:pointer; white-space:nowrap;" %>
         <% end %>
       </div>
     <% end %>
@@ -28,29 +25,67 @@
 
   <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; padding:0 18px 14px;">
     <div class="l-kpi"><div class="k">Đã điểm danh</div><div class="v"><%= @counts[:checked_in] %></div></div>
-    <div class="l-kpi"><div class="k">Quét lỗi</div><div class="v"><%= @counts[:failed] %></div></div>
+    <div class="l-kpi"><div class="k">Bị từ chối</div><div class="v"><%= @counts[:failed] %></div></div>
     <div class="l-kpi"><div class="k">Vé lẻ</div><div class="v"><%= @counts[:day_pass] %></div></div>
   </div>
 
   <div style="padding:0 18px;">
-    <% if @entries.empty? %>
+    <% if @entries.empty? && @tickets.empty? %>
       <div class="l-panel" style="text-align:center; padding:28px 18px;">
         <div style="font-size:34px;">🏊</div>
         <div style="font-weight:700; margin-top:8px;">Chưa có lượt điểm danh nào hôm nay</div>
         <p style="font-size:13px; color:var(--ink-2); margin-top:6px;">
           Quét khuôn mặt học viên tại quầy <strong>trước khi xuống nước</strong>.
-          Luồng quét đầy đủ hoàn thiện ở giai đoạn P3–P5.
         </p>
+      </div>
+    <% end %>
+
+    <% @entries.each do |att| %>
+      <div class="l-panel" style="margin-bottom:8px; padding:12px 14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-weight:600; font-size:14px;"><%= att.student.name %></div>
+            <div style="font-size:12px; color:var(--ink-2);">
+              <% if att.status == "present" %>
+                Buổi <%= att.enrollment&.sessions_used %>/<%= att.enrollment&.total_available %> ·
+                1:<%= att.lesson.swim_class.class_type %> · <%= att.lesson.teacher.display_name %>
+              <% else %>
+                <%= att.note %>
+              <% end %>
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:12px; color:var(--ink-2);"><%= l(att.checked_in_at, format: "%H:%M") %></div>
+            <span class="l-chip <%= 'l-chip-brand' if att.status == 'present' %>" style="margin-top:4px;">
+              <%= att.status == "present" ? (att.deducted ? "Đã trừ buổi" : "Buổi thi") : "Từ chối" %>
+            </span>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <% @tickets.each do |t| %>
+      <div class="l-panel" style="margin-bottom:8px; padding:12px 14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-weight:600; font-size:14px;"><%= t.guest_name.presence || "Khách vãng lai" %> ×<%= t.quantity %></div>
+            <div style="font-size:12px; color:var(--ink-2);">Vé bơi tự do · QR một lần · <%= t.code %></div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:12px; color:var(--ink-2);"><%= l(t.used_at, format: "%H:%M") %></div>
+            <span class="l-chip" style="margin-top:4px;">Vé lẻ</span>
+          </div>
+        </div>
       </div>
     <% end %>
   </div>
 
-  <div style="position:fixed; left:0; right:0; bottom:0; padding:14px 18px calc(14px + env(safe-area-inset-bottom)); background:linear-gradient(to top, var(--surface) 60%, transparent);">
+  <div style="position:fixed; left:0; right:0; bottom:0; padding:14px 18px calc(14px + env(safe-area-inset-bottom)); background:linear-gradient(to top, var(--surface) 62%, transparent);">
     <%= link_to desk_scan_path, class: "l-btn l-btn-primary l-btn-block", style: "padding:18px; font-size:16px;" do %>
       Quét điểm danh
     <% end %>
     <div style="text-align:center; font-size:12px; color:var(--ink-2); margin-top:6px;">
-      Chạm để mở camera · quét trước khi học viên xuống nước
+      Quét trước khi học viên xuống nước
     </div>
   </div>
 </div>

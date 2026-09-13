@@ -14,6 +14,7 @@ class Student < ApplicationRecord
   has_many :enrollments, dependent: :destroy
   has_many :swim_classes, through: :enrollments
   has_many :attendances, dependent: :destroy
+  has_many :session_feedbacks, dependent: :destroy
   has_many :orders, dependent: :nullify
 
   validates :name, presence: true

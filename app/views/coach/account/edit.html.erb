@@ -1,0 +1,54 @@
+<% content_for :title, "Hồ sơ của tôi" %>
+<% content_for :tab, "me" %>
+<div class="l-screen" style="padding-bottom:100px;">
+  <header style="padding:18px 18px 12px;">
+    <div style="font-family:var(--font-display); font-size:20px; font-weight:700;">Hồ sơ của tôi</div>
+  </header>
+
+  <div style="padding:0 18px;">
+    <div class="l-panel" style="margin-bottom:12px;">
+      <div style="display:flex; gap:12px; align-items:center;">
+        <div style="width:52px;height:52px;border-radius:999px;background:var(--surface-2);display:grid;place-items:center;font-weight:700;font-size:18px;">
+          <%= @user.initials %>
+        </div>
+        <div>
+          <div style="font-weight:700; font-size:16px;"><%= @teacher.display_name %></div>
+          <div style="font-size:12.5px; color:var(--ink-2);">
+            <%= @teacher.renter? ? "Thuê hồ · #{@teacher.org_name}" : @teacher.level_label %> ·
+            <%= @teacher.pools.map(&:short_name).join(" · ") %>
+          </div>
+          <div style="font-size:12.5px; color:var(--ink-2);"><%= @user.phone %></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="l-panel" style="margin-bottom:12px;">
+      <div style="font-weight:700; margin-bottom:10px;">Cập nhật thông tin</div>
+      <%= form_with model: @user, url: teacher_account_path, method: :patch, data: { turbo: false } do |f| %>
+        <div style="margin-bottom:10px;"><%= f.label :name, "Họ tên", class: "l-label" %><%= f.text_field :name, class: "l-field" %></div>
+        <div style="margin-bottom:12px;"><%= f.label :phone, "Số điện thoại", class: "l-label" %><%= f.text_field :phone, class: "l-field" %></div>
+        <%= f.submit "Lưu", class: "l-btn l-btn-soft l-btn-block" %>
+      <% end %>
+    </div>
+
+    <div class="l-panel" style="margin-bottom:12px;">
+      <div style="font-weight:700; margin-bottom:4px;">Thông báo đẩy</div>
+      <p style="font-size:12.5px; color:var(--ink-2); margin-bottom:10px;">
+        Bật để nhận ngay trên điện thoại: lịch dạy thay đổi, học viên mới vào lớp,
+        kết quả đơn xin nghỉ, chốt công kỳ lương.
+      </p>
+      <%= render "layouts/push_toggle" %>
+    </div>
+
+    <div class="l-panel">
+      <div style="font-weight:700; margin-bottom:10px;">Đổi mật khẩu</div>
+      <%= form_with model: @user, url: teacher_account_path, method: :patch, data: { turbo: false } do |f| %>
+        <div style="margin-bottom:10px;"><%= f.password_field :password, class: "l-field", placeholder: "Mật khẩu mới", autocomplete: "new-password" %></div>
+        <div style="margin-bottom:12px;"><%= f.password_field :password_confirmation, class: "l-field", placeholder: "Nhập lại", autocomplete: "new-password" %></div>
+        <%= f.submit "Đổi mật khẩu", class: "l-btn l-btn-soft l-btn-block" %>
+      <% end %>
+      <%= button_to "Đăng xuất", destroy_user_session_path, method: :delete,
+            class: "l-btn l-btn-ghost l-btn-block", style: "margin-top:10px;" %>
+    </div>
+  </div>
+</div>

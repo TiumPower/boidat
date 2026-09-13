@@ -1,34 +1,105 @@
 <% content_for :title, "Lịch dạy" %>
 <% content_for :tab, "schedule" %>
-<div class="l-screen">
+<div class="l-screen" style="padding-bottom:100px;">
   <header style="padding:18px 18px 12px;">
-    <div style="font-family:var(--font-display); font-size:20px; font-weight:700;">
-      Chào <%= @teacher&.display_name || current_user.name %>
+    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+      <div>
+        <div style="font-family:var(--font-display); font-size:20px; font-weight:700;">
+          Chào <%= @teacher.display_name %>
+        </div>
+        <div style="font-size:13px; color:var(--ink-2);">
+          <%= l(@date, format: "%A · %d/%m") %> · <%= current_pool&.name %>
+        </div>
+      </div>
+      <%= link_to current_user.initials, teacher_account_path,
+            style: "width:38px;height:38px;border-radius:999px;background:var(--surface-2);display:grid;place-items:center;font-weight:700;text-decoration:none;color:var(--ink);" %>
     </div>
-    <div style="font-size:13px; color:var(--ink-2);">
-      <%= l(@date, format: "%A · %d/%m") %> · <%= current_pool&.name %>
+
+    <div style="display:flex; gap:8px; margin-top:12px; overflow-x:auto;">
+      <% (-2..4).each do |offset| %>
+        <% d = Date.current + offset %>
+        <% on = d == @date %>
+        <%= link_to teacher_root_path(date: d),
+              style: "flex:none; text-align:center; padding:7px 12px; border-radius:12px; text-decoration:none;
+                      background:#{on ? 'var(--primary)' : 'var(--surface-2)'}; color:#{on ? '#fff' : 'var(--ink-2)'};" do %>
+          <div style="font-size:11px;"><%= %w[CN T2 T3 T4 T5 T6 T7][d.wday] %></div>
+          <div style="font-size:15px; font-weight:700;"><%= d.day %></div>
+        <% end %>
+      <% end %>
     </div>
   </header>
 
-  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; padding:0 18px 14px;">
-    <div class="l-kpi"><div class="k">Tiết hôm nay</div><div class="v"><%= @summary[:lessons] %></div></div>
-    <div class="l-kpi"><div class="k">Công hôm nay</div><div class="v"><%= @summary[:credits] %></div></div>
-    <div class="l-kpi"><div class="k">Chưa nhận xét</div><div class="v"><%= @summary[:pending_feedback] %></div></div>
-  </div>
-
-  <div style="padding:0 18px 100px;">
-    <div class="l-panel" style="text-align:center; padding:28px 18px;">
-      <div style="font-size:34px;">🗓</div>
-      <div style="font-weight:700; margin-top:8px;">Chưa có buổi dạy nào trong ngày</div>
-      <p style="font-size:13px; color:var(--ink-2); margin-top:6px;">
-        Lịch dạy, giáo án và nhận xét học viên được nối vào ở giai đoạn P3.
-      </p>
-      <% if @teacher&.renter? %>
-        <p style="font-size:13px; color:var(--ink-2); margin-top:10px;">
-          Bạn đang thuê hồ (<%= @teacher.org_name %>) — trung tâm chỉ quản lý khung giờ thuê và
-          điểm danh học viên của bạn, không có chấm công hay giáo án.
-        </p>
-      <% end %>
+  <% unless @teacher.renter? %>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; padding:0 18px 14px;">
+      <div class="l-kpi"><div class="k">Tiết hôm nay</div><div class="v"><%= @summary[:lessons] %></div></div>
+      <div class="l-kpi"><div class="k">Công hôm nay</div><div class="v"><%= @summary[:credits].to_f.round(1) %></div></div>
+      <div class="l-kpi"><div class="k">Chưa nhận xét</div><div class="v"><%= @summary[:pending_feedback] %></div></div>
     </div>
+  <% end %>
+
+  <div style="padding:0 18px;">
+    <% if @teacher.renter? %>
+      <div class="l-panel" style="margin-bottom:12px; background:var(--surface-2);">
+        <div style="font-weight:700; font-size:14px;">Thuê hồ · <%= @teacher.org_name %></div>
+        <p style="font-size:12.5px; color:var(--ink-2); margin:6px 0 0;">
+          Trung tâm chỉ quản lý khung giờ bạn thuê và điểm danh học viên của bạn.
+          Không có chấm công, giáo án hay nhận xét.
+        </p>
+      </div>
+      <% @rental_blocks.each do |cls| %>
+        <div class="l-panel" style="margin-bottom:10px;">
+          <div style="font-weight:700;"><%= cls.slot_label %></div>
+          <div style="font-size:12.5px; color:var(--ink-2);"><%= cls.pool.name %> · <%= cls.seats_taken %> học viên</div>
+        </div>
+      <% end %>
+    <% end %>
+
+    <% @lessons.each do |lesson| %>
+      <% cls = lesson.swim_class %>
+      <%= link_to teacher_lesson_path(lesson), class: "l-panel",
+            style: "display:block; margin-bottom:10px; text-decoration:none; color:inherit;" do %>
+        <div style="display:flex; justify-content:space-between; align-items:baseline;">
+          <div style="font-weight:700; font-size:16px;"><%= lesson.time_label %></div>
+          <% if lesson.done? %>
+            <span class="l-chip l-chip-brand">
+              Đã dạy<%= " · #{lesson.timesheet_entry.credits.to_f.round(1)} công" if lesson.timesheet_entry %>
+            </span>
+          <% elsif lesson.past? %>
+            <span class="l-chip" style="background:#FBF1E4; color:#8A5B12;">Chưa điểm danh</span>
+          <% else %>
+            <span class="l-chip">Sắp tới</span>
+          <% end %>
+        </div>
+        <div style="font-size:13px; margin-top:5px;">
+          1:<%= cls.class_type %> · Buổi <%= lesson.session_index %>/<%= cls.total_sessions %> · <%= lesson.title %>
+        </div>
+        <div style="font-size:12.5px; color:var(--ink-2); margin-top:3px;">
+          <%= cls.active_enrollments.map { |e| e.student.short_name }.join(" · ").presence || "chưa có học viên" %>
+        </div>
+      <% end %>
+    <% end %>
+
+    <% @free_slots.each do |slot| %>
+      <div class="l-panel" style="margin-bottom:10px; border-style:dashed; background:var(--surface);">
+        <div style="display:flex; justify-content:space-between; align-items:baseline;">
+          <div style="font-weight:700; font-size:16px;"><%= format("%02d:00", slot.hour) %></div>
+          <span class="l-chip">Slot trống</span>
+        </div>
+        <div style="font-size:12.5px; color:var(--ink-2); margin-top:5px;">
+          Đã đăng ký dạy · chưa có học viên — sale có thể xếp học viên vào slot này.
+        </div>
+      </div>
+    <% end %>
+
+    <% if @lessons.empty? && @free_slots.empty? && !@teacher.renter? %>
+      <div class="l-panel" style="text-align:center; padding:28px 18px;">
+        <div style="font-size:32px;">🗓</div>
+        <div style="font-weight:700; margin-top:8px;">Không có buổi dạy nào hôm nay</div>
+        <p style="font-size:13px; color:var(--ink-2); margin-top:6px;">
+          Nếu bạn chưa gửi lịch rảnh cho tháng này, sale sẽ không xếp được học viên.
+        </p>
+        <%= link_to "Đăng ký lịch dạy", teacher_availability_path, class: "l-btn l-btn-soft", style: "margin-top:10px;" %>
+      </div>
+    <% end %>
   </div>
 </div>

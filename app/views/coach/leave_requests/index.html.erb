@@ -1,0 +1,27 @@
+<% content_for :title, "Đơn xin nghỉ" %>
+<% content_for :tab, "leaves" %>
+<div class="l-screen" style="padding-bottom:100px;">
+  <header style="padding:18px 18px 12px; display:flex; justify-content:space-between; align-items:center;">
+    <div style="font-family:var(--font-display); font-size:20px; font-weight:700;">Đơn xin nghỉ</div>
+    <%= link_to "+ Gửi đơn", new_teacher_leave_request_path, class: "l-btn l-btn-primary", style: "padding:8px 14px; font-size:13px;" %>
+  </header>
+  <div style="padding:0 18px;">
+    <% @requests.each do |r| %>
+      <div class="l-panel" style="margin-bottom:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:baseline;">
+          <div style="font-weight:700; font-size:14px;"><%= r.label %></div>
+          <span class="l-chip <%= 'l-chip-brand' if r.approved? %>"><%= r.status_label %></span>
+        </div>
+        <p style="font-size:13px; color:var(--ink-2); margin:6px 0 0;"><%= r.reason %></p>
+      </div>
+    <% end %>
+    <% if @requests.empty? %>
+      <div class="l-panel" style="text-align:center; padding:28px;">
+        <div style="font-weight:700;">Chưa có đơn nào</div>
+        <p style="font-size:13px; color:var(--ink-2); margin-top:6px;">
+          Buổi bị huỷ do giáo viên nghỉ sẽ không trừ buổi của học viên.
+        </p>
+      </div>
+    <% end %>
+  </div>
+</div>

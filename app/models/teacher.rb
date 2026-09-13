@@ -16,6 +16,8 @@ class Teacher < ApplicationRecord
   has_many :availabilities, class_name: "TeacherAvailability", dependent: :destroy
   has_many :swim_classes, dependent: :restrict_with_error
   has_many :lessons, dependent: :restrict_with_error
+  has_many :timesheet_entries, dependent: :destroy
+  has_many :session_feedbacks, dependent: :destroy
 
   validates :kind,   inclusion: { in: KINDS }
   validates :status, inclusion: { in: STATUSES }

@@ -1,0 +1,69 @@
+<% content_for :title, "Buổi #{@lesson.session_index}" %>
+<% content_for :no_tabbar, true %>
+<div class="l-screen" style="padding-bottom:100px;">
+  <header style="padding:16px 18px 12px;">
+    <%= link_to "← Lịch dạy", teacher_root_path(date: @lesson.date), style: "font-size:13px; color:var(--ink-2); text-decoration:none;" %>
+    <div style="font-family:var(--font-display); font-size:19px; font-weight:700; margin-top:8px;">
+      Buổi <%= @lesson.time_label %> · Lớp 1:<%= @swim_class.class_type %>
+    </div>
+    <div style="font-size:13px; color:var(--ink-2);">
+      Buổi <%= @lesson.session_index %>/<%= @swim_class.total_sessions %> ·
+      <%= @swim_class.course&.name || "Thuê hồ" %>
+      <% if @entry %> · <strong><%= @entry.credits.to_f.round(1) %> công</strong><% end %>
+    </div>
+  </header>
+
+  <div style="padding:0 18px;">
+    <div class="l-eyebrow" style="margin-bottom:8px;">Học viên trong buổi</div>
+    <div class="l-panel" style="margin-bottom:14px;">
+      <% @enrollments.each do |e| %>
+        <% att = @attendances[e.student_id] %>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--line);">
+          <div>
+            <div style="font-weight:600; font-size:14px;"><%= e.student.name %></div>
+            <div style="font-size:12px; color:var(--ink-2);">
+              Buổi <%= e.sessions_used %>/<%= e.total_available %> · còn <%= e.sessions_left %> buổi
+              <% if e.student.health_notes.present? %>
+                <div style="color:#B4402F; margin-top:2px;">⚠ <%= e.student.health_notes %></div>
+              <% end %>
+            </div>
+          </div>
+          <span class="l-chip <%= 'l-chip-brand' if att %>">
+            <%= att ? "Đã điểm danh" : "Chưa" %>
+          </span>
+        </div>
+      <% end %>
+      <% if @enrollments.empty? %>
+        <p style="font-size:13px; color:var(--ink-2);">Lớp chưa có học viên.</p>
+      <% end %>
+    </div>
+
+    <div class="l-eyebrow" style="margin-bottom:8px;">Nội dung buổi dạy</div>
+    <div class="l-panel" style="margin-bottom:14px;">
+      <p style="font-size:12px; color:var(--ink-2); margin-bottom:8px;">
+        Lấy từ giáo án khoá học · sửa được cho riêng buổi này
+      </p>
+      <%= form_with url: teacher_lesson_path(@lesson), method: :patch, data: { turbo: false } do %>
+        <%= text_area_tag :content_override, @lesson.content, class: "l-field", rows: 4 %>
+        <%= submit_tag "Lưu nội dung", class: "l-btn l-btn-soft l-btn-block", style: "margin-top:10px;" %>
+      <% end %>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+      <%= link_to "Ghi nhận xét", new_teacher_lesson_feedback_path(@lesson), class: "l-btn l-btn-primary" %>
+      <%= link_to "Xin nghỉ", new_teacher_leave_request_path, class: "l-btn l-btn-ghost" %>
+    </div>
+
+    <% if @feedbacks.any? %>
+      <div class="l-eyebrow" style="margin:20px 0 8px;">Nhận xét đã gửi</div>
+      <% @feedbacks.each_value do |fb| %>
+        <div class="l-panel" style="margin-bottom:8px;">
+          <div style="font-weight:600; font-size:13.5px;"><%= fb.student.name %>
+            <% if fb.tag %><span class="l-chip" style="margin-left:6px;"><%= fb.tag_label %></span><% end %>
+          </div>
+          <p style="font-size:13px; color:var(--ink-2); margin:6px 0 0;"><%= fb.body %></p>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</div>

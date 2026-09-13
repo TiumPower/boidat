@@ -35,7 +35,11 @@ class AttendanceRecorder
                                    deducted: deducted, checked_in_at: Time.current)
       attendance.save!
       enrollment.check_exam_eligibility!
+      mark_lesson_done!
     end
+    # Công tính lại ngay sau mỗi lần điểm danh: giáo viên thấy công của buổi
+    # vừa dạy trên PWA mà không phải chờ cuối tháng (FR-301).
+    PayrollCalculator.new(@lesson.reload).call
 
     Result.new(ok: true, attendance: attendance, status: "present",
                message: "Đã điểm danh #{@student.name} · còn #{enrollment.reload.sessions_left} buổi.")
@@ -50,6 +54,7 @@ class AttendanceRecorder
       attendance.enrollment&.restore_session! if attendance.deducted
       attendance.destroy!
     end
+    PayrollCalculator.new(@lesson.reload).call
     Result.new(ok: true, attendance: nil, status: "absent",
                message: "Đã bỏ điểm danh #{@student.name}, buổi đã được hoàn lại.")
   end
@@ -61,6 +66,13 @@ class AttendanceRecorder
   private
 
   def failure(message) = Result.new(ok: false, attendance: nil, status: "error", message: message)
+
+  # Buổi có ít nhất một học viên điểm danh coi như đã diễn ra — đây là căn cứ
+  # để tính công và để bảng lịch hiện đúng "buổi thứ mấy".
+  def mark_lesson_done!
+    return if @lesson.done?
+    @lesson.update!(status: "done", completed_at: Time.current)
+  end
 
   def find_enrollment
     Enrollment.active.find_by(student_id: @student.id, swim_class_id: @lesson.swim_class_id)

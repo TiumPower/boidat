@@ -10,6 +10,8 @@ class Lesson < ApplicationRecord
   belongs_to :teacher
   belongs_to :swim_class
   has_many :attendances, dependent: :destroy
+  has_many :session_feedbacks, dependent: :destroy
+  has_one  :timesheet_entry, dependent: :destroy
 
   validates :status, inclusion: { in: STATUSES }
   validates :start_hour, inclusion: { in: 0..23 }

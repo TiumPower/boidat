@@ -1,0 +1,9 @@
+<%# Công tắc bật thông báo đẩy — dùng chung cho PWA phụ huynh và PWA giáo viên.
+    Trạng thái thật do Stimulus `pwa` phản chiếu từ quyền của trình duyệt. %>
+<div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+  <div style="font-size:13.5px; color:var(--ink-2);" data-pwa-target="pushLabel">Thông báo đẩy</div>
+  <button type="button" class="l-switch" data-pwa-target="pushToggle" data-action="pwa#togglePush"
+          aria-label="Bật thông báo đẩy">
+    <span class="knob"></span>
+  </button>
+</div>

@@ -1,0 +1,53 @@
+<% content_for :page_title, "Vé lẻ · #{current_pool.name}" %>
+<% content_for :page_sub, "FR-214 · mã QR dùng một lần, không cần đăng ký khuôn mặt" %>
+
+<div style="display:grid; grid-template-columns:340px 1fr; gap:16px; align-items:start;">
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:12px;">Bán vé nhanh</div>
+    <%= form_with url: merchant_ops_day_passes_path, method: :post, data: { turbo: false } do %>
+      <div style="margin-bottom:10px;">
+        <label class="l-label">Loại vé</label>
+        <%= select_tag :package_id,
+              options_for_select(@packages.map { |p| ["#{p.name} — #{p.price_label(current_pool)}", p.id] }),
+              class: "l-field" %>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+        <div><label class="l-label">Số lượng</label><%= number_field_tag :quantity, 1, class: "l-field", min: 1 %></div>
+        <div><label class="l-label">Hình thức</label>
+          <%= select_tag :method, options_for_select([["Tiền mặt", "cash"], ["Chuyển khoản", "transfer"]]), class: "l-field" %></div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+        <div><label class="l-label">Tên khách</label><%= text_field_tag :guest_name, nil, class: "l-field" %></div>
+        <div><label class="l-label">Điện thoại</label><%= text_field_tag :guest_phone, nil, class: "l-field" %></div>
+      </div>
+      <label style="display:flex; gap:8px; align-items:center; font-size:13.5px; margin-bottom:14px;">
+        <%= check_box_tag :paid, "1", true %> Đã thu tiền
+      </label>
+      <%= submit_tag "Tạo vé", class: "l-btn l-btn-primary l-btn-block" %>
+    <% end %>
+  </div>
+
+  <div class="l-panel">
+    <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:12px;">
+      <div style="font-weight:700;">Vé ngày <%= l(@date, format: "%d/%m/%Y") %></div>
+      <div style="font-size:13px; color:var(--ink-2);">Doanh thu vé lẻ: <strong><%= vnd(@revenue) %></strong></div>
+    </div>
+    <table class="l-table">
+      <thead><tr><th>Mã vé</th><th>Khách</th><th>SL</th><th>Trạng thái</th><th>Dùng lúc</th></tr></thead>
+      <tbody>
+        <% @tickets.each do |t| %>
+          <tr>
+            <td><strong style="font-family:ui-monospace,monospace;"><%= t.code %></strong></td>
+            <td><%= t.guest_name.presence || "Khách vãng lai" %><div style="font-size:12px; color:var(--ink-2);"><%= t.guest_phone %></div></td>
+            <td><%= t.quantity %></td>
+            <td><span class="l-chip <%= 'l-chip-brand' if t.usable? %>"><%= t.status_label %></span></td>
+            <td style="font-size:13px; color:var(--ink-2);"><%= t.used_at ? l(t.used_at, format: "%H:%M") : "—" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+    <% if @tickets.empty? %>
+      <p style="font-size:13.5px; color:var(--ink-2);">Chưa bán vé lẻ nào hôm nay.</p>
+    <% end %>
+  </div>
+</div>

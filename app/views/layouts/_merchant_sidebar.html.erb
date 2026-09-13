@@ -73,8 +73,17 @@
     <%= link_to merchant_ops_students_path, class: "l-nav-item #{'active' if nav == :students}" do %>
       <span>🧒</span><span>Học viên &amp; gia đình</span>
     <% end %>
+    <%= link_to merchant_ops_graduations_path, class: "l-nav-item #{'active' if nav == :graduations}" do %>
+      <span>🏅</span><span>Thi tốt nghiệp</span>
+    <% end %>
     <%= link_to merchant_ops_teachers_path, class: "l-nav-item #{'active' if nav == :teachers}" do %>
       <span>🎓</span><span>Giáo viên &amp; chấm công</span>
+    <% end %>
+    <%= link_to merchant_ops_timesheets_path, class: "l-nav-item #{'active' if nav == :timesheets}" do %>
+      <span>💰</span><span>Bảng chấm công</span>
+    <% end %>
+    <%= link_to merchant_ops_day_passes_path, class: "l-nav-item #{'active' if nav == :day_passes}" do %>
+      <span>🎟</span><span>Vé lẻ</span>
     <% end %>
     <%= link_to merchant_ops_packages_path, class: "l-nav-item #{'active' if nav == :packages}" do %>
       <span>🏷</span><span>Gói &amp; bảng giá</span>

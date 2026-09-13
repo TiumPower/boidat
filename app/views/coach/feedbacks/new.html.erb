@@ -1,0 +1,56 @@
+<% content_for :title, "Nhận xét buổi học" %>
+<% content_for :no_tabbar, true %>
+<div class="l-screen" style="padding-bottom:110px;">
+  <header style="padding:16px 18px 12px;">
+    <%= link_to "← Buổi học", teacher_lesson_path(@lesson), style: "font-size:13px; color:var(--ink-2); text-decoration:none;" %>
+    <div style="font-family:var(--font-display); font-size:19px; font-weight:700; margin-top:8px;">
+      Nhận xét buổi <%= @lesson.time_label %>
+    </div>
+    <div style="font-size:13px; color:var(--ink-2);">
+      Buổi <%= @lesson.session_index %>/<%= @swim_class.total_sessions %> · 1:<%= @swim_class.class_type %> ·
+      điểm danh <%= @attendances.size %>/<%= @enrollments.size %>
+    </div>
+  </header>
+
+  <%= form_with url: teacher_lesson_feedbacks_path(@lesson), method: :post, data: { turbo: false } do %>
+    <div style="padding:0 18px;">
+      <% @enrollments.each do |e| %>
+        <% fb = @feedbacks[e.student_id] %>
+        <% att = @attendances[e.student_id] %>
+        <div class="l-panel" style="margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;">
+            <div style="font-weight:700; font-size:15px;"><%= e.student.name %></div>
+            <span class="l-chip <%= 'l-chip-brand' if att %>"><%= att ? "Có mặt" : "Vắng" %></span>
+          </div>
+
+          <div style="display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
+            <% SessionFeedback::TAGS.each do |tag| %>
+              <label style="cursor:pointer;">
+                <%= radio_button_tag "feedbacks[#{e.student_id}][tag]", tag, fb&.tag == tag, style: "display:none;",
+                      onchange: "this.closest('.l-panel').querySelectorAll('label span').forEach(s=>{s.style.background='var(--surface-2)';s.style.color='var(--ink-2)'}); this.nextElementSibling.style.background='var(--primary)'; this.nextElementSibling.style.color='#fff';" %>
+                <span style="display:inline-block; padding:6px 12px; border-radius:999px; font-size:12.5px; font-weight:600;
+                             background:<%= fb&.tag == tag ? 'var(--primary)' : 'var(--surface-2)' %>;
+                             color:<%= fb&.tag == tag ? '#fff' : 'var(--ink-2)' %>;">
+                  <%= SessionFeedback::TAG_LABELS[tag] %>
+                </span>
+              </label>
+            <% end %>
+          </div>
+
+          <%= text_area_tag "feedbacks[#{e.student_id}][body]", fb&.body, class: "l-field", rows: 3,
+                placeholder: "Viết nhận xét cho #{e.student.short_name}…" %>
+        </div>
+      <% end %>
+
+      <div class="l-panel" style="background:var(--surface-2); margin-bottom:14px;">
+        <p style="font-size:12.5px; color:var(--ink-2); margin:0;">
+          Công của buổi này đã tính từ dữ liệu điểm danh —
+          <strong><%= current_workspace.feedback_blocks_payroll? ? "trung tâm đang yêu cầu có nhận xét mới chốt công" : "nhận xét không chặn lương" %></strong>,
+          nhưng có deadline <%= current_workspace.setting("feedback_deadline_hours") %> giờ.
+        </p>
+      </div>
+
+      <%= submit_tag "Gửi nhận xét cho phụ huynh", class: "l-btn l-btn-primary l-btn-block" %>
+    </div>
+  <% end %>
+</div>

@@ -93,6 +93,10 @@ Rails.application.routes.draw do
       end
       resources :teachers, only: [:index, :show]
       resources :packages, only: [:index]   # sale tra bảng giá khi chốt lịch
+      resources :graduations, only: [:index, :update]   # danh sách thi tốt nghiệp (FR-208)
+      resources :day_passes, path: "day-passes", only: [:index, :create]  # bán vé lẻ nhanh (FR-214)
+      get  "timesheets", to: "timesheets#index", as: :timesheets           # tab chấm công (FR-210)
+      post "timesheets/lock", to: "timesheets#lock", as: :lock_timesheets
       resources :audit_logs, path: "audit", only: [:index]
     end
 
@@ -128,7 +132,9 @@ Rails.application.routes.draw do
   # module :coach chứ không phải :teacher — tránh va tên với model Teacher (Zeitwerk).
   scope path: "teacher", module: :coach, as: :teacher do
     root "schedule#index", as: :root
-    resources :lessons, only: [:show]
+    resources :lessons, only: [:show, :update] do
+      resources :feedbacks, only: [:new, :create]
+    end
     get  "timesheet", to: "timesheet#index", as: :timesheet
     get  "availability", to: "availability#edit", as: :availability
     patch "availability", to: "availability#update"

@@ -1,0 +1,128 @@
+<% content_for :title, "Quét điểm danh" %>
+<div class="l-screen" style="padding-bottom:40px;">
+  <header style="padding:16px 18px 12px; display:flex; justify-content:space-between; align-items:center;">
+    <%= link_to "← Ca trực", desk_root_path, style: "font-size:13px; color:var(--ink-2); text-decoration:none;" %>
+    <span class="l-chip l-chip-brand"><%= current_pool.name %></span>
+  </header>
+
+  <% if @match && @context %>
+    <%# ---- Màn hình xác nhận (FR-232 / FR-235) ---- %>
+    <div style="padding:0 18px;">
+      <% if @context.wrong_pool? %>
+        <%# Quét nhầm hồ: chỉ tên, ảnh và cơ sở trực thuộc — không lộ lịch học,
+            gói học hay lịch sử thanh toán của học viên hồ khác. %>
+        <div class="l-panel" style="background:#FBECEC; border-color:#E4B3B3;">
+          <div style="font-size:30px;">⚠️</div>
+          <div style="font-weight:700; margin-top:8px; font-size:15px;"><%= @context.reason %></div>
+          <p style="font-size:13px; color:var(--ink-2); margin-top:6px;">
+            Không thể điểm danh tại quầy <%= current_pool.name %> — học viên chỉ học tại hồ đã đăng ký.
+          </p>
+        </div>
+        <div class="l-panel" style="margin-top:12px; text-align:center;">
+          <div style="width:76px;height:76px;border-radius:999px;background:var(--surface-2);margin:0 auto;display:grid;place-items:center;font-size:26px;">🙂</div>
+          <div style="font-weight:700; margin-top:10px;"><%= @match.name %></div>
+          <div style="font-size:13px; color:var(--ink-2);"><%= @match.pool.name %></div>
+        </div>
+        <p style="font-size:12.5px; color:var(--ink-2); margin:14px 0;">
+          Nếu phụ huynh cần đổi cơ sở, Admin phải chuyển hồ trực thuộc trên web trước khi điểm danh.
+        </p>
+        <%= link_to "Quét người tiếp theo", desk_scan_path, class: "l-btn l-btn-primary l-btn-block" %>
+
+      <% elsif @context.allowed? %>
+        <div class="l-panel">
+          <div class="l-eyebrow" style="color:var(--primary);">Đã tìm thấy học viên</div>
+          <div style="display:flex; gap:12px; align-items:center; margin-top:10px;">
+            <div style="width:60px;height:60px;border-radius:14px;background:var(--surface-2);display:grid;place-items:center;font-size:22px;">🙂</div>
+            <div>
+              <div style="font-weight:700; font-size:17px;"><%= @match.name %></div>
+              <div style="font-size:12.5px; color:var(--ink-2);">
+                <%= [@match.age_label, @match.household.name].compact.join(" · ") %>
+              </div>
+              <div style="font-size:12.5px; color:var(--ink-2);">Trực thuộc <%= @match.pool.name %></div>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px;">
+            <div class="l-kpi"><div class="k">Buổi hôm nay</div>
+              <div class="v" style="font-size:20px;">Buổi <%= @context.enrollment.sessions_used + 1 %> / <%= @context.enrollment.total_available %></div></div>
+            <div class="l-kpi"><div class="k">Còn lại sau buổi này</div>
+              <div class="v" style="font-size:20px;"><%= [@context.enrollment.sessions_left - 1, 0].max %> buổi</div></div>
+            <div class="l-kpi"><div class="k">Lớp hôm nay</div>
+              <div class="v" style="font-size:16px;"><%= @context.lesson.time_label %> · 1:<%= @context.lesson.swim_class.class_type %></div></div>
+            <div class="l-kpi"><div class="k">Giáo viên</div>
+              <div class="v" style="font-size:16px;"><%= @context.lesson.teacher.display_name %></div></div>
+          </div>
+        </div>
+
+        <%= button_to "Xác nhận điểm danh · trừ 1 buổi", desk_scan_path,
+              params: { student_id: @match.id, method: "manual" },
+              class: "l-btn l-btn-primary l-btn-block", style: "margin-top:14px; padding:16px;" %>
+        <%= link_to "Không phải em này — quét lại", desk_scan_path,
+              class: "l-btn l-btn-ghost l-btn-block", style: "margin-top:8px;" %>
+
+      <% else %>
+        <div class="l-panel" style="background:#FBF1E4; border-color:#E4C79A;">
+          <div style="font-size:30px;">⚠️</div>
+          <div style="font-weight:700; margin-top:8px;"><%= @context.reason %></div>
+        </div>
+        <%= link_to "Quét lại", desk_scan_path, class: "l-btn l-btn-primary l-btn-block", style: "margin-top:14px;" %>
+      <% end %>
+    </div>
+
+  <% else %>
+    <%# ---- Màn hình quét ---- %>
+    <div style="padding:0 18px;">
+      <div style="border-radius:18px; background:#0C2229; aspect-ratio:3/4; display:grid; place-items:center; color:#fff; text-align:center; margin-bottom:14px;">
+        <div>
+          <div style="width:150px; height:150px; border:2px dashed rgba(255,255,255,.5); border-radius:20px; margin:0 auto 14px;"></div>
+          <div style="font-size:14px; font-weight:600;">Đưa khuôn mặt vào khung</div>
+          <div style="font-size:12px; opacity:.7; margin-top:4px;">
+            camera trước · quét trước khi xuống nước
+          </div>
+          <div style="font-size:11.5px; opacity:.55; margin-top:12px; max-width:250px;">
+            Nhận diện tự động sẽ bật khi service khuôn mặt được kết nối (P5).
+            Hiện tại tra cứu theo tên bên dưới — luồng dự phòng này luôn dùng được.
+          </div>
+        </div>
+      </div>
+
+      <%= form_with url: desk_scan_path, method: :get, data: { turbo: false }, style: "margin-bottom:12px;" do %>
+        <%= search_field_tag :q, @query, class: "l-field", placeholder: "Tra cứu theo tên học viên…", autofocus: true %>
+      <% end %>
+
+      <% @candidates.each do |student| %>
+        <%= link_to desk_scan_path(student_id: student.id), class: "l-panel",
+              style: "display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; text-decoration:none; color:inherit; padding:12px 14px;" do %>
+          <div>
+            <div style="font-weight:600; font-size:14px;"><%= student.name %></div>
+            <div style="font-size:12px; color:var(--ink-2);">
+              <%= [student.age_label, student.pool.name].compact.join(" · ") %>
+              <%= " · chưa có ảnh khuôn mặt" unless student.face_registered? %>
+            </div>
+          </div>
+          <span style="color:var(--ink-2);">›</span>
+        <% end %>
+      <% end %>
+
+      <% if @query.present? && @candidates.empty? %>
+        <div class="l-panel" style="text-align:center; padding:24px;">
+          <div style="font-weight:700;">Không tìm thấy “<%= @query %>”</div>
+          <p style="font-size:13px; color:var(--ink-2); margin-top:6px;">
+            Tra cứu chạy trên học viên của cả 3 cơ sở. Nếu vẫn không thấy, mở bảng master data
+            trên web và điểm danh tay cho slot đó.
+          </p>
+        </div>
+      <% end %>
+
+      <div class="l-eyebrow" style="margin:20px 0 8px;">Vé lẻ</div>
+      <%= form_with url: desk_scan_ticket_path, method: :post, data: { turbo: false },
+            style: "display:flex; gap:8px;" do %>
+        <%= text_field_tag :code, nil, class: "l-field", placeholder: "Mã vé QR một lần" %>
+        <%= submit_tag "Dùng vé", class: "l-btn l-btn-soft" %>
+      <% end %>
+      <p style="font-size:12px; color:var(--ink-2); margin-top:8px;">
+        Khách vãng lai dùng mã vé một lần, không cần đăng ký dữ liệu khuôn mặt.
+      </p>
+    </div>
+  <% end %>
+</div>

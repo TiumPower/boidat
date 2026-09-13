@@ -1,0 +1,46 @@
+<% content_for :title, "Xin nghỉ buổi dạy" %>
+<% content_for :no_tabbar, true %>
+<div class="l-screen" style="padding-bottom:110px;">
+  <header style="padding:16px 18px 12px;">
+    <%= link_to "← Đơn xin nghỉ", teacher_leave_requests_path, style: "font-size:13px; color:var(--ink-2); text-decoration:none;" %>
+    <div style="font-family:var(--font-display); font-size:19px; font-weight:700; margin-top:8px;">Xin nghỉ buổi dạy</div>
+    <div style="font-size:13px; color:var(--ink-2);">Admin duyệt → phụ huynh được thông báo tự động</div>
+  </header>
+
+  <% if @request.errors.any? %>
+    <div style="margin:0 18px 12px;" class="l-chip"><%= @request.errors.full_messages.to_sentence %></div>
+  <% end %>
+
+  <%= form_with url: teacher_leave_requests_path, method: :post, data: { turbo: false } do %>
+    <div style="padding:0 18px;">
+      <div class="l-eyebrow" style="margin-bottom:8px;">Chọn buổi cần nghỉ</div>
+      <% @lessons.each do |lesson| %>
+        <label class="l-panel" style="display:block; margin-bottom:8px; cursor:pointer;">
+          <div style="display:flex; gap:10px; align-items:flex-start;">
+            <%= check_box_tag "lesson_ids[]", lesson.id, false, style: "margin-top:3px;" %>
+            <div>
+              <div style="font-weight:600; font-size:14px;">
+                <%= %w[CN T2 T3 T4 T5 T6 T7][lesson.date.wday] %> · <%= l(lesson.date, format: "%d/%m") %> · <%= lesson.time_label %>
+              </div>
+              <div style="font-size:12.5px; color:var(--ink-2);">
+                Lớp 1:<%= lesson.swim_class.class_type %> · <%= lesson.swim_class.seats_taken %> học viên · <%= lesson.pool.name %>
+              </div>
+            </div>
+          </div>
+        </label>
+      <% end %>
+      <% if @lessons.empty? %>
+        <p style="font-size:13.5px; color:var(--ink-2);">Không có buổi dạy nào sắp tới.</p>
+      <% end %>
+
+      <div class="l-eyebrow" style="margin:18px 0 8px;">Lý do</div>
+      <%= text_area_tag :reason, nil, class: "l-field", rows: 3,
+            placeholder: "Việc gia đình, em nhờ trung tâm sắp xếp lịch bù giúp học viên ạ." %>
+
+      <p style="font-size:12.5px; color:var(--ink-2); margin:12px 0;">
+        Buổi bị huỷ do giáo viên nghỉ sẽ <strong>không trừ buổi</strong> của học viên.
+      </p>
+      <%= submit_tag "Gửi đơn cho Admin", class: "l-btn l-btn-primary l-btn-block" %>
+    </div>
+  <% end %>
+</div>
