@@ -1,0 +1,23 @@
+# systemd USER unit — cài vào ~/.config/systemd/user/ của user deploy.
+#
+# Viết tay thay vì để capistrano-puma sinh: bản nó sinh nhét biến môi trường
+# thẳng vào dòng ExecStart, systemd không chấp nhận cú pháp đó và service không
+# bao giờ khởi động (đúng lỗi đã gặp ở dự án estate).
+[Unit]
+Description=Puma HTTP Server cho BƠI ĐẠT (production)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/boidat/current
+EnvironmentFile=/var/www/boidat/shared/.env
+Environment=RAILS_ENV=production
+ExecStart=/home/deploy/.rbenv/bin/rbenv exec bundle exec puma -e production -C /var/www/boidat/current/config/puma.rb
+ExecReload=/bin/kill -USR1 $MAINPID
+Restart=always
+RestartSec=3
+StandardOutput=append:/var/www/boidat/shared/log/puma.log
+StandardError=append:/var/www/boidat/shared/log/puma.log
+
+[Install]
+WantedBy=default.target

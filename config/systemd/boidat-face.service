@@ -1,0 +1,17 @@
+# Service nhận diện khuôn mặt (docker compose). Cài vào /etc/systemd/system/.
+[Unit]
+Description=BƠI ĐẠT Face Service (InsightFace + FastAPI)
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/var/www/boidat/current/face_service
+EnvironmentFile=/var/www/boidat/shared/.env
+ExecStart=/usr/bin/docker compose up -d --build
+ExecStop=/usr/bin/docker compose down
+TimeoutStartSec=900
+
+[Install]
+WantedBy=multi-user.target

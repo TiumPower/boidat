@@ -1,0 +1,23 @@
+# systemd SYSTEM unit — cài vào /etc/systemd/system/.
+#
+# Sidekiq là BẮT BUỘC ở production: queue_adapter = :sidekiq, nên thông báo đẩy,
+# email OTP, job đóng khoá hết hạn và đẩy vector khuôn mặt đều nằm trong hàng đợi.
+# Không chạy sidekiq thì mọi thứ chạy nền đều im lặng không xảy ra.
+[Unit]
+Description=Sidekiq cho BƠI ĐẠT (production)
+After=network.target redis-server.service
+
+[Service]
+Type=simple
+User=deploy
+WorkingDirectory=/var/www/boidat/current
+EnvironmentFile=/var/www/boidat/shared/.env
+Environment=RAILS_ENV=production
+ExecStart=/home/deploy/.rbenv/bin/rbenv exec bundle exec sidekiq -e production -C /var/www/boidat/current/config/sidekiq.yml
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/www/boidat/shared/log/sidekiq.log
+StandardError=append:/var/www/boidat/shared/log/sidekiq.log
+
+[Install]
+WantedBy=multi-user.target
