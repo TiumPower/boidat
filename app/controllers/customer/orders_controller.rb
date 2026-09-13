@@ -16,12 +16,12 @@ module Customer
     # Mở phiên thanh toán: sinh link PayOS mới rồi chuyển sang trang QR của họ.
     def pay
       result = PayosCheckout.new(@order,
-                                 return_url: member_order_return_url(@order, **url_host),
-                                 cancel_url: member_order_return_url(@order, cancel: true, **url_host)).call
+                                 return_url: member_order_return_url(id: @order.id, **url_host),
+                                 cancel_url: member_order_return_url(id: @order.id, cancel: true, **url_host)).call
       if result.ok?
         redirect_to result.checkout_url, allow_other_host: true
       else
-        redirect_to member_order_path(@order), alert: result.error
+        redirect_to member_order_path(id: @order.id), alert: result.error
       end
     end
 

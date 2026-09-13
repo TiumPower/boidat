@@ -12,7 +12,7 @@
     <% if @pending.any? %>
       <div class="l-eyebrow" style="margin-bottom:8px;">Cần chọn phương án</div>
       <% @pending.each do |req| %>
-        <%= link_to member_makeup_path(req), class: "l-panel",
+        <%= link_to member_makeup_path(id: req.id), class: "l-panel",
               style: "display:block; margin-bottom:10px; text-decoration:none; color:inherit; border-color:var(--primary);" do %>
           <div style="font-weight:700; font-size:14px;">
             <%= req.student.name %> ·

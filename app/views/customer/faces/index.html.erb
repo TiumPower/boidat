@@ -33,7 +33,7 @@
           </div>
         </div>
 
-        <%= form_with url: member_create_face_path(student), method: :post, multipart: true,
+        <%= form_with url: member_create_face_path(student_id: student.id), method: :post, multipart: true,
               data: { turbo: false }, style: "margin-top:12px;" do %>
           <%= file_field_tag :photo, accept: "image/*", capture: "user", class: "l-field", required: true %>
 
@@ -51,7 +51,7 @@
         <% end %>
 
         <% if student.face_registered? %>
-          <%= button_to "Yêu cầu xoá dữ liệu sinh trắc học", member_destroy_face_path(student),
+          <%= button_to "Yêu cầu xoá dữ liệu sinh trắc học", member_destroy_face_path(student_id: student.id),
                 method: :delete, class: "l-btn l-btn-ghost l-btn-block", style: "margin-top:8px;",
                 form: { data: { turbo_confirm: "Xoá dữ liệu khuôn mặt của #{student.short_name}? Em sẽ phải điểm danh thủ công." } } %>
         <% end %>

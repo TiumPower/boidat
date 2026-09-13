@@ -33,7 +33,7 @@ module Customer
         m.reason = params[:reason]
         m.status = "pending"
       end
-      redirect_to member_makeup_path(request), notice: "Đã ghi nhận. Hãy chọn buổi học bù."
+      redirect_to member_makeup_path(id: request.id), notice: "Đã ghi nhận. Hãy chọn buổi học bù."
     end
 
     def book
@@ -48,7 +48,7 @@ module Customer
 
       lesson = Lesson.where(pool_id: household_pool_ids).find(params[:lesson_id])
       if lesson.swim_class.full?
-        return redirect_to member_makeup_path(request), alert: "Buổi này vừa hết chỗ. Chọn buổi khác giúp em."
+        return redirect_to member_makeup_path(id: request.id), alert: "Buổi này vừa hết chỗ. Chọn buổi khác giúp em."
       end
 
       choice = lesson.teacher_id == request.enrollment.swim_class.teacher_id ? "other_slot" : "other_teacher"

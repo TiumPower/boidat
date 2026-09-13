@@ -23,9 +23,9 @@
 
             <% if n.awaiting_ack? %>
               <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
-                <%= button_to "Nghỉ theo thầy", member_ack_notification_path(n, choice: "follow_teacher"),
+                <%= button_to "Nghỉ theo thầy", member_ack_notification_path(id: n.id, choice: "follow_teacher"),
                       class: "l-btn l-btn-primary", style: "padding:7px 14px; font-size:12.5px;" %>
-                <%= button_to "Chọn lịch khác", member_ack_notification_path(n, choice: "other_slot"),
+                <%= button_to "Chọn lịch khác", member_ack_notification_path(id: n.id, choice: "other_slot"),
                       class: "l-btn l-btn-soft", style: "padding:7px 14px; font-size:12.5px;" %>
               </div>
             <% elsif n.acknowledged? %>

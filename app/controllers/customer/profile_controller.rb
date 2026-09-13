@@ -7,7 +7,7 @@ module Customer
       @guardian = current_guardian
       @household = current_household
       @students = household_students.includes(:face_profile)
-      @qr_url = member_qr_login_url(@household.qr_token, host: request.host_with_port,
+      @qr_url = member_qr_login_url(qr_token: @household.qr_token, host: request.host_with_port,
                                     protocol: request.protocol,
                                     workspace_slug: params[:workspace_slug])
     end

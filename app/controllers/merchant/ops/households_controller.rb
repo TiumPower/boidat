@@ -15,7 +15,7 @@ module Merchant
 
       def show
         @students = @household.students.includes(:pool, :face_profile).to_a
-        @qr_url = member_qr_login_url(@household.qr_token, host: request.host_with_port,
+        @qr_url = member_qr_login_url(qr_token: @household.qr_token, host: request.host_with_port,
                                       protocol: request.protocol, workspace_slug: current_workspace.slug)
       end
 

@@ -10,7 +10,7 @@ module Customer
       @contract.sign!(guardian_name: params[:guardian_name].presence || current_guardian.name,
                       guardian_signature: signature_blob(params[:guardian_signature]),
                       request: request)
-      redirect_to member_contract_path(@contract), notice: "Đã ký cam kết. Cảm ơn quý phụ huynh."
+      redirect_to member_contract_path(id: @contract.id), notice: "Đã ký cam kết. Cảm ơn quý phụ huynh."
     end
 
     private

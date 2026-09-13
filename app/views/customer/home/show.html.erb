@@ -27,7 +27,7 @@
       <%= @household.individual? ? "Khoá học" : "Thành viên đang học" %>
     </div>
     <% @students.each do |st| %>
-      <%= link_to member_student_path(st), class: "l-panel", style: "display:block; text-decoration:none; color:inherit; margin-bottom:10px;" do %>
+      <%= link_to member_student_path(id: st.id), class: "l-panel", style: "display:block; text-decoration:none; color:inherit; margin-bottom:10px;" do %>
         <div style="display:flex; justify-content:space-between; align-items:baseline;">
           <div style="font-weight:700;"><%= st.name %></div>
           <span class="l-chip"><%= st.pool.name %></span>
