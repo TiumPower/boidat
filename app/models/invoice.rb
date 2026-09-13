@@ -49,15 +49,22 @@ class Invoice < ApplicationRecord
   # previously cancelled/expired link on this invoice can't collide at PayOS
   # ("đơn hàng đã được xử lý"). Clears the stale checkout URL too.
   def reassign_order_code!
-    update!(payos_order_code: 73_000_000_000 + (Time.now.to_i % 1_000_000_000) + rand(0..999),
-            checkout_url: nil)
+    update!(payos_order_code: self.class.next_order_code, checkout_url: nil)
+  end
+
+  def self.next_order_code
+    73_000_000_000 + SecureRandom.random_number(100_000_000)
   end
 
   private
 
-  # Unique integer order code for PayOS (offset to avoid clashing with other apps
-  # sharing the same PayOS merchant account).
+  # Mã đơn PayOS. Tiền tố 73 tách BƠI ĐẠT khỏi các app khác dùng chung tài khoản
+  # merchant (loyalty 71, estate 72). Trong nội bộ app còn chia hai dải nữa:
+  #   73_0xx_xxx_xxx — hoá đơn thuê bao nền tảng (Invoice, file này)
+  #   73_1xx_xxx_xxx — đơn khoá học của trung tâm (Order)
+  # Hai dải KHÔNG được chồng nhau: webhook tra Order trước, một mã trùng sẽ ghi
+  # nhận thanh toán vào nhầm bản ghi.
   def assign_order_code
-    self.payos_order_code ||= 73_000_000_000 + SecureRandom.random_number(1_000_000_000)
+    self.payos_order_code ||= self.class.next_order_code
   end
 end

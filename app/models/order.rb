@@ -56,6 +56,9 @@ class Order < ApplicationRecord
 
   # Mã đơn PayOS mới trước mỗi lần mở checkout, để link cũ đã huỷ/hết hạn không
   # chặn lần thanh toán sau.
+  #
+  # Dải 73_1xx tách khỏi dải 73_0xx của Invoice (thuê bao nền tảng) — webhook
+  # tra Order trước, nên hai dải chồng nhau sẽ ghi nhận tiền vào nhầm bản ghi.
   def reassign_payos_code!
     update!(payos_order_code: 73_100_000_000 + SecureRandom.random_number(100_000_000),
             checkout_url: nil)
