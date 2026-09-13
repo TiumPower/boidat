@@ -21,7 +21,7 @@ class SelfEnrollmentOptions
   # Lớp nhóm đang chạy còn chỗ — ưu tiên hiện trước vì học nhóm rẻ hơn và mở lớp
   # mới cho một học viên là lãng phí một khung giờ của giáo viên.
   def open_classes
-    @open_classes ||= SwimClass.running.classes.where(pool_id: @pool.id)
+    @open_classes ||= SwimClass.teaching.classes.where(pool_id: @pool.id)
                                .includes(:teacher, :course, enrollments: :student).to_a
                                .select { |c| c.seats_left.positive? && !already_in?(c) }
                                .map do |cls|
@@ -34,7 +34,7 @@ class SelfEnrollmentOptions
   def free_slots
     @free_slots ||= begin
       months = [Date.current.beginning_of_month, Date.current.next_month.beginning_of_month]
-      busy = SwimClass.running.where(pool_id: @pool.id).flat_map do |cls|
+      busy = SwimClass.teaching.where(pool_id: @pool.id).flat_map do |cls|
         cls.weekday_list.map { |wd| "#{cls.teacher_id}:#{wd}:#{cls.start_hour}" }
       end.to_set
 

@@ -28,8 +28,32 @@ class SwimClass < ApplicationRecord
   scope :classes, -> { where(kind: "class") }
   scope :rentals, -> { where(kind: "rental") }
 
+  # "Đang dạy" khác "chưa bị đóng". Một lớp dạy hết 12 buổi vẫn nằm nguyên ở
+  # status "running" cho tới khi có người đóng nó, nên `running` một mình là
+  # câu trả lời sai cho câu hỏi "lớp này còn hoạt động không".
+  #
+  # Chỗ này từng gây hai hậu quả thật: bộ xếp lịch coi khung giờ của lớp đã dạy
+  # xong là vùng cấm nên không bao giờ xếp lại được (6/16 khung của Hồ Quận 7
+  # bị khoá vĩnh viễn), và PWA phụ huynh vẫn chào bán chỗ trống của những lớp
+  # không còn buổi nào để học.
+  # Nghi ngờ thì coi là CÒN hoạt động. Lớp vừa tạo mà chưa kịp sinh buổi cũng
+  # phải giữ chỗ: đoán nhầm theo hướng "đã xong" nghĩa là bộ xếp lịch xếp đè
+  # lên giáo viên đang có lớp, tệ hơn hẳn việc để trống một khung.
+  scope :teaching, lambda {
+    over = joins(:lessons).group("swim_classes.id")
+                          .having("MAX(lessons.date) < ?", Date.current)
+                          .select("swim_classes.id")
+    running.where.not(id: over)
+  }
+
   def running? = status == "running"
   def rental?  = kind == "rental"
+
+  # Đã dạy hết giáo trình: có buổi, và buổi cuối cùng đã ở quá khứ. Lớp chưa
+  # sinh buổi nào thì KHÔNG tính là xong — nó chỉ chưa bắt đầu.
+  def course_over?
+    running? && lessons.exists? && lessons.where("date >= ?", Date.current).none?
+  end
 
   def weekday_list = Array(weekdays).map(&:to_i).sort
   def weekday_label = weekday_list.map { |w| WEEKDAY_SHORT[w] }.join(" & ")

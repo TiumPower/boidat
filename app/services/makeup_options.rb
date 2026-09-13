@@ -71,7 +71,7 @@ class MakeupOptions
   def candidate_lessons
     @candidate_lessons ||= Lesson.where(pool_id: @pool.id, status: "scheduled")
                                  .where(date: @from..(@from + LOOKAHEAD_DAYS))
-                                 .where(swim_class_id: SwimClass.running.classes.where(pool_id: @pool.id).select(:id))
+                                 .where(swim_class_id: SwimClass.teaching.classes.where(pool_id: @pool.id).select(:id))
                                  .includes(swim_class: [:course, :teacher, { enrollments: :student }],
                                            teacher: [:user, :teacher_level])
                                  .order(:date, :start_hour).to_a

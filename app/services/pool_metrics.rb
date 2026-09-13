@@ -125,7 +125,7 @@ class PoolMetrics
   end
 
   def courses_running
-    SwimClass.running.classes.where(pool_id: @pool_ids).count
+    SwimClass.teaching.classes.where(pool_id: @pool_ids).count
   end
 
   # Tiết đã dạy = buổi đã hoàn thành (có ít nhất một học viên điểm danh).

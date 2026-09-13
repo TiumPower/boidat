@@ -481,6 +481,44 @@ ActsAsTenant.with_tenant(ws) do
   end
 
 
+  # Bảo đảm BẢY NGÀY TỚI ngày nào cũng có buổi học.
+  #
+  # Trước đây seed chỉ rải lớp theo vài cặp thứ cố định rồi hy vọng may mắn.
+  # Nó hỏng hai lần theo hai kiểu khác nhau: Chủ nhật không lớp nào chạy, và
+  # sang Thứ Hai thì cả bốn lớp có lịch Thứ Hai đều đã dạy hết 12 buổi từ
+  # tuần trước. Cả hai lần, người mở bản demo đều thấy PWA quầy và PWA giáo
+  # viên trống trơn — đúng hai màn hình được bấm vào đầu tiên.
+  #
+  # "Lớp có lịch Thứ Hai" không đồng nghĩa "còn buổi vào Thứ Hai này". Nên
+  # phải kiểm tra đúng thứ cần kiểm: hôm đó có Lesson nào không. Thiếu ngày
+  # nào thì khai giảng thêm một lớp mới cho ngày đó.
+  puts "→ Bảo đảm tuần tới ngày nào cũng có buổi"
+  (0..6).each do |offset|
+    day = Date.current + offset
+    next if Lesson.where(date: day).where(pool_id: q7.id).exists?
+
+    teacher = [minh, hanh, tuan].find do |t|
+      SwimClass.teaching.where(teacher_id: t.id).none? { |c| c.weekday_list.include?(day.wday) }
+    end
+    next unless teacher
+
+    hour = (6..20).find do |h|
+      SwimClass.teaching.where(pool_id: q7.id, start_hour: h)
+               .none? { |c| c.weekday_list.include?(day.wday) }
+    end
+    next unless hour
+
+    cap = [teacher.capacity, 2].min
+    students = Student.where(pool: q7, kind: "center").order(:id).limit(cap).to_a
+    next if students.empty?
+
+    open_class!(ws: ws, pool: q7, teacher: teacher, course: basic_course,
+                package: cap >= 2 ? pkg_1v2 : nil, class_type: cap,
+                weekdays: [day.wday], hour: hour,
+                start_date: 1.week.ago.to_date.beginning_of_week,
+                students: students, used: 1)
+  end
+
   # ---- Điểm danh & công cho các buổi đã qua ------------------------------
   puts "→ Điểm danh & chấm công"
   receptionist = User.find_by(email: "ngan@boidat.vn")

@@ -70,7 +70,7 @@ module Merchant
         @teachers = ::Teacher.staff.active.in_pool(current_pool).includes(:user, :teacher_level).to_a
         @courses  = Course.active.ordered.to_a
         @packages = Package.sellable.ordered.includes(:course, :price_list_items).to_a
-        @open_classes = SwimClass.running.classes.where(pool_id: current_pool.id)
+        @open_classes = SwimClass.teaching.classes.where(pool_id: current_pool.id)
                                  .includes(:teacher, :course, enrollments: :student).to_a
                                  .select { |c| c.seats_left.positive? }
         @promotions = Promotion.active.ordered.select { |p| p.pool_id.nil? || p.pool_id == current_pool.id }

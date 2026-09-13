@@ -61,7 +61,7 @@ module Merchant
         {
           teachers: teachers,
           submitted: submitted,
-          running_classes: SwimClass.running.where(pool_id: current_pool.id).count,
+          running_classes: SwimClass.teaching.where(pool_id: current_pool.id).count,
           ready: submitted.positive?
         }
       end

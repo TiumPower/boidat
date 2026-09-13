@@ -5,6 +5,7 @@
 #      là nguồn khiếu nại chắc chắn.
 #   2. Đóng khoá đã hết hạn 1 năm, số buổi chưa dùng mất hiệu lực.
 #   3. Nhắc gia hạn khi còn ≤ n buổi (OQ-17 — đòn bẩy tái ký).
+#   4. Đóng lớp đã dạy hết giáo trình.
 class CourseMaintenanceJob < ApplicationJob
   queue_as :default
 
@@ -15,6 +16,7 @@ class CourseMaintenanceJob < ApplicationJob
           warn_expiring(workspace)
           close_expired(workspace)
           nudge_low_sessions(workspace)
+          close_finished_classes(workspace)
         end
       rescue StandardError => e
         Rails.logger.error("[maintenance] #{workspace.subdomain}: #{e.class} #{e.message}")
@@ -47,6 +49,19 @@ class CourseMaintenanceJob < ApplicationJob
              title: "Khoá của #{enrollment.student.short_name} đã hết hạn",
              body: "Gói hết hạn ngày #{I18n.l(enrollment.expires_on, format: '%d/%m/%Y')}. " \
                    "Liên hệ trung tâm nếu bạn muốn đăng ký khoá mới.")
+    end
+  end
+
+  # Lớp dạy hết 12 buổi vẫn nằm ở status "running" cho tới khi có người đóng —
+  # và trước đây không ai đóng cả. Hậu quả không phải chuyện thẩm mỹ: bộ xếp
+  # lịch coi khung giờ của lớp đã xong là vùng cấm nên vĩnh viễn không xếp lại
+  # được ai vào đó, và cổng phụ huynh vẫn chào bán chỗ trống của lớp không còn
+  # buổi nào. Ở Hồ Quận 7 có lúc 6/16 khung bị khoá kiểu này.
+  def close_finished_classes(workspace)
+    SwimClass.running.find_each do |cls|
+      next unless cls.course_over?
+      cls.update!(status: "finished")
+      Rails.logger.info("[maintenance] #{workspace.subdomain}: đóng lớp #{cls.code} (đã dạy hết)")
     end
   end
 

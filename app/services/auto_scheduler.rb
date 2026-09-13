@@ -52,7 +52,7 @@ class AutoScheduler
 
   # Khung đã bị chiếm bởi lớp ĐANG CHẠY — vùng cấm của thuật toán.
   def booked_keys
-    @booked_keys ||= SwimClass.running.where(pool_id: @pool.id).flat_map do |cls|
+    @booked_keys ||= SwimClass.teaching.where(pool_id: @pool.id).flat_map do |cls|
       cls.weekday_list.map { |wd| "#{cls.teacher_id}:#{wd}:#{cls.start_hour}" }
     end.to_set
   end
@@ -133,7 +133,7 @@ class AutoScheduler
   # của hồ, không đoán. Hồ chưa có dữ liệu thì giả định lớp 1:2.
   def expected_credit_per_slot
     @expected_credit_per_slot ||= begin
-      avg = SwimClass.running.where(pool_id: @pool.id).map(&:seats_taken)
+      avg = SwimClass.teaching.where(pool_id: @pool.id).map(&:seats_taken)
       headcount = avg.any? ? [(avg.sum.to_f / avg.size).round, 1].max : 2
       @workspace.credits_for(headcount)
     end
@@ -156,7 +156,7 @@ class AutoScheduler
 
     {
       "open_slots" => open_slots.size,
-      "locked_classes" => SwimClass.running.where(pool_id: @pool.id).count,
+      "locked_classes" => SwimClass.teaching.where(pool_id: @pool.id).count,
       "teachers" => proposals.map(&:teacher_id).uniq.size,
       "expected_credit_per_slot" => expected_credit_per_slot,
       "credit_stddev_by_level" => spread,

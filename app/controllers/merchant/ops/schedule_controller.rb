@@ -58,7 +58,7 @@ module Merchant
       end
 
       def load_kpis
-        running = SwimClass.running.classes.where(pool_id: current_pool.id).count
+        running = SwimClass.teaching.classes.where(pool_id: current_pool.id).count
         students = Enrollment.active.where(pool_id: current_pool.id).count
         low = Enrollment.active.where(pool_id: current_pool.id)
                         .select { |e| e.low_sessions? }.size
