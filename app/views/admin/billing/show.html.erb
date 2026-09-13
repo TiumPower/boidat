@@ -1,0 +1,22 @@
+<% content_for :title, "Doanh thu nền tảng" %>
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:18px;">
+  <div class="l-kpi"><div class="k">Đã thu tháng này</div><div class="v" style="font-size:22px;"><%= vnd(@paid_this_month) %></div></div>
+  <div class="l-kpi"><div class="k">Đang chờ thanh toán</div><div class="v" style="font-size:22px;"><%= vnd(@pending_total) %></div></div>
+  <div class="l-kpi"><div class="k">Doanh thu định kỳ</div><div class="v" style="font-size:22px;"><%= vnd(@mrr) %></div></div>
+</div>
+<div class="l-panel">
+  <table class="l-table">
+    <thead><tr><th>Trung tâm</th><th>Gói</th><th>Kỳ</th><th>Số tiền</th><th>Trạng thái</th></tr></thead>
+    <tbody>
+      <% @invoices.each do |inv| %>
+        <tr>
+          <td><%= inv.workspace.name %></td>
+          <td><%= inv.plan %></td>
+          <td><%= inv.period_label %></td>
+          <td><%= vnd(inv.amount) %></td>
+          <td><span class="l-chip"><%= inv.status %></span></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

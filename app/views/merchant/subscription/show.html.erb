@@ -1,0 +1,39 @@
+<% content_for :page_title, "Gói & thanh toán" %>
+<div style="display:grid; grid-template-columns:1fr 320px; gap:16px; align-items:start;">
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:12px;">Chọn gói</div>
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px;">
+      <% @plans.each do |plan| %>
+        <% current = plan.key == @workspace.plan %>
+        <div style="border:1px solid <%= current ? 'var(--primary)' : 'var(--line)' %>; border-radius:14px; padding:16px;">
+          <div style="font-weight:700; font-size:16px;"><%= plan.name %></div>
+          <div style="font-size:20px; font-weight:700; color:var(--primary); margin:6px 0;"><%= plan.price_label %><span style="font-size:12px; color:var(--ink-2); font-weight:500;">/tháng</span></div>
+          <ul style="font-size:12.5px; color:var(--ink-2); padding-left:16px; margin:10px 0;">
+            <% plan.localized_features.each do |feat| %><li><%= feat %></li><% end %>
+          </ul>
+          <%= button_to current ? "Gia hạn gói này" : "Chuyển sang gói này",
+                merchant_billing_pay_path(plan: plan.key), class: "l-btn #{current ? 'l-btn-primary' : 'l-btn-soft'} l-btn-block",
+                form: { data: { turbo: false } } %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:8px;">Thuê bao hiện tại</div>
+    <div style="font-size:13.5px; color:var(--ink-2); line-height:1.9;">
+      Gói: <strong style="color:var(--ink);"><%= @workspace.plan_record.name %></strong><br>
+      Trạng thái: <strong style="color:var(--ink);"><%= @workspace.payment_label %></strong><br>
+      <% if @workspace.paid_until %>Hiệu lực tới: <strong style="color:var(--ink);"><%= l(@workspace.paid_until.to_date, format: "%d/%m/%Y") %></strong><% end %>
+    </div>
+    <% if @invoices.any? %>
+      <div class="l-eyebrow" style="margin:18px 0 8px;">Hoá đơn gần đây</div>
+      <% @invoices.each do |inv| %>
+        <div style="display:flex; justify-content:space-between; font-size:13px; padding:6px 0; border-bottom:1px solid var(--line);">
+          <span><%= inv.period_label %></span>
+          <span><%= vnd(inv.amount) %> · <%= inv.status %></span>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</div>

@@ -1,0 +1,13 @@
+<% content_for :page_title, "Kết quả thanh toán" %>
+<div class="l-panel" style="max-width:520px;">
+  <% if @invoice&.paid? %>
+    <div style="font-size:40px;">✅</div>
+    <h2 style="margin:8px 0;">Thanh toán thành công</h2>
+    <p style="color:var(--ink-2);">Gói <strong><%= @invoice.plan %></strong> đã được kích hoạt tới <%= l(@workspace.paid_until.to_date, format: "%d/%m/%Y") %>.</p>
+  <% else %>
+    <div style="font-size:40px;">⏳</div>
+    <h2 style="margin:8px 0;">Chưa ghi nhận thanh toán</h2>
+    <p style="color:var(--ink-2);">Nếu bạn vừa chuyển khoản, trạng thái sẽ tự cập nhật khi PayOS báo về.</p>
+  <% end %>
+  <%= link_to "Về trang gói & thanh toán", merchant_billing_path, class: "l-btn l-btn-primary" %>
+</div>

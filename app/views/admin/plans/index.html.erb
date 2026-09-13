@@ -1,0 +1,26 @@
+<% content_for :title, "Gói thuê bao" %>
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:16px;">
+  <% @plans.each do |plan| %>
+    <div class="l-panel">
+      <%= form_with model: plan, url: admin_plan_path(plan), method: :patch, data: { turbo: false } do |f| %>
+        <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px;">
+          <div style="font-weight:700; font-size:17px;"><%= plan.name %></div>
+          <span class="l-chip"><%= plan.key %></span>
+        </div>
+        <div style="margin-bottom:10px;"><%= f.label :price, "Giá / tháng (đ)", class: "l-label" %><%= f.number_field :price, class: "l-field" %></div>
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:10px;">
+          <div><%= f.label :max_pools, "Hồ", class: "l-label" %><%= f.number_field :max_pools, class: "l-field", placeholder: "∞" %></div>
+          <div><%= f.label :max_students, "Học viên", class: "l-label" %><%= f.number_field :max_students, class: "l-field", placeholder: "∞" %></div>
+          <div><%= f.label :max_teachers, "Giáo viên", class: "l-label" %><%= f.number_field :max_teachers, class: "l-field", placeholder: "∞" %></div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px; font-size:13px; margin-bottom:14px;">
+          <label style="display:flex; gap:8px;"><%= f.check_box :allow_face_recognition %> Điểm danh khuôn mặt</label>
+          <label style="display:flex; gap:8px;"><%= f.check_box :allow_auto_scheduler %> Xếp lịch tự động</label>
+          <label style="display:flex; gap:8px;"><%= f.check_box :allow_chat %> Chat realtime</label>
+          <label style="display:flex; gap:8px;"><%= f.check_box :allow_custom_domain %> Tên miền riêng</label>
+        </div>
+        <%= f.submit "Lưu", class: "l-btn l-btn-primary l-btn-block" %>
+      <% end %>
+    </div>
+  <% end %>
+</div>

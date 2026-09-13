@@ -1,0 +1,11 @@
+<% content_for :title, "Tài khoản" %>
+<div class="l-panel" style="max-width:520px;">
+  <%= form_with model: @admin, url: admin_account_path, method: :patch, data: { turbo: false } do |f| %>
+    <div style="margin-bottom:12px;"><%= f.label :name, "Họ tên", class: "l-label" %><%= f.text_field :name, class: "l-field" %></div>
+    <div style="margin-bottom:12px;"><%= f.label :email, "Email", class: "l-label" %><%= f.email_field :email, class: "l-field" %></div>
+    <div class="l-eyebrow" style="margin:18px 0 10px;">Đổi mật khẩu</div>
+    <div style="margin-bottom:12px;"><%= f.label :password, "Mật khẩu mới", class: "l-label" %><%= f.password_field :password, class: "l-field", autocomplete: "new-password" %></div>
+    <div style="margin-bottom:18px;"><%= f.label :password_confirmation, "Nhập lại", class: "l-label" %><%= f.password_field :password_confirmation, class: "l-field", autocomplete: "new-password" %></div>
+    <%= f.submit "Lưu", class: "l-btn l-btn-primary" %>
+  <% end %>
+</div>

@@ -1,0 +1,53 @@
+<% content_for :page_title, "Lịch #{current_pool&.name}" %>
+<% content_for :page_sub, "Bảng master data lịch học · FR-202" %>
+
+<div class="l-panel" style="margin-bottom:16px;">
+  <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+    <div style="display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden;">
+      <% [["day", "Ngày"], ["week", "Tuần"], ["month", "Tháng"]].each do |key, label| %>
+        <% on = @view == key %>
+        <%= link_to label, merchant_ops_root_path(view: key, date: @anchor),
+              style: "padding:6px 16px; font-size:12.5px; font-weight:700; text-decoration:none; #{on ? 'background:var(--primary); color:#fff;' : 'color:var(--ink-2);'}" %>
+      <% end %>
+    </div>
+    <%= form_with url: merchant_ops_root_path, method: :get, data: { turbo: false },
+          style: "display:inline-flex; gap:8px; align-items:center;" do %>
+      <%= hidden_field_tag :view, @view %>
+      <%= date_field_tag :date, @anchor, class: "l-field", style: "width:auto;", onchange: "this.form.requestSubmit()" %>
+    <% end %>
+    <input type="search" class="l-field" style="width:auto; min-width:240px;"
+           placeholder="Tìm giáo viên / học viên…" disabled>
+    <span style="font-size:12px; color:var(--ink-2);">tìm kiếm &amp; lọc slot trống — P2</span>
+  </div>
+</div>
+
+<div class="l-panel">
+  <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px;">
+    <div style="font-weight:700;">Giáo viên đang dạy tại <%= current_pool&.name %></div>
+    <div style="font-size:12.5px; color:var(--ink-2);">
+      Giờ mở cửa hôm nay: <%= current_pool&.hours_on(Date.current)&.map { |t| t.strftime("%H:%M") }&.join(" – ") || "nghỉ" %>
+    </div>
+  </div>
+  <table class="l-table">
+    <thead><tr><th>Giáo viên</th><th>Level</th><th>Tối đa / tiết</th><th>Chuyên môn</th><th>Trạng thái</th></tr></thead>
+    <tbody>
+      <% @teachers.each do |t| %>
+        <tr>
+          <td><strong><%= t.display_name %></strong></td>
+          <td><%= t.level_label %></td>
+          <td><%= t.capacity %> học viên</td>
+          <td style="color:var(--ink-2);"><%= t.specialty %></td>
+          <td><span class="l-chip"><%= t.status_label %></span></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<div class="l-panel" style="margin-top:16px; background:var(--surface-2);">
+  <div style="font-weight:700; margin-bottom:6px;">Bảng lịch đầy đủ đang được dựng ở giai đoạn P2</div>
+  <p style="font-size:13.5px; color:var(--ink-2); margin:0;">
+    Sẽ hiển thị toàn bộ slot của hồ — cả slot đã có lớp lẫn slot còn trống — kèm giáo viên,
+    danh sách học viên, buổi thứ mấy, nội dung buổi học và số buổi còn lại của từng em (FR-202, FR-203).
+  </p>
+</div>

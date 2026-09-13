@@ -1,0 +1,53 @@
+<% content_for :title, "Tổng quan nền tảng" %>
+
+<div class="l-eyebrow" style="margin-bottom:10px;">Hiện tại</div>
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-bottom:20px;">
+  <div class="l-kpi"><div class="k">Trung tâm</div><div class="v"><%= @counts[:workspaces] %></div>
+    <div class="d" style="color:var(--ink-2);"><%= @counts[:active] %> trả phí · <%= @counts[:trial] %> dùng thử</div></div>
+  <div class="l-kpi"><div class="k">Hồ bơi</div><div class="v"><%= @counts[:pools] %></div></div>
+  <div class="l-kpi"><div class="k">Học viên đang học</div><div class="v"><%= @counts[:students] %></div></div>
+  <div class="l-kpi"><div class="k">Giáo viên</div><div class="v"><%= @counts[:teachers] %></div></div>
+  <div class="l-kpi" style="outline:2px solid var(--primary); outline-offset:-1px;">
+    <div class="k">Doanh thu định kỳ</div>
+    <div class="v" style="font-size:22px; color:var(--primary);"><%= vnd(@mrr) %></div>
+    <div class="d" style="color:var(--ink-2);">mỗi tháng</div></div>
+</div>
+
+<div class="l-panel" style="margin-bottom:18px;">
+  <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:12px;">
+    <div style="font-weight:700;">Trung tâm mới nhất</div>
+    <%= link_to "Xem tất cả →", admin_workspaces_path, style: "font-size:13px; color:var(--primary);" %>
+  </div>
+  <table class="l-table">
+    <thead><tr><th>Trung tâm</th><th>Gói</th><th>Trạng thái</th><th>Thuê bao</th><th></th></tr></thead>
+    <tbody>
+      <% @workspaces.each do |ws| %>
+        <tr>
+          <td><strong><%= ws.name %></strong><div style="font-size:12px; color:var(--ink-2);"><%= ws.subdomain %></div></td>
+          <td><%= ws.plan_record.name %></td>
+          <td><span class="l-chip"><%= ws.status_label %></span></td>
+          <td><%= ws.paid_until ? l(ws.paid_until.to_date, format: "%d/%m/%Y") : "—" %></td>
+          <td style="text-align:right;"><%= link_to "Chi tiết", admin_workspace_path(ws), class: "l-btn l-btn-soft" %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<% if @unpaid.any? %>
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:12px;">Hoá đơn thuê bao chưa thanh toán</div>
+    <table class="l-table">
+      <thead><tr><th>Trung tâm</th><th>Kỳ</th><th>Số tiền</th></tr></thead>
+      <tbody>
+        <% @unpaid.each do |inv| %>
+          <tr>
+            <td><%= inv.workspace.name %></td>
+            <td><%= inv.period_label %></td>
+            <td><%= vnd(inv.amount) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>

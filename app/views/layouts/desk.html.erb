@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="<%= I18n.locale %>" class="pwa-app">
+  <head>
+    <% content_for :apple_title, "Điểm danh" %>
+    <% content_for(:title) { "Quầy điểm danh" } unless content_for?(:title) %>
+    <%= render "layouts/head" %>
+    <link rel="manifest" href="<%= desk_pwa_manifest_path %>">
+    <% if current_workspace %>
+      <meta name="theme-color" content="<%= current_workspace.theme_value(:primary) %>">
+      <link rel="icon" href="<%= workspace_icon_url(current_workspace) %>">
+      <link rel="apple-touch-icon" href="<%= workspace_icon_url(current_workspace) %>">
+    <% end %>
+  </head>
+  <body class="pwa-app">
+    <%= render "layouts/theme_vars", ws: current_workspace %>
+    <div class="l-phone"
+         data-controller="pwa"
+         data-pwa-vapid-value="<%= PushSender.public_key %>"
+         data-pwa-subscribe-url-value="<%= desk_push_subscribe_path %>">
+      <%= yield %>
+    </div>
+  </body>
+</html>

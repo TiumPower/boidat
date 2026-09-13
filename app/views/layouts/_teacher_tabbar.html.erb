@@ -1,0 +1,20 @@
+<% key = content_for(:tab).to_s.strip.presence %>
+<nav class="l-tabbar">
+  <div class="l-tabbar-inner">
+    <%= link_to teacher_root_path, class: ("active" if key == "schedule") do %>
+      <span class="ce-tab-ic"><%= ui_icon(:calendar, size: 22) %></span><span>Lịch dạy</span>
+    <% end %>
+    <%= link_to teacher_timesheet_path, class: ("active" if key == "timesheet") do %>
+      <span class="ce-tab-ic"><%= ui_icon(:wallet, size: 22) %></span><span>Bảng công</span>
+    <% end %>
+    <%= link_to teacher_availability_path, class: ("active" if key == "availability") do %>
+      <span class="ce-tab-ic"><%= ui_icon(:check, size: 22) %></span><span>Đăng ký</span>
+    <% end %>
+    <%= link_to teacher_leave_requests_path, class: ("active" if key == "leaves") do %>
+      <span class="ce-tab-ic"><%= ui_icon(:doc, size: 22) %></span><span>Xin nghỉ</span>
+    <% end %>
+    <%= link_to teacher_account_path, class: ("active" if key == "me") do %>
+      <span class="ce-tab-ic"><%= ui_icon(:user, size: 22) %></span><span>Tôi</span>
+    <% end %>
+  </div>
+</nav>

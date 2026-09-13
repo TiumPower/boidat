@@ -1,0 +1,32 @@
+<% content_for :page_title, "Hồ sơ của tôi" %>
+<% content_for :page_sub, "FR-219" %>
+
+<div style="display:grid; grid-template-columns:1fr 340px; gap:16px; align-items:start;">
+  <div class="l-panel">
+    <%= form_with model: @user, url: merchant_account_path, method: :patch, data: { turbo: false } do |f| %>
+      <div style="margin-bottom:12px;"><%= f.label :name, "Họ tên", class: "l-label" %><%= f.text_field :name, class: "l-field" %></div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+        <div><%= f.label :phone, "Số điện thoại", class: "l-label" %><%= f.text_field :phone, class: "l-field" %></div>
+        <div><%= f.label :title, "Kính ngữ", class: "l-label" %>
+          <%= f.select :title, [["—", ""], ["Thầy", "Thầy"], ["Cô", "Cô"]], {}, class: "l-field" %></div>
+      </div>
+      <div style="margin-bottom:16px;"><%= f.label :avatar, "Ảnh đại diện", class: "l-label" %><%= f.file_field :avatar, class: "l-field", accept: "image/*" %></div>
+      <%= f.submit "Lưu", class: "l-btn l-btn-primary" %>
+    <% end %>
+
+    <div class="l-eyebrow" style="margin:22px 0 10px;">Đổi mật khẩu</div>
+    <%= form_with model: @user, url: merchant_account_path, method: :patch, data: { turbo: false } do |f| %>
+      <div style="margin-bottom:12px;"><%= f.label :password, "Mật khẩu mới", class: "l-label" %><%= f.password_field :password, class: "l-field", autocomplete: "new-password" %></div>
+      <div style="margin-bottom:16px;"><%= f.label :password_confirmation, "Nhập lại", class: "l-label" %><%= f.password_field :password_confirmation, class: "l-field", autocomplete: "new-password" %></div>
+      <%= f.submit "Đổi mật khẩu", class: "l-btn l-btn-soft" %>
+    <% end %>
+  </div>
+
+  <div class="l-panel">
+    <div style="font-weight:700; margin-bottom:4px;">QR đăng nhập nhanh PWA</div>
+    <p style="font-size:12.5px; color:var(--ink-2);">
+      Quét bằng điện thoại để vào thẳng cổng của bạn, không phải gõ mật khẩu ở quầy. Mã sống 5 phút.
+    </p>
+    <%= link_to "Hiện mã QR", merchant_account_qr_path, class: "l-btn l-btn-primary l-btn-block", data: { turbo: false } %>
+  </div>
+</div>

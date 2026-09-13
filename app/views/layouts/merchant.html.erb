@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="<%= I18n.locale %>">
+  <head>
+    <meta name="turbo-cache-control" content="no-cache">
+    <meta name="turbo-refresh-method" content="morph">
+    <meta name="turbo-refresh-scroll" content="preserve">
+    <% if current_workspace %>
+      <% content_for(:title) { "#{current_workspace.name} · Quản lý" } unless content_for?(:title) %>
+    <% end %>
+    <%= render "layouts/head" %>
+    <% if current_workspace %>
+      <meta name="theme-color" content="<%= current_workspace.theme_value(:primary) %>">
+      <link rel="icon" href="<%= workspace_icon_url(current_workspace) %>">
+    <% end %>
+  </head>
+  <body>
+    <%= render "layouts/merchant_theme_vars" %>
+
+    <% if impersonating? %>
+      <div style="background:#0C2229; color:#fff; font-size:13px; padding:8px 16px;">
+        👁 Bạn đang xem với tư cách <strong><%= current_workspace&.name %></strong> (chế độ hỗ trợ Super Admin).
+      </div>
+    <% end %>
+
+    <div class="l-shell">
+      <%= render "layouts/merchant_sidebar" %>
+      <main class="l-main">
+        <header class="l-topbar">
+          <% cur_nav = defined?(nav_key) ? nav_key : nil %>
+          <% if content_for?(:back) %>
+            <%= yield(:back) %>
+          <% end %>
+          <div class="title">
+            <%= content_for?(:page_title) ? yield(:page_title) : "Tổng quan" %>
+            <span class="en"><%= content_for?(:page_sub) ? yield(:page_sub) : "" %></span>
+          </div>
+          <% if content_for?(:actions) %>
+            <div style="margin-left:auto; display:flex; gap:10px; align-items:center;"><%= yield(:actions) %></div>
+          <% end %>
+        </header>
+        <div class="l-content"><%= yield %></div>
+      </main>
+    </div>
+    <%= render "layouts/merchant_tabbar" %>
+  </body>
+</html>

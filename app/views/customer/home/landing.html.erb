@@ -1,0 +1,31 @@
+<%# Host trần: ở dev đây là bảng điều hướng liệt kê cả 5 cổng để test nhanh. %>
+<div style="max-width:860px; margin:0 auto; padding:48px 20px;">
+  <p class="l-eyebrow">BƠI ĐẠT · Hệ thống quản lý trung tâm dạy bơi</p>
+  <h1 style="font-family:var(--font-display); font-size:34px; margin:8px 0 6px;">Năm cổng vào, một nguồn sự thật</h1>
+  <p style="color:var(--ink-2); max-width:60ch;">
+    Cùng một cơ sở dữ liệu cho tất cả các hồ. Mỗi nhóm người dùng có một cổng riêng,
+    và mọi truy vấn đều đi qua cùng một lớp phân quyền theo vai trò và theo hồ.
+  </p>
+
+  <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; margin-top:28px;">
+    <% [
+         ["Cổng điều hành", "BOD · Super Admin của trung tâm", "/merchant/bod"],
+         ["Cổng vận hành", "Admin · Sale", "/merchant/ops"],
+         ["Quầy điểm danh", "Lễ tân tại hồ (PWA)", "/desk"],
+         ["Cổng giáo viên", "Giáo viên (PWA)", "/teacher"],
+         ["Super Admin nền tảng", "Quản lý các trung tâm", "/admin"]
+       ].each do |title, sub, path| %>
+      <a href="<%= path %>" class="l-panel" style="text-decoration:none; color:inherit; display:block;">
+        <div style="font-weight:700;"><%= title %></div>
+        <div style="font-size:13px; color:var(--ink-2); margin-top:4px;"><%= sub %></div>
+      </a>
+    <% end %>
+
+    <% @workspaces.each do |ws| %>
+      <a href="/w/<%= ws.slug %>" class="l-panel" style="text-decoration:none; color:inherit; display:block; border-color:var(--primary);">
+        <div style="font-weight:700;">Cổng phụ huynh · <%= ws.name %></div>
+        <div style="font-size:13px; color:var(--ink-2); margin-top:4px;">Quét QR hộ gia đình hoặc SĐT + OTP</div>
+      </a>
+    <% end %>
+  </div>
+</div>

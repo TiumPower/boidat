@@ -1,0 +1,17 @@
+<% content_for :title, "Xác thực" %>
+<% content_for :no_tabbar, true %>
+<div class="l-screen" style="padding:24px 20px;">
+  <div style="font-family:var(--font-display); font-size:22px; font-weight:700;">Nhập mã xác thực</div>
+  <p style="font-size:13.5px; color:var(--ink-2); margin-top:4px;">Mã 6 số đã gửi tới <strong><%= @phone %></strong>.</p>
+
+  <% if @dev_code %>
+    <div class="l-chip l-chip-brand" style="display:block; margin:14px 0;">Mã (chỉ hiện ở môi trường thử nghiệm): <strong><%= @dev_code %></strong></div>
+  <% end %>
+
+  <%= form_with url: member_verify_submit_path, method: :post, data: { turbo: false } do %>
+    <%= text_field_tag :code, nil, class: "l-field", inputmode: "numeric", maxlength: 6, autofocus: true,
+          style: "font-size:24px; letter-spacing:8px; text-align:center;" %>
+    <%= submit_tag "Xác nhận", class: "l-btn l-btn-primary l-btn-block", style: "margin-top:14px;" %>
+  <% end %>
+  <p style="text-align:center; margin-top:14px;"><%= link_to "Đổi số điện thoại", member_login_path(mode: "phone"), style: "font-size:13px; color:var(--ink-2);" %></p>
+</div>

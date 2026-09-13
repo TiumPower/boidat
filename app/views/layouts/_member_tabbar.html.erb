@@ -1,0 +1,21 @@
+<% key = content_for(:tab).to_s.strip.presence %>
+<nav class="l-tabbar">
+  <div class="l-tabbar-inner">
+    <%= link_to member_root_path, class: ("active" if key == "home") do %>
+      <span class="ce-tab-ic"><%= ui_icon(:home, size: 22) %></span>
+      <span><%= current_household&.individual? ? "Khoá của tôi" : "Gia đình" %></span>
+    <% end %>
+    <%= link_to member_notifications_path, class: ("active" if key == "notifications") do %>
+      <span class="ce-tab-ic">
+        <%= ui_icon(:bell, size: 22) %>
+        <%= render "layouts/chat_tab_badge", count: @unread %>
+      </span><span>Thông báo</span>
+    <% end %>
+    <%= link_to member_faces_path, class: "ce-tab-home #{'active' if key == 'faces'}" do %>
+      <span class="ce-tab-ic"><%= ui_icon(:camera, size: 27) %></span><span>Khuôn mặt</span>
+    <% end %>
+    <%= link_to member_profile_path, class: ("active" if key == "me") do %>
+      <span class="ce-tab-ic"><%= ui_icon(:user, size: 22) %></span><span>Hồ sơ</span>
+    <% end %>
+  </div>
+</nav>

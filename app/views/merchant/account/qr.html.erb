@@ -1,0 +1,6 @@
+<% content_for :page_title, "QR đăng nhập nhanh" %>
+<div class="l-panel" style="max-width:420px; text-align:center;">
+  <div style="margin:0 auto 14px; width:260px;"><%= qr_svg(@url, size: 260) %></div>
+  <p style="font-size:13px; color:var(--ink-2);">Mã hết hạn sau 5 phút. Tải lại trang để lấy mã mới.</p>
+  <%= link_to "Quay lại hồ sơ", merchant_account_path, class: "l-btn l-btn-soft" %>
+</div>

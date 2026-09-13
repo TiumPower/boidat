@@ -1,0 +1,37 @@
+<%# Điều hướng dưới đáy cho màn hình hẹp (≤900px), khi sidebar bị ẩn. %>
+<% nav  = defined?(nav_key) ? nav_key : nil %>
+<% area = request.path.start_with?("/merchant/bod") ? :bod : :ops %>
+<nav class="l-mtab">
+  <div class="l-mtab-inner">
+    <% if area == :bod %>
+      <%= link_to merchant_bod_root_path, class: ("active" if nav == :dashboard) do %>
+        <span class="ce-tab-ic"><%= ui_icon(:home, size: 22) %></span><span>Tổng quan</span>
+      <% end %>
+      <%= link_to merchant_bod_pools_path, class: ("active" if nav == :pools) do %>
+        <span class="ce-tab-ic"><%= ui_icon(:building, size: 22) %></span><span>Hồ bơi</span>
+      <% end %>
+      <%= link_to merchant_bod_teachers_path, class: "ce-tab-home #{'active' if nav == :teachers}" do %>
+        <span class="ce-tab-ic"><%= ui_icon(:users, size: 27) %></span><span>Giáo viên</span>
+      <% end %>
+      <%= link_to merchant_bod_reports_path, class: ("active" if nav == :reports) do %>
+        <span class="ce-tab-ic"><%= ui_icon(:target, size: 22) %></span><span>Báo cáo</span>
+      <% end %>
+    <% else %>
+      <%= link_to merchant_ops_root_path, class: ("active" if nav == :schedule) do %>
+        <span class="ce-tab-ic"><%= ui_icon(:calendar, size: 22) %></span><span>Lịch</span>
+      <% end %>
+      <%= link_to merchant_ops_students_path, class: ("active" if nav == :students) do %>
+        <span class="ce-tab-ic"><%= ui_icon(:users, size: 22) %></span><span>Học viên</span>
+      <% end %>
+      <%= link_to merchant_ops_root_path, class: "ce-tab-home #{'active' if nav == :schedule}" do %>
+        <span class="ce-tab-ic"><%= ui_icon(:home, size: 27) %></span><span>Trang chủ</span>
+      <% end %>
+      <%= link_to merchant_ops_teachers_path, class: ("active" if nav == :teachers) do %>
+        <span class="ce-tab-ic"><%= ui_icon(:medal, size: 22) %></span><span>Giáo viên</span>
+      <% end %>
+    <% end %>
+    <%= link_to merchant_account_path, class: ("active" if [:account, :appearance, :billing, :settings, :audit].include?(nav)) do %>
+      <span class="ce-tab-ic"><%= ui_icon(:user, size: 22) %></span><span>Cá nhân</span>
+    <% end %>
+  </div>
+</nav>

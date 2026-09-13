@@ -1,0 +1,58 @@
+<% content_for :title, current_household&.name %>
+<% content_for :tab, "home" %>
+<div class="l-screen">
+  <header style="padding:18px 18px 12px; display:flex; align-items:center; justify-content:space-between;">
+    <div>
+      <div style="font-family:var(--font-display); font-size:20px; font-weight:700;">
+        <%= @household.individual? ? "Khoá của tôi" : "Gia đình" %>
+      </div>
+      <div style="font-size:13px; color:var(--ink-2);"><%= @household.name %></div>
+    </div>
+    <%= link_to current_guardian.initials, member_profile_path,
+          style: "width:38px;height:38px;border-radius:999px;background:var(--surface-2);display:grid;place-items:center;font-weight:700;text-decoration:none;color:var(--ink);" %>
+  </header>
+
+  <% if @needs_face.any? %>
+    <div style="margin:0 18px 14px; padding:14px; border-radius:14px; background:#FBF1E4; border:1px solid #E4C79A;">
+      <div style="font-weight:700; font-size:14px;">Cần chụp ảnh khuôn mặt</div>
+      <p style="font-size:13px; color:var(--ink-2); margin:4px 0 10px;">
+        <%= @needs_face.map(&:short_name).to_sentence %> chưa có ảnh nên chưa điểm danh tự động được ở quầy.
+      </p>
+      <%= link_to "Chụp ảnh ngay", member_faces_path, class: "l-btn l-btn-primary" %>
+    </div>
+  <% end %>
+
+  <div style="padding:0 18px 100px;">
+    <div class="l-eyebrow" style="margin-bottom:10px;">
+      <%= @household.individual? ? "Khoá học" : "Thành viên đang học" %>
+    </div>
+    <% @students.each do |st| %>
+      <%= link_to member_student_path(st), class: "l-panel", style: "display:block; text-decoration:none; color:inherit; margin-bottom:10px;" do %>
+        <div style="display:flex; justify-content:space-between; align-items:baseline;">
+          <div style="font-weight:700;"><%= st.name %></div>
+          <span class="l-chip"><%= st.pool.name %></span>
+        </div>
+        <div style="font-size:13px; color:var(--ink-2); margin-top:4px;">
+          <%= [st.age_label, st.face_registered? ? "đã có ảnh khuôn mặt" : "chưa có ảnh khuôn mặt"].compact.join(" · ") %>
+        </div>
+      <% end %>
+    <% end %>
+
+    <% unless @household.individual? %>
+      <div class="l-eyebrow" style="margin:22px 0 10px;">Thành viên trong gia đình</div>
+      <div class="l-panel">
+        <% current_household.guardians.each do |g| %>
+          <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--line);">
+            <div>
+              <div style="font-weight:600; font-size:14px;"><%= g.name %></div>
+              <div style="font-size:12px; color:var(--ink-2);">
+                <%= g.role_label %><%= " · xem thanh toán" if g.can_view_payments? %>
+              </div>
+            </div>
+            <div style="font-size:13px; color:var(--ink-2);"><%= g.phone %></div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

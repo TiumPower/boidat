@@ -1,0 +1,34 @@
+<% content_for :title, "Lịch dạy" %>
+<% content_for :tab, "schedule" %>
+<div class="l-screen">
+  <header style="padding:18px 18px 12px;">
+    <div style="font-family:var(--font-display); font-size:20px; font-weight:700;">
+      Chào <%= @teacher&.display_name || current_user.name %>
+    </div>
+    <div style="font-size:13px; color:var(--ink-2);">
+      <%= l(@date, format: "%A · %d/%m") %> · <%= current_pool&.name %>
+    </div>
+  </header>
+
+  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px; padding:0 18px 14px;">
+    <div class="l-kpi"><div class="k">Tiết hôm nay</div><div class="v"><%= @summary[:lessons] %></div></div>
+    <div class="l-kpi"><div class="k">Công hôm nay</div><div class="v"><%= @summary[:credits] %></div></div>
+    <div class="l-kpi"><div class="k">Chưa nhận xét</div><div class="v"><%= @summary[:pending_feedback] %></div></div>
+  </div>
+
+  <div style="padding:0 18px 100px;">
+    <div class="l-panel" style="text-align:center; padding:28px 18px;">
+      <div style="font-size:34px;">🗓</div>
+      <div style="font-weight:700; margin-top:8px;">Chưa có buổi dạy nào trong ngày</div>
+      <p style="font-size:13px; color:var(--ink-2); margin-top:6px;">
+        Lịch dạy, giáo án và nhận xét học viên được nối vào ở giai đoạn P3.
+      </p>
+      <% if @teacher&.renter? %>
+        <p style="font-size:13px; color:var(--ink-2); margin-top:10px;">
+          Bạn đang thuê hồ (<%= @teacher.org_name %>) — trung tâm chỉ quản lý khung giờ thuê và
+          điểm danh học viên của bạn, không có chấm công hay giáo án.
+        </p>
+      <% end %>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,33 @@
+<% content_for :title, "Trung tâm" %>
+
+<div style="display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+  <div style="display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden;">
+    <%= link_to "Tất cả", admin_workspaces_path,
+          style: "padding:6px 14px; font-size:12.5px; font-weight:700; text-decoration:none; #{@status.nil? ? 'background:var(--primary); color:#fff;' : 'color:var(--ink-2);'}" %>
+    <% Workspace::STATUSES.each do |st| %>
+      <%= link_to "#{Workspace::STATUS_LABELS[st]} (#{@counts[st].to_i})", admin_workspaces_path(status: st),
+            style: "padding:6px 14px; font-size:12.5px; font-weight:700; text-decoration:none; #{@status == st ? 'background:var(--primary); color:#fff;' : 'color:var(--ink-2);'}" %>
+    <% end %>
+  </div>
+  <%= link_to "+ Trung tâm mới", new_admin_workspace_path, class: "l-btn l-btn-primary", style: "margin-left:auto;" %>
+</div>
+
+<div class="l-panel">
+  <table class="l-table">
+    <thead><tr><th>Trung tâm</th><th>Hồ</th><th>Học viên</th><th>Giáo viên</th><th>Gói</th><th>Trạng thái</th><th></th></tr></thead>
+    <tbody>
+      <% @workspaces.each do |ws| %>
+        <tr>
+          <td><strong><%= ws.name %></strong>
+            <div style="font-size:12px; color:var(--ink-2);"><%= ws.subdomain %>.<%= ApplicationController::PLATFORM_HOST %></div></td>
+          <td><%= @pool_counts[ws.id].to_i %></td>
+          <td><%= @student_counts[ws.id].to_i %></td>
+          <td><%= @teacher_counts[ws.id].to_i %></td>
+          <td><%= ws.plan_record.name %></td>
+          <td><span class="l-chip"><%= ws.status_label %></span></td>
+          <td style="text-align:right;"><%= link_to "Mở", admin_workspace_path(ws), class: "l-btn l-btn-soft" %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

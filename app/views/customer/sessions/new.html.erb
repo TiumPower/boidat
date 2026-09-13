@@ -1,0 +1,39 @@
+<% content_for :title, "Đăng nhập" %>
+<% content_for :no_tabbar, true %>
+<div class="l-screen" style="padding:24px 20px;">
+  <div style="font-family:var(--font-display); font-size:22px; font-weight:700;">Đăng nhập</div>
+  <p style="font-size:13.5px; color:var(--ink-2); margin-top:4px;">
+    Chọn cách phù hợp với bạn — không cần mật khẩu.
+  </p>
+
+  <% if flash.now[:alert] || flash[:alert] %>
+    <div class="l-chip" style="background:#FBECEC; color:#9B2C2C; display:block; margin:14px 0;"><%= flash[:alert] %></div>
+  <% end %>
+
+  <div style="display:flex; flex-direction:column; gap:10px; margin:20px 0;">
+    <%= link_to member_login_path(mode: "qr"), class: "l-panel", style: "display:block; text-decoration:none; color:inherit; border-color:#{@mode == 'qr' ? 'var(--primary)' : 'var(--line)'};" do %>
+      <div style="font-weight:700;">Phụ huynh · mã QR của hộ</div>
+      <div style="font-size:12.5px; color:var(--ink-2);">Theo dõi nhiều con trong một hộ gia đình</div>
+    <% end %>
+    <%= link_to member_login_path(mode: "phone"), class: "l-panel", style: "display:block; text-decoration:none; color:inherit; border-color:#{@mode == 'phone' ? 'var(--primary)' : 'var(--line)'};" do %>
+      <div style="font-weight:700;">Học viên tự học · số điện thoại</div>
+      <div style="font-size:12.5px; color:var(--ink-2);">Người lớn học một mình, không cần phụ huynh</div>
+    <% end %>
+  </div>
+
+  <%= form_with url: member_login_path, method: :post, data: { turbo: false } do %>
+    <%= hidden_field_tag :mode, @mode %>
+    <% if @mode == "phone" %>
+      <label class="l-label">Số điện thoại</label>
+      <%= telephone_field_tag :phone, @phone, class: "l-field", placeholder: "09xx xxx xxx", autofocus: true %>
+      <%= submit_tag "Gửi mã xác thực", class: "l-btn l-btn-primary l-btn-block", style: "margin-top:14px;" %>
+    <% else %>
+      <label class="l-label">Mã QR của hộ gia đình</label>
+      <%= text_field_tag :qr_token, nil, class: "l-field", placeholder: "Dán mã hoặc đường dẫn QR", autofocus: true %>
+      <%= submit_tag "Vào ứng dụng", class: "l-btn l-btn-primary l-btn-block", style: "margin-top:14px;" %>
+      <p style="font-size:12.5px; color:var(--ink-2); margin-top:12px;">
+        Mất mã? Liên hệ trung tâm để cấp lại — mã cũ sẽ bị thu hồi ngay.
+      </p>
+    <% end %>
+  <% end %>
+</div>
