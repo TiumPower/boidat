@@ -15,6 +15,7 @@ module StaffScoped
     before_action :no_browser_cache
     before_action :set_current_workspace
     before_action :require_accessible_workspace
+    before_action :redirect_to_own_workspace_host
     before_action :enforce_workspace_access
     before_action :set_current_pool
     around_action :scope_tenant
@@ -49,6 +50,29 @@ module StaffScoped
     end
     @current_workspace ||= accessible_workspaces.first
     session[:workspace_id] = @current_workspace&.id
+  end
+
+  # Cookie phiên có domain ".boidat.czin.net" nên nó đi theo sang subdomain của
+  # MỌI trung tâm. Không rò dữ liệu — `set_current_workspace` chỉ nhận workspace
+  # từ host khi người dùng có membership ở đó. Nhưng nếu không có, trước đây nó
+  # âm thầm render trung tâm của mình dưới tên miền của trung tâm khác: nhân
+  # viên gõ nhầm subdomain sẽ thấy dữ liệu đúng dưới thương hiệu sai và không
+  # hiểu chuyện gì. Cổng phụ huynh vốn đã bắt đăng nhập lại trong tình huống
+  # này; cổng nhân sự nay đưa thẳng người dùng về đúng tên miền của họ.
+  def redirect_to_own_workspace_host
+    return unless @current_workspace
+    host_ws = workspace_from_host
+    return if host_ws.nil? || host_ws.id == @current_workspace.id
+
+    target = merchant_url_for(@current_workspace, request.fullpath)
+    # Ở dev/test mọi thứ nằm trên một host nên merchant_url_for trả về đúng
+    # đường dẫn hiện tại — chuyển hướng lúc đó là tự tạo vòng lặp.
+    return unless target.start_with?("http") && URI.parse(target).host != request.host
+
+    redirect_to(target, allow_other_host: true,
+                alert: "Bạn không có quyền ở #{host_ws.name}. Đã chuyển về #{@current_workspace.name}.")
+  rescue URI::InvalidURIError
+    nil
   end
 
   def require_accessible_workspace
