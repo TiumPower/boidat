@@ -43,6 +43,8 @@ class Workspace < ApplicationRecord
   validates :name, :subdomain, presence: true
   validates :subdomain, uniqueness: true, format: { with: /\A[a-z0-9][a-z0-9-]*\z/ }
   validates :status, inclusion: { in: STATUSES }
+  validate  :theme_colors_are_css_colors
+  validate  :theme_fonts_are_known
 
   before_validation :default_subdomain, on: :create
 
@@ -221,8 +223,39 @@ class Workspace < ApplicationRecord
     "clay_pink"  => { label: "Hồng đất",    primary: "#B8536B", primary_2: "#C2871A" }
   }.freeze
 
+  # Màu của theme được đổ thẳng vào một khối <style>, nên phải kiểm định dạng.
+  # Thoát HTML không đỡ được ở đây: chuỗi `red; } * { display:none } .x {` không
+  # chứa ký tự nào bị thoát, mà nó thoát ra khỏi khai báo CSS và viết lại giao
+  # diện cho toàn bộ trung tâm — gồm cả các trang phụ huynh nhìn thấy.
+  #
+  # Lọc ở CẢ hai đầu: `validate` để người sửa thấy lỗi ngay, và `theme_value`
+  # để dữ liệu xấu lỡ nằm sẵn trong DB cũng không render ra được.
+  CSS_COLOR = /\A(?:\#(?:\h{3}|\h{6})|rgba?\([\d\s.,%]+\)|hsla?\([\d\s.,%]+\))\z/
+  COLOR_KEYS = %w[primary primary_2 on_primary surface surface_2 ink ink_2 line].freeze
+
+  def self.valid_css_color?(value) = value.to_s.strip.match?(CSS_COLOR)
+
+  def theme_fonts_are_known
+    return if theme.blank?
+    %w[font_display font_body].each do |key|
+      value = theme[key].presence or next
+      next if FONT_STACKS.key?(value)
+      errors.add(:theme, "#{key}: \"#{value}\" không có trong danh sách font (#{FONT_STACKS.keys.join(', ')})")
+    end
+  end
+
+  def theme_colors_are_css_colors
+    return if theme.blank?
+    COLOR_KEYS.each do |key|
+      value = theme[key].presence or next
+      next if self.class.valid_css_color?(value)
+      errors.add(:theme, "#{key}: \"#{value}\" không phải mã màu hợp lệ (ví dụ #0E7C86 hoặc rgb(14,124,134))")
+    end
+  end
+
   def theme_value(key)
     stored = theme.presence&.dig(key.to_s).presence
+    stored = nil if COLOR_KEYS.include?(key.to_s) && !self.class.valid_css_color?(stored)
     return stored if stored
     return readable_ink(theme_value(:primary)) if key.to_s == "on_primary"
     DEFAULT_THEME[key.to_s]
@@ -254,15 +287,25 @@ class Workspace < ApplicationRecord
     (hi + 0.05) / (lo + 0.05)
   end
 
+  # Chỉ nhận số thuần hoặc số kèm px. Bản cũ trả nguyên chuỗi khi không khớp,
+  # nên "16px; } * { display:none } .x {" đi thẳng vào CSS.
   def css_radius
     r = theme_value(:radius).to_s.strip
-    r.match?(/\A\d+(\.\d+)?\z/) ? "#{r}px" : (r.presence || "16px")
+    return "#{r}px" if r.match?(/\A\d+(\.\d+)?\z/)
+    return r if r.match?(/\A\d+(\.\d+)?px\z/)
+    DEFAULT_THEME["radius"]
   end
 
   def resolved_theme = DEFAULT_THEME.merge(theme.presence || {})
 
+  # `DEFAULT_THEME` khoá bằng CHUỖI, nên `DEFAULT_THEME[key]` với key là symbol
+  # luôn ra nil — đường lui im lặng biến mất. Font lạ thì font_stack trả nil,
+  # mà view gọi `.html_safe` trên kết quả, nên NoMethodError và MỌI trang của
+  # trung tâm đó 500. Chỉ cần BOD gõ một tên font bất kỳ ở màn Giao diện.
   def font_stack(key)
-    FONT_STACKS[theme_value(key)] || FONT_STACKS[DEFAULT_THEME[key]]
+    FONT_STACKS[theme_value(key)] ||
+      FONT_STACKS[DEFAULT_THEME[key.to_s]] ||
+      FONT_STACKS.values.first
   end
 
   def apply_theme_preset!(key)
