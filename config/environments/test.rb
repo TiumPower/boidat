@@ -56,8 +56,15 @@ Rails.application.configure do
   # Tell Active Support which deprecation messages to disallow.
   config.active_support.disallowed_deprecation_warnings = []
 
-  # Raises error for missing translations.
-  # config.i18n.raise_on_missing_translations = true
+  # Báo lỗi khi thiếu bản dịch. Bật hẳn sau khi dọn hai file locale từ 2.462
+  # dòng (gần hết là chuỗi của Estate/Loyalty) xuống còn 194: từ nay mỗi lần
+  # `get` trong integration test là một lần khẳng định không thiếu khoá nào,
+  # nên hai file tự canh nhau thay vì phải rà bằng mắt.
+  #
+  # Lưu ý khi sửa locale: `config.i18n.fallbacks = [:en]`, nên xoá một khoá ở
+  # riêng vi.yml sẽ KHÔNG làm test đỏ — nó lặng lẽ rơi về tiếng Anh và người
+  # Việt thấy chuỗi tiếng Anh. Muốn biết thật thì so hai file với nhau.
+  config.i18n.raise_on_missing_translations = true
 
   # Annotate rendered view with file names.
   # config.action_view.annotate_rendered_view_with_filenames = true
