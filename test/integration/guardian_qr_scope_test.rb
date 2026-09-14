@@ -68,7 +68,7 @@ class GuardianQrScopeTest < ActionDispatch::IntegrationTest
     with_tenant(@ws) { @pickup.revoke_qr! }
 
     get "/w/#{@ws.slug}/q/#{@pickup.qr_token}"
-    assert_redirected_to "/w/#{@ws.slug}/login"
+    assert_redirected_to member_login_path(workspace_slug: @ws.slug)
 
     get "/w/#{@ws.slug}/q/#{@owner.qr_token}"
     follow_redirect!

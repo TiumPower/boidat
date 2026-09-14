@@ -82,13 +82,13 @@ class PageSmokeTest < ActionDispatch::IntegrationTest
     with_tenant(@ws) { @c.household.revoke_qr! }
     host! "example.com"
     login_guardian!(@ws, @c.household)
-    assert_redirected_to "/w/#{@ws.slug}/login"
+    assert_redirected_to member_login_path(workspace_slug: @ws.slug)
   end
 
   test "PWA phụ huynh yêu cầu đăng nhập khi chưa có phiên" do
     host! "example.com"
     get "/w/#{@ws.slug}"
-    assert_redirected_to "/w/#{@ws.slug}/login"
+    assert_redirected_to member_login_path(workspace_slug: @ws.slug)
     follow_redirect!
     assert_response :success
   end

@@ -43,7 +43,7 @@ class OpsMasterDataTest < ActionDispatch::IntegrationTest
     # Mã cũ không đăng nhập được nữa.
     host! "example.com"
     get "/w/#{@ws.slug}/q/#{old_token}"
-    assert_redirected_to "/w/#{@ws.slug}/login"
+    assert_redirected_to member_login_path(workspace_slug: @ws.slug)
   end
 
   test "sale chuyển được sang hồ mình được gán, không chuyển sang hồ lạ" do

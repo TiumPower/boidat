@@ -45,6 +45,16 @@
   "subdomain boidat" — trùng subdomain của trung tâm BƠI ĐẠT. Dev và test chạy
   trên `example.com` hai nhãn nên đặt cứng số 2 là hỏng mọi test subdomain.
 
+- **Đăng nhập phụ huynh nằm ở `/vao`, không phải `/login`.** Hai cổng chạy chung
+  một host ở production. Segment `(/w/:workspace_slug)` tuỳ chọn nên `login` của
+  phụ huynh rút gọn thành đúng `/login`, trùng route Devise của nhân sự khai
+  phía trên và thua nó — phụ huynh rơi vào form email + mật khẩu họ không có.
+  Trong test đừng viết cứng đường dẫn, dùng `member_login_path(workspace_slug:)`.
+- **Luật `rack_attack` phải khớp đường dẫn THẬT của app này.** Bản bê từ app
+  khác nhắm vào `/merchant/login` và `params["email"]` — cái thứ nhất không tồn
+  tại, cái thứ hai là `phone` ở đây. Cả hai luật im lặng không khớp lần nào; một
+  luật không khớp trông giống hệt một luật đang bảo vệ tốt.
+
 ## Quy ước phải giữ
 
 - Mọi truy vấn nghiệp vụ đi qua `pool_scope(...)` hoặc lọc `pool_id` tường minh.

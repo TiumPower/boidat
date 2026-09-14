@@ -185,9 +185,16 @@ Rails.application.routes.draw do
     # "/?workspace_slug=x" thay vì "/w/x" khi ở chế độ đường dẫn (dev).
     get "", to: "home#show", as: :root
 
-    # Đăng nhập: quét QR hộ gia đình, hoặc SĐT + OTP với người lớn tự học (FR-401)
-    get    "login",       to: "sessions#new",         as: :login
-    post   "login",       to: "sessions#create"
+    # Đăng nhập: quét QR hộ gia đình, hoặc SĐT + OTP với người lớn tự học (FR-401).
+    #
+    # Đường dẫn là "vao" chứ KHÔNG phải "login". Segment (/w/:workspace_slug) là
+    # tuỳ chọn, nên ở chế độ subdomain — chế độ chạy thật — "login" của phụ huynh
+    # rút gọn thành đúng /login, trùng route Devise của nhân sự khai phía trên và
+    # thua nó. Hậu quả: phụ huynh mở app mà chưa có phiên rơi vào form email +
+    # mật khẩu của nhân sự, thứ họ không hề có, và không thấy lối quét QR lẫn
+    # lối SĐT + OTP ở đâu cả.
+    get    "vao",         to: "sessions#new",         as: :login
+    post   "vao",         to: "sessions#create"
     get    "verify",      to: "sessions#verify_form", as: :verify
     post   "verify",      to: "sessions#verify",      as: :verify_submit
     delete "logout",      to: "sessions#destroy",     as: :logout
