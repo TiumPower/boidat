@@ -37,6 +37,14 @@
   `app/javascript/controllers/` là nó tải trên MỌI trang của cả năm cổng, kể cả
   PWA chạy 4G. Đừng để lại controller không dùng.
 
+- **Sửa locale phải nhìn cả hai file.** `config.i18n.fallbacks = [:en]`, nên xoá
+  một khoá ở riêng `vi.yml` KHÔNG làm test đỏ — nó lặng lẽ rơi về tiếng Anh và
+  người Việt thấy chuỗi tiếng Anh. Test chỉ đỏ khi khoá mất ở cả hai file.
+- **`tld_length` suy từ `PLATFORM_HOST`, đừng viết cứng.** Host nền tảng ba nhãn
+  (`boidat.czin.net`) mà tld_length mặc định là 1 thì Rails đọc chính apex thành
+  "subdomain boidat" — trùng subdomain của trung tâm BƠI ĐẠT. Dev và test chạy
+  trên `example.com` hai nhãn nên đặt cứng số 2 là hỏng mọi test subdomain.
+
 ## Quy ước phải giữ
 
 - Mọi truy vấn nghiệp vụ đi qua `pool_scope(...)` hoặc lọc `pool_id` tường minh.

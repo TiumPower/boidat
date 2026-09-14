@@ -193,10 +193,23 @@ dữ liệu tiền–buổi–công · quét mặt điểm danh đầu-cuối ·
 quầy vẫn sống · Sidekiq 0 job lỗi · 57 trang của năm cổng trả 200 · thời gian
 phản hồi dưới 400ms · không có N+1 trên các màn hình danh sách.
 
-Còn lại chưa xử lý, đều là dọn dẹp chứ không phải lỗi: `AppSetting` là model
-chết, và hai file locale còn ~2.400 dòng chuỗi của Estate trong khi app chỉ
-dùng 33 khoá — không cắt vì Rails dùng ngầm rất nhiều khoá (thông báo lỗi,
-định dạng ngày) nên cắt ẩu là hỏng thứ khác.
+Dọn nốt sau đó: bỏ model và bảng `AppSetting` (không dòng code nào dùng, bảng
+rỗng), và cắt hai file locale từ 2.462 dòng xuống 194 — app chỉ dùng 30 khoá,
+phần còn lại là chuỗi của Estate và Loyalty. Ba nhánh trông như rác nhưng phải
+giữ: `datetime.distance_in_words` (`time_ago_in_words` ở màn đơn nghỉ dùng
+ngầm), `merchant.dashboard.range_*` và `merchant.plans.*` (bị nội suy trong code
+nên grep không ra). `raise_on_missing_translations` nay bật ở môi trường test
+để hai file tự canh nhau.
+
+Việc dọn locale làm lộ thêm một lỗi: **trang giới thiệu ở host trần chưa từng
+hiển thị lần nào trên production**. `tld_length` mặc định là 1 mà host nền tảng
+có ba nhãn, nên Rails đọc `boidat.czin.net` thành "subdomain boidat" — trùng
+đúng subdomain của trung tâm BƠI ĐẠT — rồi chuyển thẳng sang subdomain đó. Đã
+sửa bằng cách suy `tld_length` từ `PLATFORM_HOST`.
+
+Một điểm còn lệch, chưa sửa vì nằm ngoài phạm vi: trang giới thiệu có nút đổi
+VI/EN nhưng chỉ phần khung (thanh điều hướng, chân trang) được dịch; thân trang
+là tiếng Việt viết cứng. Chọn EN hiện ra trang nửa Anh nửa Việt.
 
 ## Còn lại
 
