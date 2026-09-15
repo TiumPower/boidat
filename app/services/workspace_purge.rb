@@ -13,7 +13,7 @@ class WorkspacePurge
     price_list_items promotions packages course_sessions courses
     teacher_pools teachers teacher_levels
     pool_assignments pool_holidays pool_operating_hours pools
-    memberships invoices otp_challenges
+    memberships invoices
   ].freeze
 
   def self.call(workspace)
@@ -26,7 +26,15 @@ class WorkspacePurge
         purge_attachments("FaceProfile", FaceProfile.where(workspace_id: wid).pluck(:id))
 
         conn = ApplicationRecord.connection
+        # Danh sách này trôi theo schema. Một bảng bị xoá đi mà quên gỡ khỏi đây
+        # sẽ ném PG::UndefinedTable giữa transaction và làm hỏng hẳn việc xoá
+        # trung tâm — đúng chuyện vừa xảy ra khi bỏ `otp_challenges`. Bỏ qua
+        # bảng không còn tồn tại, nhưng ghi log để không âm thầm quên.
         DELETE_ORDER.each do |table|
+          unless conn.table_exists?(table)
+            Rails.logger.warn("[WorkspacePurge] bỏ qua bảng không còn tồn tại: #{table}")
+            next
+          end
           conn.exec_delete("DELETE FROM #{table} WHERE workspace_id = #{wid.to_i}", "WorkspacePurge")
         end
         workspace.destroy!

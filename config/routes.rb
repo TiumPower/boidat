@@ -195,8 +195,6 @@ Rails.application.routes.draw do
     # lối SĐT + OTP ở đâu cả.
     get    "vao",         to: "sessions#new",         as: :login
     post   "vao",         to: "sessions#create"
-    get    "verify",      to: "sessions#verify_form", as: :verify
-    post   "verify",      to: "sessions#verify",      as: :verify_submit
     delete "logout",      to: "sessions#destroy",     as: :logout
     get    "q/:qr_token", to: "sessions#qr",          as: :qr_login
 

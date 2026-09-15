@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_09_14_111356) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_15_110432) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -510,22 +510,6 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_14_111356) do
     t.index ["workspace_id"], name: "index_orders_on_workspace_id"
   end
 
-  create_table "otp_challenges", force: :cascade do |t|
-    t.bigint "workspace_id"
-    t.string "identity", null: false
-    t.string "scope", default: "staff", null: false
-    t.string "code", null: false
-    t.string "purpose", default: "login", null: false
-    t.integer "attempts", default: 0, null: false
-    t.datetime "expires_at", null: false
-    t.datetime "consumed_at"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["scope", "identity"], name: "index_otp_challenges_on_scope_and_identity"
-    t.index ["workspace_id", "identity"], name: "index_otp_challenges_on_workspace_id_and_identity"
-    t.index ["workspace_id"], name: "index_otp_challenges_on_workspace_id"
-  end
-
   create_table "packages", force: :cascade do |t|
     t.bigint "workspace_id", null: false
     t.bigint "course_id"
@@ -983,7 +967,6 @@ ActiveRecord::Schema[7.2].define(version: 2026_09_14_111356) do
   add_foreign_key "orders", "students"
   add_foreign_key "orders", "users", column: "sale_id"
   add_foreign_key "orders", "workspaces"
-  add_foreign_key "otp_challenges", "workspaces"
   add_foreign_key "packages", "courses"
   add_foreign_key "packages", "workspaces"
   add_foreign_key "payments", "orders"

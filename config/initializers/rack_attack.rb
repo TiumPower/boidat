@@ -15,26 +15,13 @@ class Rack::Attack
 
   safelist("localhost") { |req| %w[127.0.0.1 ::1].include?(req.ip) }
 
-  # Cổng phụ huynh: xin mã OTP. Đường dẫn là "/vao" (không phải "/login" — chỗ
-  # đó là đăng nhập của nhân sự), và định danh là SỐ ĐIỆN THOẠI.
+  # Cổng phụ huynh: dán mã QR ở /vao. Không còn OTP — lối SĐT + OTP đã gỡ vì
+  # giai đoạn 1 chưa nối SMS/Zalo, mã chỉ nằm trong log máy chủ.
   #
-  # Bản cũ bê nguyên từ app khác: nó khoá theo `params["email"]` trên một form
-  # chỉ gửi `phone`, nên khoá luôn rỗng và luật chưa bao giờ khớp lần nào. Mỗi
-  # lần xin mã là một tin nhắn có tính tiền, nên một số điện thoại có thể bị dội
-  # mã vô hạn miễn là đổi IP.
-  otp_request = ->(req) { req.post? && req.path.end_with?("/vao") }
-
-  throttle("otp/phone", limit: 5, period: 10.minutes) do |req|
-    if otp_request.call(req)
-      phone = req.params["phone"].to_s.gsub(/\D/, "")
-      "otp-phone:#{phone}" if phone.present?
-    end
-  end
-  throttle("otp/ip", limit: 20, period: 10.minutes) { |req| req.ip if otp_request.call(req) }
-
-  # Nhập mã OTP: chặn dò mã theo IP (model đã chặn theo từng lượt phát mã).
-  throttle("otp-verify/ip", limit: 30, period: 10.minutes) do |req|
-    req.ip if req.post? && req.path.end_with?("/verify")
+  # Mã QR dài 144 bit nên dò mù là bất khả thi; luật này để chặn kịch bản quét
+  # rác làm phình log và bảng phiên, không phải để chống dò mã.
+  throttle("qr-paste/ip", limit: 20, period: 10.minutes) do |req|
+    req.ip if req.post? && req.path.end_with?("/vao")
   end
 
   # Đăng nhập bằng mật khẩu của nhân sự và của Super Admin.

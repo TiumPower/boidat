@@ -748,6 +748,6 @@ puts <<~INFO
     Giáo viên thuê hồ     /login         khoa@caheo.vn
 
   Phụ huynh: mở /w/boidat → quét/dán mã QR của hộ (in ở màn Học viên),
-  hoặc người lớn tự học đăng nhập bằng SĐT 0987654321 (mã OTP hiện trên màn hình).
+  người lớn tự học cũng có mã QR riêng của mình (in cùng chỗ).
   ────────────────────────────────────────────────────────────
 INFO

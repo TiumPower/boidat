@@ -45,8 +45,14 @@ Tài khoản demo (mật khẩu `boidat1234`):
 | Giáo viên thuê hồ | `khoa@caheo.vn` |
 
 Phụ huynh: mở `/w/boidat`, dán mã QR của hộ (in ở màn **Học viên & gia đình** trong
-cổng vận hành). Học viên người lớn tự học đăng nhập bằng SĐT `0987654321` — mã OTP
-hiện thẳng trên màn hình ở môi trường dev.
+cổng vận hành). Mỗi người giám hộ một mã riêng, kể cả học viên người lớn tự học:
+chủ hộ và người đưa đón có quyền khác nhau (OQ-03) nên dùng chung mã thì không
+phân biệt được ai đang quét.
+
+Quét mã QR là cách duy nhất vào cổng phụ huynh. Từng có lối SĐT + OTP, đã gỡ:
+giai đoạn 1 chưa nối SMS/Zalo (phụ thuộc A5) nên mã chỉ được ghi vào log máy
+chủ trong khi màn hình báo với phụ huynh là "Mã 6 số đã gửi tới …". Muốn mở lại
+thì nối kênh gửi trước, đừng bật màn hình trước.
 
 ## Hai trục phân quyền
 
@@ -131,7 +137,7 @@ PAYOS_CLIENT_ID PAYOS_API_KEY PAYOS_CHECKSUM_KEY
 VAPID_PUBLIC_KEY VAPID_PRIVATE_KEY VAPID_SUBJECT
 BREVO_API_KEY MAIL_FROM MAIL_FROM_NAME
 FACE_SERVICE_URL FACE_SERVICE_SECRET FACE_DATABASE_URL
-SENTRY_DSN SHOW_OTP
+SENTRY_DSN
 ```
 
 Mã đơn PayOS dùng tiền tố **73** để tách khỏi các app khác dùng chung tài khoản

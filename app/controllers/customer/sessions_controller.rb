@@ -1,35 +1,36 @@
 module Customer
-  # Hai cách vào cổng phụ huynh (FR-401, UX phụ huynh màn 1):
-  #   1. Quét mã QR cá nhân của người giám hộ — không cần mật khẩu, phiên không
-  #      hết hạn. Mã của TỪNG NGƯỜI, không phải của cả hộ: chủ hộ và người đưa
-  #      đón có quyền khác nhau (OQ-03) nên phải phân biệt được ai đang quét.
-  #   2. Người lớn tự học: số điện thoại + OTP.
+  # Một cách duy nhất vào cổng phụ huynh (FR-401): quét mã QR cá nhân của người
+  # giám hộ. Không cần mật khẩu, phiên không hết hạn.
+  #
+  # Mã là của TỪNG NGƯỜI chứ không phải của cả hộ: chủ hộ và người đưa đón có
+  # quyền khác nhau (OQ-03) nên phải phân biệt được ai đang quét. Người lớn tự
+  # học cũng là một Guardian và có mã riêng của mình.
+  #
+  # Từng có lối thứ hai bằng SĐT + OTP, đã gỡ: giai đoạn 1 chưa nối SMS/Zalo
+  # (phụ thuộc A5) nên mã chỉ được ghi vào log máy chủ, trong khi màn hình báo
+  # với phụ huynh là "Mã 6 số đã gửi tới …". Họ đợi một thứ không bao giờ tới,
+  # và admin trung tâm không có quyền đọc log để đọc mã cho họ. Một ngõ cụt
+  # bày ngang hàng với lối đi thật thì tệ hơn là không bày.
   class SessionsController < BaseController
     before_action :require_workspace!, except: [:destroy]
 
     def new
       redirect_to(member_root_path) and return if guardian_signed_in?
-      @mode = params[:mode] == "phone" ? "phone" : "qr"
-      @phone = ""
     end
 
-    # Nhập/dán mã QR hoặc gửi OTP cho số điện thoại.
+    # Dán mã QR (hoặc dán nguyên đường dẫn chép từ tin nhắn).
     def create
-      if params[:mode] == "phone"
-        start_phone_login
+      token = extract_token(params[:qr_token])
+      guardian  = Guardian.find_by(qr_token: token) if token.present?
+      household = Household.find_by(qr_token: token) if token.present? && guardian.nil?
+
+      if guardian&.qr_active?
+        sign_in_guardian_and_go(guardian)
+      elsif household&.qr_active?
+        sign_in_household(household)
       else
-        token = extract_token(params[:qr_token])
-        guardian  = Guardian.find_by(qr_token: token) if token.present?
-        household = Household.find_by(qr_token: token) if token.present? && guardian.nil?
-        if guardian&.qr_active?
-          sign_in_guardian_and_go(guardian)
-        elsif household&.qr_active?
-          sign_in_household(household)
-        else
-          flash.now[:alert] = "Mã QR không hợp lệ hoặc đã bị thu hồi. Liên hệ trung tâm để cấp lại."
-          @mode = "qr"
-          render :new, status: :unprocessable_entity
-        end
+        flash.now[:alert] = "Mã QR không hợp lệ hoặc đã bị thu hồi. Liên hệ trung tâm để cấp lại."
+        render :new, status: :unprocessable_entity
       end
     end
 
@@ -53,52 +54,12 @@ module Customer
       end
     end
 
-    def verify_form
-      @phone = session[:otp_phone]
-      redirect_to(member_login_path) and return if @phone.blank?
-      @dev_code = latest_code(@phone) if show_otp_onscreen?
-    end
-
-    def verify
-      @phone = session[:otp_phone]
-      redirect_to(member_login_path) and return if @phone.blank?
-
-      challenge = OtpChallenge.latest_for(identity: @phone, scope: "guardian", workspace: current_workspace)
-      if challenge&.verify(params[:code]) == :ok
-        guardian = Guardian.find_by(phone: Guardian.normalize_phone(@phone))
-        session.delete(:otp_phone)
-        if guardian
-          sign_in_guardian(guardian)
-          redirect_to (session.delete(:return_to).presence || member_root_path),
-                      notice: "Chào #{guardian.name} 👋"
-        else
-          redirect_to member_login_path, alert: "Số điện thoại này chưa đăng ký học viên nào."
-        end
-      else
-        @dev_code = latest_code(@phone) if show_otp_onscreen?
-        flash.now[:alert] = "Mã xác thực không đúng hoặc đã hết hạn."
-        render :verify_form, status: :unprocessable_entity
-      end
-    end
-
     def destroy
       sign_out_guardian
       redirect_to member_login_path, notice: "Đã đăng xuất."
     end
 
     private
-
-    def start_phone_login
-      @phone = Guardian.normalize_phone(params[:phone])
-      if @phone.length < 9
-        @mode = "phone"
-        flash.now[:alert] = "Số điện thoại không hợp lệ."
-        return render(:new, status: :unprocessable_entity)
-      end
-      OtpChallenge.issue!(identity: @phone, scope: "guardian", workspace: current_workspace)
-      session[:otp_phone] = @phone
-      redirect_to member_verify_path
-    end
 
     # Mã cũ ở cấp hộ vẫn dùng được để link đã phát ra không chết; nó dẫn về chủ hộ.
     def sign_in_household(household)
@@ -122,12 +83,5 @@ module Customer
       v.split(/[?#]/).first
     end
 
-    def show_otp_onscreen?
-      ENV["SHOW_OTP"] == "true" || !Rails.env.production?
-    end
-
-    def latest_code(phone)
-      OtpChallenge.latest_for(identity: phone, scope: "guardian", workspace: current_workspace)&.code
-    end
   end
 end
