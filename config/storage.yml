@@ -14,7 +14,8 @@ local:
 # PDF cam kết và chữ ký tay. Ứng dụng phát URL đã ký qua chế độ proxy
 # (`rails_storage_proxy_path`), nên không có tệp nào đọc được bằng link trần.
 spaces:
-  service: S3
+  service: PrefixedS3
+  prefix: <%= ENV.fetch("SPACES_PREFIX", "boidat") %>
   access_key_id:     <%= ENV["SPACES_KEY"] %>
   secret_access_key: <%= ENV["SPACES_SECRET"] %>
   region:            <%= ENV.fetch("SPACES_REGION", "sgp1") %>
