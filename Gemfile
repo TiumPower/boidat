@@ -64,6 +64,9 @@ gem "caxlsx_rails"
 # File uploads / image variants
 gem "image_processing", "~> 1.2"
 
+# Active Storage nói chuyện với DigitalOcean Spaces qua giao thức S3.
+gem "aws-sdk-s3", "~> 1.170", require: false
+
 # Env management
 gem "dotenv-rails"
 

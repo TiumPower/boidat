@@ -37,7 +37,22 @@ Rails.application.configure do
   # config.action_dispatch.x_sendfile_header = "X-Accel-Redirect" # for NGINX
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
-  config.active_storage.service = :local
+  # Kho lưu trữ tệp: Spaces khi đã cấu hình, ngược lại rơi về đĩa của máy chủ.
+  #
+  # Cố ý không viết cứng `:spaces`. Thiếu một biến môi trường mà app vẫn trỏ
+  # sang S3 thì mọi lần tải ảnh lên đều nổ trên production, và lỗi chỉ lộ ra
+  # lúc một phụ huynh đang gửi ảnh khuôn mặt cho con. Chưa đủ khoá thì chạy
+  # tiếp trên đĩa, có nhật ký sao lưu hằng đêm đỡ.
+  config.active_storage.service =
+    if ENV["SPACES_BUCKET"].present? && ENV["SPACES_KEY"].present?
+      :spaces
+    else
+      :local
+    end
+
+  # Tệp riêng tư đi qua ứng dụng chứ không phát link trần ra bucket — ảnh khuôn
+  # mặt trẻ em và chữ ký trên cam kết không được nằm sau một URL đoán được.
+  config.active_storage.resolve_model_to_route = :rails_storage_proxy
 
   # Mount Action Cable outside main process or domain.
   # config.action_cable.mount_path = nil
