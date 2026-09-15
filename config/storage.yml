@@ -25,9 +25,18 @@ spaces:
   upload:
     cache_control: "private, max-age=0, no-store"
 
-# Chuyển kho lưu trữ: ghi vào Spaces nhưng vẫn ĐỌC được tệp cũ trên đĩa.
-# Dùng trong lúc chạy `storage:migrate`, rồi đổi về `spaces` khi đã chuyển xong.
-spaces_migration:
+# Spaces là kho chính, đĩa máy chủ là bản sao.
+#
+# Không thừa: bản sao lưu hằng đêm đóng gói thư mục shared/storage, và đó là
+# bản sao lưu duy nhất đã được kiểm chứng khôi phục thật. Nếu tệp mới chỉ nằm
+# trên Spaces thì từ nay bản sao lưu ấy không còn phủ ảnh khuôn mặt và cam kết
+# nữa — mất phủ một cách âm thầm, đúng kiểu hỏng không ai biết cho tới lúc cần.
+# DO Spaces không có versioning, nên xoá nhầm là mất hẳn.
+#
+# Giá phải trả là lưu hai nơi. Với vài MB ảnh trên ổ còn 28 GB thì rẻ hơn nhiều
+# so với việc mất dữ liệu sinh trắc của trẻ em. Đặt SPACES_MIRROR_LOCAL=false
+# để tắt nếu sau này dung lượng thành vấn đề.
+spaces_mirrored:
   service: Mirror
   primary: spaces
   mirrors: [ local ]

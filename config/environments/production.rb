@@ -45,7 +45,7 @@ Rails.application.configure do
   # tiếp trên đĩa, có nhật ký sao lưu hằng đêm đỡ.
   config.active_storage.service =
     if ENV["SPACES_BUCKET"].present? && ENV["SPACES_KEY"].present?
-      :spaces
+      ENV["SPACES_MIRROR_LOCAL"] == "false" ? :spaces : :spaces_mirrored
     else
       :local
     end

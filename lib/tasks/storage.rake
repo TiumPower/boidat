@@ -7,6 +7,12 @@ namespace :storage do
     # So bằng TÊN LỚP chứ không bằng hằng số: khi kho đang dùng là S3 thì
     # ActiveStorage::Service::DiskService chưa được nạp và tham chiếu tới nó
     # ném NameError.
+    if service.class.name.end_with?("MirrorService")
+      primary = service.primary
+      puts "  kho chính: #{primary.class.name.demodulize} · bản sao: #{service.mirrors.map { |m| m.class.name.demodulize }.join(', ')}"
+      service = primary
+    end
+
     if service.class.name.end_with?("DiskService")
       puts "→ đang dùng đĩa của máy chủ. Đặt SPACES_* trong .env để chuyển sang Spaces."
       next
