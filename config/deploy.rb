@@ -65,6 +65,28 @@ namespace :deploy do
   # Keep the nightly backup script in shared/ rather than in the release: a bad
   # deploy (or a rolled-back release) must never be able to stop backups. The
   # source of truth stays in the repo, copied out on every deploy.
+  desc "Chuyển tệp còn trên đĩa lên kho hiện tại (cap production deploy:storage_migrate)"
+  task :storage_migrate do
+    on roles(:app) do
+      within current_path do
+        with rails_env: fetch(:rails_env) do
+          execute :rake, "storage:migrate"
+        end
+      end
+    end
+  end
+
+  desc "Đối chiếu mọi blob đọc được và đúng checksum (cap production deploy:storage_verify)"
+  task :storage_verify do
+    on roles(:app) do
+      within current_path do
+        with rails_env: fetch(:rails_env) do
+          execute :rake, "storage:verify"
+        end
+      end
+    end
+  end
+
   desc "Install the nightly backup script and its cron entry"
   task :install_backup do
     on roles(:db) do
