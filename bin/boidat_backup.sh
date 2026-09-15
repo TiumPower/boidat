@@ -67,14 +67,23 @@ TABLES=$(PGPASSWORD="$DB_PASS" pg_restore --list "$DUMP" 2>/dev/null | grep -c '
 log "dump ok: $(du -h "$DUMP" | cut -f1), $TABLES tables"
 
 # ---- Uploaded files ---------------------------------------------------------
-if [ -d "$STORAGE_DIR" ]; then
+#
+# Tệp đính kèm nay nằm trên DigitalOcean Spaces, không còn trên đĩa. Thư mục
+# storage rỗng, và đóng gói một thư mục rỗng rồi ghi "storage ok" là lời trấn
+# an sai: đọc log sẽ tưởng ảnh khuôn mặt và cam kết đã được sao lưu.
+#
+# Nói thẳng thay vì tạo tệp giả. Muốn phủ cả media thì bật lại bản sao cục bộ
+# (SPACES_MIRROR_LOCAL=true) hoặc đồng bộ bucket sang nơi khác — DO Spaces
+# KHÔNG có versioning, nên xoá nhầm trên đó là mất hẳn.
+FILE_COUNT=$(find "$STORAGE_DIR" -type f 2>/dev/null | wc -l | tr -d " ")
+if [ "${FILE_COUNT:-0}" -gt 0 ]; then
   TAR="$BACKUP_ROOT/storage/storage_${STAMP}.tar.gz"
-  log "archiving $STORAGE_DIR -> $TAR"
+  log "archiving $STORAGE_DIR ($FILE_COUNT files) -> $TAR"
   tar czf "$TAR.part" -C "$APP_ROOT/shared" storage || fail "tar returned $?"
   mv "$TAR.part" "$TAR"
   log "storage ok: $(du -h "$TAR" | cut -f1)"
 else
-  log "no storage dir at $STORAGE_DIR — skipping files"
+  log "storage KHONG duoc sao luu: tep dinh kem nam tren object storage (Spaces), khong co ban sao tren dia"
 fi
 
 # ---- Credentials needed to restore ------------------------------------------
