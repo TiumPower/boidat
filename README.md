@@ -133,6 +133,7 @@ kịch bản thầy xin nghỉ → duyệt → hoàn buổi → phụ huynh đ�
 
 ```
 PLATFORM_HOST BOIDAT_DATABASE_PASSWORD SECRET_KEY_BASE REDIS_URL
+SPACES_KEY SPACES_SECRET SPACES_BUCKET SPACES_REGION SPACES_ENDPOINT
 PAYOS_CLIENT_ID PAYOS_API_KEY PAYOS_CHECKSUM_KEY
 VAPID_PUBLIC_KEY VAPID_PRIVATE_KEY VAPID_SUBJECT
 BREVO_API_KEY MAIL_FROM MAIL_FROM_NAME
@@ -144,6 +145,33 @@ Mã đơn PayOS dùng tiền tố **73** để tách khỏi các app khác dùng
 merchant (loyalty 71, estate 72). Trong nội bộ app còn chia hai dải: `73_0xx` cho
 hoá đơn thuê bao nền tảng, `73_1xx` cho đơn khoá học của trung tâm — webhook tra
 Order trước nên hai dải không được chồng nhau.
+
+## Kho lưu trữ tệp
+
+Ảnh khuôn mặt, PDF cam kết, chữ ký tay, logo trung tâm và ảnh đại diện nhân sự
+đi vào **DigitalOcean Spaces** (S3-compatible, vùng `sgp1`), tiền tố `boidat/`
+trong bucket dùng chung `czin`.
+
+Ba điều không được đổi nếu chưa hiểu hệ quả:
+
+- **Bucket riêng tư.** `public: false` và production dùng
+  `resolve_model_to_route = :rails_storage_proxy`, nên mọi tệp đi qua ứng dụng
+  với URL đã ký. Đã kiểm: link trần vào bucket trả 403, liệt kê bucket cũng 403.
+- **Đĩa máy chủ giữ bản sao** (`spaces_mirrored`). Bản sao lưu hằng đêm đóng gói
+  `shared/storage`; bỏ bản sao là bản sao lưu ấy âm thầm không còn phủ media,
+  mà DO Spaces không có versioning. Tắt bằng `SPACES_MIRROR_LOCAL=false`.
+- **Kho chọn theo biến môi trường**, thiếu khoá thì rơi về đĩa. Viết cứng
+  `:spaces` mà thiếu một biến thì lỗi chỉ lộ ra đúng lúc phụ huynh đang gửi ảnh.
+
+```bash
+bin/rails storage:check     # ghi–đọc–xoá một tệp thử
+bin/rails storage:migrate   # chuyển tệp còn trên đĩa lên kho hiện tại
+bin/rails storage:verify    # đối chiếu checksum mọi blob
+```
+
+Đổi sang nhà cung cấp S3-compatible khác (VNG vStorage, Viettel, CMC) chỉ cần
+đổi `SPACES_ENDPOINT` và `SPACES_REGION` — xem ghi chú về dữ liệu xuyên biên
+giới ở cuối file.
 
 ## Job định kỳ
 
@@ -225,3 +253,13 @@ OQ còn lại (`OQ-13` vé lẻ, `OQ-26` doanh thu thuê hồ, `OQ-03` quyền t
 
 Hai phụ thuộc bên ngoài: tài khoản **merchant PayOS** đã kích hoạt, và **VPS**
 cho `boidat.czin.net` + wildcard DNS.
+
+### Dữ liệu xuyên biên giới — việc còn nợ
+
+Tệp đang nằm ở Spaces vùng Singapore. Ảnh khuôn mặt học viên là **dữ liệu cá
+nhân nhạy cảm** theo NĐ 13/2023, và PDF cam kết chứa chữ ký tay của phụ huynh.
+Đưa ra khỏi lãnh thổ là chuyển dữ liệu xuyên biên giới, cần hồ sơ đánh giá tác
+động nộp A05 theo Điều 25.
+
+Nếu không muốn làm hồ sơ, đổi sang nhà cung cấp S3-compatible trong nước chỉ là
+đổi hai biến môi trường rồi chạy `storage:migrate` — cấu hình không phải sửa.
