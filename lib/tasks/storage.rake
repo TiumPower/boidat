@@ -4,7 +4,10 @@ namespace :storage do
     service = ActiveStorage::Blob.service
     puts "dịch vụ: #{Rails.application.config.active_storage.service} (#{service.class.name.demodulize})"
 
-    if service.is_a?(ActiveStorage::Service::DiskService)
+    # So bằng TÊN LỚP chứ không bằng hằng số: khi kho đang dùng là S3 thì
+    # ActiveStorage::Service::DiskService chưa được nạp và tham chiếu tới nó
+    # ném NameError.
+    if service.class.name.end_with?("DiskService")
       puts "→ đang dùng đĩa của máy chủ. Đặt SPACES_* trong .env để chuyển sang Spaces."
       next
     end
@@ -24,7 +27,7 @@ namespace :storage do
   task migrate: :environment do
     target = ActiveStorage::Blob.service
     target_name = Rails.application.config.active_storage.service.to_s
-    if target.is_a?(ActiveStorage::Service::DiskService)
+    if target.class.name.end_with?("DiskService")
       abort "Kho đích vẫn là đĩa — đặt SPACES_* trước đã, nếu không đây là việc vô nghĩa."
     end
 
