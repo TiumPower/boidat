@@ -14,8 +14,15 @@ module Desk
         failed: @entries.count { |a| a.status == "rejected" },
         day_pass: @tickets.sum(&:quantity)
       }
-      @pending_lessons = Lesson.where(pool_id: current_pool.id, date: @today, status: "scheduled")
-                               .includes(swim_class: { enrollments: :student }).order(:start_hour).to_a
+      # Danh sách DỰ KIẾN của ca trực, không phải nhật ký: lễ tân cần trả lời
+      # "em này hôm nay có lịch không" và "còn ai chưa tới". Lấy cả buổi đã có
+      # người điểm danh (status "done") để danh sách không rụng dần trong ca.
+      @pending_lessons = Lesson.where(pool_id: current_pool.id, date: @today)
+                               .where.not(status: "cancelled")
+                               .includes(:teacher, swim_class: { enrollments: :student })
+                               .order(:start_hour).to_a
+      @checked_in_ids = @entries.select { |a| a.status == "present" }.map(&:student_id).to_set
+      @expected_count = @pending_lessons.sum { |l| l.swim_class.active_enrollments.size }
     end
 
     def select_pool

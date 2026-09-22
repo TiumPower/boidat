@@ -32,7 +32,9 @@
           <div style="height:100%; width:<%= pct %>%; background:var(--primary);"></div>
         </div>
         <div style="font-size:12px; color:var(--ink-2); margin-top:8px;">
-          Thi tốt nghiệp ở buổi <%= @enrollment.swim_class.course&.exam_session || current_workspace.exam_session_index %>
+          <%# OQ-25: khoá không có buổi thi thì đừng để lại câu cụt "ở buổi ". %>
+          <% exam_at = @enrollment.swim_class.course&.exam_session || current_workspace.exam_session_index %>
+          <%= exam_at ? "Thi tốt nghiệp ở buổi #{exam_at}" : "Kỳ thi tốt nghiệp xếp riêng ngoài khoá" %>
           <% if @enrollment.exam_eligible? %>
             · <strong style="color:var(--primary);">đã đủ điều kiện thi</strong>
           <% end %>

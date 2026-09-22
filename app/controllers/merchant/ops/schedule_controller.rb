@@ -59,7 +59,10 @@ module Merchant
 
       def load_kpis
         running = SwimClass.teaching.classes.where(pool_id: current_pool.id).count
-        students = Enrollment.active.where(pool_id: current_pool.id).count
+        # Đếm ĐẦU NGƯỜI, không đếm lượt ghi danh: một em tái ký hai lần vẫn là
+        # một học viên. Đếm enrollment làm hồ Quận 7 báo 36 trong khi cả trung
+        # tâm chỉ có 23 em — con số khách bắt được ngay.
+        students = Enrollment.active.where(pool_id: current_pool.id).distinct.count(:student_id)
         low = Enrollment.active.where(pool_id: current_pool.id)
                         .select { |e| e.low_sessions? }.size
         { classes: running, students: students, free_slots: @board.free_slots.size,

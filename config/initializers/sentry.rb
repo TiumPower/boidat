@@ -14,7 +14,7 @@ Sentry.init do |config|
 
   # This app holds tenants' ID documents, contracts, phone numbers and bank
   # details. Never ship request bodies, cookies or IPs to a third party; the
-  # workspace/user tags set below are enough to find the landlord who hit a bug.
+  # workspace/user tags set below are enough to find the centre that hit a bug.
   config.send_default_pii = false
   config.max_request_body_size = :never
   config.send_client_reports = false

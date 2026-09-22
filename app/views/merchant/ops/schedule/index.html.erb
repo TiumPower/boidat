@@ -82,11 +82,35 @@
         <% if day_slots.empty? %>
           <div style="font-size:13px; color:var(--ink-2);">Hồ đóng cửa hoặc chưa có giáo viên đăng ký dạy.</div>
         <% else %>
-          <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:10px;">
-            <% day_slots.each do |slot| %>
-              <%= render "merchant/ops/schedule/slot_card", slot: slot %>
-            <% end %>
-          </div>
+          <%# Một tuần ở Hồ Quận 7 có 8 lớp thật và 161 slot trống. Vẽ mỗi slot
+              trống thành một thẻ bằng thẻ lớp thì lớp thật chìm nghỉm. Mặc định
+              gom slot trống thành danh sách chip gấp lại được; khi sale bấm
+              "Chỉ slot trống" thì chúng trở lại dạng thẻ đầy đủ. %>
+          <% busy, free = day_slots.partition { |s| !s.free? } %>
+          <% carded = @only_free ? day_slots : busy %>
+          <% if carded.any? %>
+            <div style="display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:10px;">
+              <% carded.each do |slot| %>
+                <%= render "merchant/ops/schedule/slot_card", slot: slot %>
+              <% end %>
+            </div>
+          <% end %>
+
+          <% if !@only_free && free.any? %>
+            <details style="margin-top:<%= busy.any? ? 12 : 0 %>px;">
+              <summary style="cursor:pointer; font-size:12.5px; color:var(--ink-2); font-weight:600;">
+                <%= free.size %> slot trống — bấm để xếp học viên
+              </summary>
+              <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:10px;">
+                <% free.each do |slot| %>
+                  <%= link_to new_merchant_ops_registration_path(teacher_id: slot.teacher.id, hour: slot.hour, date: slot.date),
+                        class: "l-chip", style: "text-decoration:none; border-style:dashed;" do %>
+                    <strong><%= format("%02d:00", slot.hour) %></strong> <%= slot.teacher.short_name %>
+                  <% end %>
+                <% end %>
+              </div>
+            </details>
+          <% end %>
         <% end %>
       </div>
     <% end %>

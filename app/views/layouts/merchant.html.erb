@@ -23,7 +23,10 @@
     <% end %>
 
     <div class="l-shell">
-      <%= render "layouts/merchant_sidebar" %>
+      <%# Trang /merchant/menu tự render sidebar làm nội dung chính; render
+          thêm bản ẩn ở đây sẽ nhân đôi id chat_tab_badge và làm hỏng
+          Turbo Stream cập nhật huy hiệu tin chưa đọc. %>
+      <% unless content_for?(:no_sidebar) %><%= render "layouts/merchant_sidebar" %><% end %>
       <main class="l-main">
         <header class="l-topbar">
           <% cur_nav = defined?(nav_key) ? nav_key : nil %>
@@ -32,7 +35,7 @@
           <% end %>
           <div class="title">
             <%= content_for?(:page_title) ? yield(:page_title) : "Tổng quan" %>
-            <span class="en"><%= content_for?(:page_sub) ? yield(:page_sub) : "" %></span>
+            <span class="en"><%= content_for?(:page_sub) ? page_subtitle(yield(:page_sub)) : "" %></span>
           </div>
           <% if content_for?(:actions) %>
             <div style="margin-left:auto; display:flex; gap:10px; align-items:center;"><%= yield(:actions) %></div>

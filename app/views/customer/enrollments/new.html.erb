@@ -47,9 +47,11 @@
           <div style="display:flex; gap:10px; align-items:flex-start;">
             <%= radio_button_tag :package_id, pkg.id, i.zero?, style: "margin-top:4px;" %>
             <div style="flex:1;">
-              <div style="display:flex; justify-content:space-between; align-items:baseline;">
-                <div style="font-weight:700; font-size:14px;"><%= pkg.name %></div>
-                <div style="font-weight:700; color:var(--primary);"><%= pkg.price_label(@student.pool) %></div>
+              <%# Giá phải là khối không xuống dòng và tên gói phải được phép co
+                  lại, nếu không tên dài sẽ ngắt ngang qua giá. %>
+              <div style="display:flex; gap:10px; justify-content:space-between; align-items:baseline;">
+                <div style="font-weight:700; font-size:14px; flex:1; min-width:0;"><%= pkg.name %></div>
+                <div style="font-weight:700; color:var(--primary); flex:none; white-space:nowrap;"><%= pkg.price_label(@student.pool) %></div>
               </div>
               <div style="font-size:12.5px; color:var(--ink-2); margin-top:3px;">
                 <%= [pkg.class_type_label, "#{pkg.session_count} buổi", "hạn #{pkg.expiry_days} ngày"].compact.join(" · ") %>

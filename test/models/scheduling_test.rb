@@ -37,6 +37,39 @@ class SchedulingTest < ActiveSupport::TestCase
     end
   end
 
+  test "không mở được hai lớp cùng giáo viên, cùng giờ, cùng thứ" do
+    make_class(weekdays: [1, 3], hour: 17)
+    with_tenant(@ws) do
+      clash = SwimClass.new(workspace: @ws, pool: @pool, teacher: @c.teacher, class_type: 2,
+                            start_hour: 17, weekdays: [1, 3],
+                            start_date: Date.current.next_week, status: "running")
+      refute clash.valid?, "giáo viên không thể đứng hai lớp cùng khung giờ"
+      assert_match "đã có lớp", clash.errors.full_messages.join
+    end
+  end
+
+  test "trùng giờ nhưng khác thứ thì vẫn mở được" do
+    make_class(weekdays: [1, 3], hour: 17)
+    with_tenant(@ws) do
+      other = SwimClass.new(workspace: @ws, pool: @pool, teacher: @c.teacher, class_type: 2,
+                            start_hour: 17, weekdays: [2, 4],
+                            start_date: Date.current.next_week, status: "running")
+      assert other.valid?, other.errors.full_messages.join
+    end
+  end
+
+  test "lớp cũ đã dạy xong thì khung giờ đó mở lại được" do
+    old = make_class(weekdays: [1, 3], hour: 17, start_date: 20.weeks.ago.to_date)
+    with_tenant(@ws) do
+      LessonGenerator.new(old).call
+      assert old.lessons.maximum(:date) < Date.current, "lớp cũ phải đã dạy hết"
+      fresh = SwimClass.new(workspace: @ws, pool: @pool, teacher: @c.teacher, class_type: 2,
+                            start_hour: 17, weekdays: [1, 3],
+                            start_date: Date.current.next_week, status: "running")
+      assert fresh.valid?, fresh.errors.full_messages.join
+    end
+  end
+
   test "khoá có khai buổi thi thì buổi đó được đánh dấu" do
     with_tenant(@ws) do
       course = Course.create!(workspace: @ws, name: "Khoá có thi", sessions_count: 8, exam_session_index: 8)

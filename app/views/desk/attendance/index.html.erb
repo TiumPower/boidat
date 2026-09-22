@@ -29,7 +29,46 @@
     <div class="l-kpi"><div class="k">Vé lẻ</div><div class="v"><%= @counts[:day_pass] %></div></div>
   </div>
 
+  <%# ---- Dự kiến hôm nay ----
+      Màn này trước đây chỉ là nhật ký những lượt đã quét, nên lễ tân không trả
+      lời được hai câu hỏi thường gặp nhất ở quầy: "em này hôm nay có lịch
+      không?" và "còn ai chưa tới?". Dữ liệu đã có sẵn trong controller. %>
+  <div style="padding:0 18px 14px;">
+    <% if @pending_lessons.any? %>
+      <div style="display:flex; align-items:baseline; justify-content:space-between; margin-bottom:8px;">
+        <div class="l-eyebrow">Dự kiến hôm nay</div>
+        <div style="font-size:12px; color:var(--ink-2);">
+          <%= @counts[:checked_in] %>/<%= @expected_count %> đã tới
+        </div>
+      </div>
+      <% @pending_lessons.each do |lesson| %>
+        <% roster = lesson.swim_class.active_enrollments %>
+        <% next if roster.empty? %>
+        <div class="l-panel" style="margin-bottom:8px; padding:12px 14px;">
+          <div style="display:flex; justify-content:space-between; align-items:baseline; gap:8px;">
+            <div style="font-weight:700; font-size:14px;"><%= format("%02d:00", lesson.start_hour) %></div>
+            <div style="font-size:12px; color:var(--ink-2); text-align:right; flex:1; min-width:0;">
+              <%= lesson.teacher.display_name %> · 1:<%= lesson.swim_class.class_type %>
+              <%= " · thuê hồ" if lesson.swim_class.rental? %>
+            </div>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:8px;">
+            <% roster.each do |enr| %>
+              <% here = @checked_in_ids.include?(enr.student_id) %>
+              <span class="l-chip <%= 'l-chip-brand' if here %>" style="font-size:11.5px; padding:4px 9px;">
+                <%= here ? "✓" : "○" %> <%= enr.student.short_name %>
+              </span>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+
   <div style="padding:0 18px;">
+    <% if @entries.any? || @tickets.any? %>
+      <div class="l-eyebrow" style="margin-bottom:8px;">Đã quét trong ca</div>
+    <% end %>
     <% if @entries.empty? && @tickets.empty? %>
       <div class="l-panel" style="text-align:center; padding:28px 18px;">
         <div style="font-size:34px;">🏊</div>

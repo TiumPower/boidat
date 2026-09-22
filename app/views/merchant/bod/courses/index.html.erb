@@ -20,7 +20,10 @@
           <tr>
             <td><strong><%= c.name %></strong><div style="font-size:12px; color:var(--ink-2);"><%= c.description&.truncate(60) %></div></td>
             <td><%= c.audience_label %></td>
-            <td><%= c.total_sessions %> buổi<div style="font-size:12px; color:var(--ink-2);">thi ở buổi <%= c.exam_session %></div></td>
+            <%# OQ-25: mặc định không buổi nào trong khoá là buổi thi, nên
+                exam_session là nil — đừng in "thi ở buổi " cụt đuôi. %>
+            <td><%= c.total_sessions %> buổi<div style="font-size:12px; color:var(--ink-2);">
+              <%= c.exam_session ? "thi ở buổi #{c.exam_session}" : "kỳ thi xếp riêng" %></div></td>
             <td><%= c.class_type_label %></td>
             <td><%= c.course_sessions.size %>/<%= c.total_sessions %> buổi đã có giáo án</td>
             <td><%= c.packages.size %></td>

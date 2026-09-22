@@ -1,4 +1,5 @@
 <% key = content_for(:tab).to_s.strip.presence %>
+<%# Nút "Khuôn mặt" là nút nổi nên phải nằm chính giữa: 7 tab → vị trí thứ 4. %>
 <nav class="l-tabbar">
   <div class="l-tabbar-inner">
     <%= link_to member_root_path, class: ("active" if key == "home") do %>
@@ -11,6 +12,9 @@
     <%= link_to member_orders_path, class: ("active" if key == "invoices") do %>
       <span class="ce-tab-ic"><%= ui_icon(:receipt, size: 22) %></span><span>Hoá đơn</span>
     <% end %>
+    <%= link_to member_faces_path, class: "ce-tab-home #{'active' if key == 'faces'}" do %>
+      <span class="ce-tab-ic"><%= ui_icon(:camera, size: 27) %></span><span>Khuôn mặt</span>
+    <% end %>
     <%= link_to member_chat_path, class: ("active" if key == "chat") do %>
       <span class="ce-tab-ic"><%= ui_icon(:chat, size: 22) %></span><span>Nhắn tin</span>
     <% end %>
@@ -19,9 +23,6 @@
         <%= ui_icon(:bell, size: 22) %>
         <%= render "layouts/chat_tab_badge", count: @unread %>
       </span><span>Thông báo</span>
-    <% end %>
-    <%= link_to member_faces_path, class: "ce-tab-home #{'active' if key == 'faces'}" do %>
-      <span class="ce-tab-ic"><%= ui_icon(:camera, size: 27) %></span><span>Khuôn mặt</span>
     <% end %>
     <%= link_to member_profile_path, class: ("active" if key == "me") do %>
       <span class="ce-tab-ic"><%= ui_icon(:user, size: 22) %></span><span>Hồ sơ</span>

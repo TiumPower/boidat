@@ -21,7 +21,7 @@ class BillingMailer < ApplicationMailer
 
   private
 
-  def platform_from = %(Boidat <#{ENV.fetch("MAIL_FROM", "no-reply@boidat.czin.net")}>)
+  def platform_from = %(Boidat <#{ENV.fetch("MAIL_FROM", "no-reply@boidat.tiumpower.com")}>)
 
   def billing_page_url(ws)
     host = ws.subdomain.present? ? "#{ws.subdomain}.#{ApplicationController::PLATFORM_HOST}" : ApplicationController::PLATFORM_HOST

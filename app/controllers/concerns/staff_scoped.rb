@@ -52,7 +52,7 @@ module StaffScoped
     session[:workspace_id] = @current_workspace&.id
   end
 
-  # Cookie phiên có domain ".boidat.czin.net" nên nó đi theo sang subdomain của
+  # Cookie phiên có domain ".boidat.tiumpower.com" nên nó đi theo sang subdomain của
   # MỌI trung tâm. Không rò dữ liệu — `set_current_workspace` chỉ nhận workspace
   # từ host khi người dùng có membership ở đó. Nhưng nếu không có, trước đây nó
   # âm thầm render trung tâm của mình dưới tên miền của trung tâm khác: nhân

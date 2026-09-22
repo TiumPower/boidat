@@ -108,6 +108,24 @@ class RegistrationFlowTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "đăng ký vào slot đã có lớp thì vào lớp đó, không mở lớp trùng giờ" do
+    post "/merchant/ops/registrations", params: valid_params
+    first_class = with_tenant(@ws) { Student.find_by(name: "Nguyễn Gia Bảo").enrollments.first.swim_class }
+
+    assert_no_difference -> { with_tenant(@ws) { SwimClass.count } } do
+      post "/merchant/ops/registrations", params: valid_params.deep_merge(
+        registration: { student_name: "Lâm Khánh Vy", guardian_name: "Lâm Quốc Cường",
+                        guardian_phone: "0908221448" }
+      )
+    end
+    assert_response :redirect
+    with_tenant(@ws) do
+      second = Student.find_by(name: "Lâm Khánh Vy")
+      assert_equal first_class.id, second.enrollments.first.swim_class_id,
+                   "phải vào đúng lớp đang chạy ở khung giờ đó"
+    end
+  end
+
   test "lớp nhóm hết chỗ thì báo rõ chứ không nhét thêm" do
     post "/merchant/ops/registrations", params: valid_params
     cls = with_tenant(@ws) { SwimClass.last }

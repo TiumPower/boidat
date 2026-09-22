@@ -61,7 +61,7 @@ Rails.application.routes.draw do
         member { patch :reset_password }
       end
       resources :teachers, only: [:index, :show, :new, :create, :edit, :update]
-      resources :teacher_levels, path: "levels", except: [:show]
+      resources :teacher_levels, path: "levels", except: [:show, :new]  # form "Thêm cấp độ" nằm ngay trên index
       resources :courses do
         member { post :generate_plan }
       end
@@ -87,7 +87,9 @@ Rails.application.routes.draw do
       resources :lessons, only: [:show, :update] do
         member { patch :attend }
       end
-      resources :students, only: [:index, :show, :new, :create, :edit, :update]
+      resources :students, only: [:index, :show, :edit, :update]
+      # Tạo học viên đi qua màn "Đăng ký học viên" (registrations#new); students#new
+      # và #create không có action lẫn view, để lại chỉ tạo route 404.
       resources :households, only: [:index, :show] do
         member { post :reissue_qr }
       end
@@ -130,6 +132,9 @@ Rails.application.routes.draw do
       resources :makeups, only: [:index]
       resources :audit_logs, path: "audit", only: [:index]
     end
+
+    # Menu đầy đủ cho điện thoại (sidebar bị ẩn ở ≤900px).
+    get "menu", to: "menu#show", as: :menu
 
     # Hồ sơ cá nhân của nhân sự (FR-219) — dùng chung cho mọi vai trò.
     get   "account", to: "account#edit",   as: :account

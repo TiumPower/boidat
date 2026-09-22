@@ -82,6 +82,13 @@ a.l-chip-brand:hover, button.l-chip-brand:hover { background: color-mix(in srgb,
   padding:14px 16px; font-size:14px; font-weight:600; transition:border-color .15s, background .15s, color .15s; }
 .l-upload:hover { border-color:var(--primary); color:var(--primary); background:color-mix(in srgb, var(--primary) 6%, var(--surface)); }
 .l-upload svg { flex:none; }
+/* Input thật bị ẩn: nhãn "Choose File / No file chosen" của trình duyệt là
+   tiếng Anh và CSS không đổi được. Nhãn hiển thị do upload_controller vẽ. */
+.l-upload input[type="file"] { position:absolute; width:1px; height:1px; opacity:0; pointer-events:none; }
+.l-upload .name { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:500; }
+.l-upload .pick { flex:none; font-size:12.5px; font-weight:700; color:var(--primary);
+  background:var(--primary-soft); border-radius:999px; padding:5px 12px; }
+.l-upload.has-file { border-style:solid; border-color:var(--primary); color:var(--ink); }
 
 /* clickable outlet cards (whole card is a link; actions sit above it) */
 .l-outlet-card { position:relative; background:#fff; border:1px solid var(--line); border-radius:16px; padding:16px 18px;
@@ -184,8 +191,15 @@ a.l-chip-lg:hover, button.l-chip-lg:hover { background:#fff; color:var(--ink);
 .l-tabbar { position:fixed; bottom:0; left:0; right:0; width:100%; z-index:50;
   background:#fff; border-top:1px solid var(--line);
   padding-bottom: env(safe-area-inset-bottom); box-shadow:0 -2px 12px rgba(40,24,12,.05); }
-.l-tabbar-inner { max-width:480px; margin:0 auto; display:grid; grid-template-columns:repeat(5,1fr);
+/* Số tab không cố định: cổng quầy có 5, cổng phụ huynh có 7. Khai cứng
+   repeat(5,1fr) làm hai tab cuối rơi xuống hàng thứ hai và nút camera nổi đè
+   lên nhãn "Gia đình". auto-flow column tự chia đều theo số tab thật. */
+.l-tabbar-inner { max-width:480px; margin:0 auto; display:grid;
+  grid-auto-flow:column; grid-auto-columns:1fr;
   align-items:center; padding:8px 10px; }
+/* Từ 6 tab trở lên thì hạ cỡ chữ để nhãn dài nhất vẫn nằm trên một dòng. */
+.l-tabbar-inner:has(> :nth-child(6)) a { font-size:9.5px; letter-spacing:-.01em; }
+.l-tabbar-inner a > span:last-child { white-space:nowrap; }
 .l-tabbar a { display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0;
   color: var(--ink-2); text-decoration:none; font-size:10.5px; font-weight:600; }
 .l-tabbar a.active { color: var(--primary); }
@@ -282,7 +296,7 @@ a.l-chip-lg:hover, button.l-chip-lg:hover { background:#fff; color:var(--ink);
 
 .l-main { min-width:0; display:flex; flex-direction:column; }
 
-/* ---- Landlord mobile bottom nav (only when the sidebar is hidden) ---- */
+/* ---- Thanh điều hướng dưới đáy cho nhân sự (chỉ khi sidebar bị ẩn) ---- */
 .l-mtab { display:none; }
 @media (max-width:900px) {
   /* Hide the sidebar on phones (a base .l-side rule declared later than the
@@ -347,6 +361,45 @@ a.l-chip-lg:hover, button.l-chip-lg:hover { background:#fff; color:var(--ink);
 .l-kpi .d { font-size:12px; color:var(--good); margin-top:2px; font-weight:600; }
 
 .l-panel { background:#fff; border:1px solid var(--line); border-radius:20px; padding:22px; box-shadow: var(--shadow); }
+
+/* ---- Bảng dữ liệu ----
+   .l-table được dùng ở 40 màn của ba cổng nhân sự nhưng trước đây không có
+   dòng style nào, nên mọi bảng rơi về mặc định trình duyệt: không padding ô,
+   hai cột dính vào nhau ("Cấp độCông", "Doanh thu khoá học127.920.000đ"). */
+.l-table { width:100%; border-collapse:collapse; font-size:13.5px; }
+.l-table th { text-align:left; padding:0 14px 9px 0; vertical-align:bottom; white-space:nowrap;
+  font-size:10.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-2); font-weight:700; }
+.l-table td { padding:11px 14px 11px 0; border-top:1px solid var(--line); vertical-align:middle; }
+.l-table th:last-child, .l-table td:last-child { padding-right:0; }
+.l-table tbody tr:first-child td { border-top:none; }
+.l-table thead + tbody tr:first-child td { border-top:1px solid var(--line); }
+.l-table tbody tr:hover td { background: color-mix(in srgb, var(--primary) 4%, transparent); }
+/* Ô chứa nút/form không được xuống dòng giữa chừng */
+.l-table td:has(> .l-btn), .l-table td:has(> form) { white-space:nowrap; }
+/* Tiền và số buổi đọc theo cột dọc nên cần chữ số đều bề ngang */
+.l-table td strong { font-variant-numeric: tabular-nums; }
+
+/* Panel chứa bảng được phép cuộn ngang. Hai công dụng: (1) trên điện thoại,
+   bảng 6–7 cột cuộn thay vì bóp mỗi ô xuống ba dòng; (2) khi panel nằm trong
+   grid `1fr 320px`, overflow khác visible mới kéo min-width của grid item về 0
+   — không có nó, bảng rộng đẩy cả trang tràn ngang. */
+.l-panel:has(.l-table) { overflow-x:auto; }
+@media (max-width:900px) { .l-table { min-width:620px; } }
+
+/* Trang /merchant/menu: sidebar đứng làm nội dung chính nên phải thắng quy tắc
+   ẩn sidebar ở ≤900px, và bỏ sticky/100vh để nó cao theo nội dung. */
+.l-menupage .l-side { display:flex !important; position:static; height:auto;
+  width:100%; border-radius:18px; max-width:520px; margin:0 auto; }
+
+/* ---- Bố cục "nội dung chính + cột phụ" ----
+   16 màn của cổng điều hành/vận hành khai cứng `grid-template-columns:1fr 340px`
+   trong style inline, nên không media query nào chạm tới được: ở ≤900px sidebar
+   đã ẩn mà trang vẫn cố giữ hai cột → tràn ngang trên điện thoại (màn Hồ sơ của
+   tôi là chỗ đau nhất vì PWA quầy và giáo viên trỏ thẳng vào đó). */
+.l-split { display:grid; grid-template-columns:minmax(0,1fr) var(--side,340px);
+  gap:16px; align-items:start; }
+@media (max-width:820px) { .l-split { grid-template-columns:minmax(0,1fr); } }
+
 .l-toggle-row { display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid var(--line); }
 .l-toggle-row:last-child { border-bottom:none; }
 .l-switch { display:inline-block; width:46px; height:27px; border-radius:999px; background:var(--surface-2); position:relative; cursor:pointer; border:1px solid var(--line); flex:none; vertical-align:middle; }
@@ -356,10 +409,6 @@ a.l-chip-lg:hover, button.l-chip-lg:hover { background:#fff; color:var(--ink);
 .l-switch:has(input:checked) .knob, .l-switch.on .knob { left:21px; }
 /* bare button wrapper so a button_to can render as a toggle */
 .l-switch-btn { background:none; border:none; padding:0; cursor:pointer; }
-
-/* flash */
-.l-flash { position:fixed; top:14px; left:50%; transform:translateX(-50%); z-index:1000;
-  background: var(--ink); color:#fff; padding:11px 18px; border-radius:12px; font-size:14px; box-shadow: var(--shadow-lg); }
 
 /* preset swatch */
 .l-preset { border:1px solid var(--line); border-radius:14px; padding:12px; cursor:pointer; background:#fff; text-align:left; }
@@ -445,6 +494,13 @@ input[type="range"], input[type="checkbox"], input[type="radio"], progress { acc
   animation: toastIn .32s cubic-bezier(.2,.8,.2,1) both; }
 @keyframes toastIn { from { transform:translateX(120%); opacity:0; } to { transform:none; opacity:1; } }
 .l-toast.leaving { transform:translateX(120%); opacity:0; transition:transform .3s ease, opacity .3s ease; }
+/* Trên điện thoại toast rộng 260–380px neo ở góc trên phải sẽ phủ kín tiêu đề
+   trang ("Ca trự…", "Gia đ…"). Đẩy xuống đáy, nằm trên thanh tab. */
+@media (max-width:520px) {
+  .l-toast-wrap { top:auto; bottom:calc(84px + env(safe-area-inset-bottom)); left:12px; right:12px; max-width:none; }
+  .l-toast { min-width:0; max-width:none; }
+  .l-toast.leaving { transform:translateY(130%); }
+}
 .l-toast.error { border-left-color:var(--warn); }
 .l-toast .ic { width:22px; height:22px; border-radius:50%; display:grid; place-items:center; flex:none; color:#fff; background:var(--good); font-size:13px; font-weight:700; margin-top:1px; }
 .l-toast.error .ic { background:var(--warn); }

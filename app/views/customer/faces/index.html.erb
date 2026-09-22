@@ -35,7 +35,9 @@
 
         <%= form_with url: member_create_face_path(student_id: student.id), method: :post, multipart: true,
               data: { turbo: false }, style: "margin-top:12px;" do %>
-          <%= file_field_tag :photo, accept: "image/*", capture: "user", class: "l-field", required: true %>
+          <%= render "shared/upload_field", icon: :camera, placeholder: "Chụp ảnh khuôn mặt",
+                field: file_field_tag(:photo, accept: "image/*", capture: "user", required: true,
+                                      data: { upload_target: "input", action: "upload#render" }) %>
 
           <label style="display:flex; gap:9px; align-items:flex-start; margin:12px 0; font-size:12.5px; color:var(--ink-2); line-height:1.5;">
             <%= check_box_tag :consent, "1", false, required: true, style: "margin-top:3px;" %>

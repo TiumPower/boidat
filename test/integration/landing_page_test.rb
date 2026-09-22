@@ -1,6 +1,6 @@
 require "test_helper"
 
-# Trang công khai ở host trần (boidat.czin.net, chưa xác định được trung tâm).
+# Trang công khai ở host trần (boidat.tiumpower.com, chưa xác định được trung tâm).
 # Đây là trang duy nhất dùng layout `marketing` và các khoá `landing.*`, là
 # trang duy nhất có nút đổi VI/EN — và trước đây là trang duy nhất KHÔNG có
 # test nào chạm tới. Nó cũng là trang người lạ nhìn thấy đầu tiên.

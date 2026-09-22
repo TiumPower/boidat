@@ -9,7 +9,12 @@
   <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:12px;">
     <div><%= f.label :kind, "Loại", class: "l-label" %>
       <%= f.select :kind, Promotion::KINDS.map { |k| [Promotion::KIND_LABELS[k], k] }, {}, class: "l-field" %></div>
-    <div><%= f.label :value, "Giá trị", class: "l-label" %><%= f.number_field :value, class: "l-field" %></div>
+    <div><%= f.label :value, "Giá trị", class: "l-label" %><%= f.number_field :value, class: "l-field" %>
+      <div style="font-size:11.5px; color:var(--ink-2); margin-top:5px; line-height:1.45;">
+        <% Promotion::VALUE_HINTS.each do |k, hint| %>
+          <div><strong><%= Promotion::KIND_LABELS[k] %>:</strong> <%= hint %></div>
+        <% end %>
+      </div></div>
     <div><%= f.label :stock, "Số lượng (quà hiện vật)", class: "l-label" %><%= f.number_field :stock, class: "l-field" %></div>
   </div>
   <div style="margin-bottom:12px;"><%= f.label :condition_note, "Điều kiện áp dụng", class: "l-label" %>

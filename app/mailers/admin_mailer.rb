@@ -11,5 +11,5 @@ class AdminMailer < ApplicationMailer
 
   private
 
-  def platform_from = %(Boidat <#{ENV.fetch("MAIL_FROM", "no-reply@boidat.czin.net")}>)
+  def platform_from = %(Boidat <#{ENV.fetch("MAIL_FROM", "no-reply@boidat.tiumpower.com")}>)
 end

@@ -1,5 +1,7 @@
 <% nav  = defined?(nav_key) ? nav_key : nil %>
-<% area = request.path.start_with?("/merchant/bod") ? :bod : :ops %>
+<%# `area` suy từ đường dẫn, trừ khi trang gọi render truyền sẵn (trang
+    /merchant/menu không nằm dưới /merchant/bod nhưng vẫn cần menu BOD). %>
+<% area = local_assigns[:area] || (request.path.start_with?("/merchant/bod") ? :bod : :ops) %>
 <aside class="l-side" data-controller="activenav">
   <div class="brand">
     <div class="logo"><%= current_workspace&.logo_initials || "BĐ" %></div>
@@ -24,7 +26,10 @@
         <% end %>
       </div>
     </details>
-  <% elsif current_pool %>
+  <% elsif area == :ops && current_pool %>
+    <%# Chỉ cổng vận hành mới có khái niệm "hồ đang làm việc". Cổng điều hành
+        nhìn toàn bộ hồ và chọn phạm vi ngay trên dashboard, nên cái hộp tĩnh
+        này ở đó vừa bấm không được vừa nói ngược với bộ lọc "Tất cả hồ". %>
     <div class="l-ws"><div class="k">Hồ đang chọn</div><div class="v"><%= current_pool.name %></div></div>
   <% end %>
 
@@ -126,6 +131,7 @@
       </div>
     <% end %>
     <%= button_to "⎋", destroy_user_session_path, method: :delete,
+          title: "Đăng xuất", "aria-label": "Đăng xuất",
           form: { data: { turbo_confirm: "Đăng xuất khỏi hệ thống?" } },
           style: "margin-left:auto;background:none;border:none;color:inherit;cursor:pointer;font-size:16px;" %>
   </div>

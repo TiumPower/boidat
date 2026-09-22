@@ -1,31 +1,55 @@
-<%# Host trần: ở dev đây là bảng điều hướng liệt kê cả 5 cổng để test nhanh. %>
-<div style="max-width:860px; margin:0 auto; padding:48px 20px;">
-  <p class="l-eyebrow">BƠI ĐẠT · Hệ thống quản lý trung tâm dạy bơi</p>
-  <h1 style="font-family:var(--font-display); font-size:34px; margin:8px 0 6px;">Năm cổng vào, một nguồn sự thật</h1>
-  <p style="color:var(--ink-2); max-width:60ch;">
-    Cùng một cơ sở dữ liệu cho tất cả các hồ. Mỗi nhóm người dùng có một cổng riêng,
-    và mọi truy vấn đều đi qua cùng một lớp phân quyền theo vai trò và theo hồ.
-  </p>
+<%# Host trần (boidat.tiumpower.com): không có trang giới thiệu, chỉ là bảng chọn cổng.
+    Mọi chuỗi đi qua t() để nút VI/EN không để lại nửa trang tiếng Việt. %>
+<% content_for :title, "BƠI ĐẠT" %>
 
-  <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; margin-top:28px;">
-    <% [
-         ["Cổng điều hành", "BOD · Super Admin của trung tâm", "/merchant/bod"],
-         ["Cổng vận hành", "Admin · Sale", "/merchant/ops"],
-         ["Quầy điểm danh", "Lễ tân tại hồ (PWA)", "/desk"],
-         ["Cổng giáo viên", "Giáo viên (PWA)", "/teacher"],
-         ["Super Admin nền tảng", "Quản lý các trung tâm", "/admin"]
-       ].each do |title, sub, path| %>
-      <a href="<%= path %>" class="l-panel" style="text-decoration:none; color:inherit; display:block;">
-        <div style="font-weight:700;"><%= title %></div>
-        <div style="font-size:13px; color:var(--ink-2); margin-top:4px;"><%= sub %></div>
-      </a>
-    <% end %>
-
-    <% @workspaces.each do |ws| %>
-      <a href="/w/<%= ws.slug %>" class="l-panel" style="text-decoration:none; color:inherit; display:block; border-color:var(--primary);">
-        <div style="font-weight:700;">Cổng phụ huynh · <%= ws.name %></div>
-        <div style="font-size:13px; color:var(--ink-2); margin-top:4px;">Quét QR hộ gia đình hoặc SĐT + OTP</div>
-      </a>
-    <% end %>
+<header class="k-head">
+  <img src="/icon.svg" alt="" class="k-mark" width="52" height="52">
+  <div>
+    <div class="l-eyebrow">BƠI ĐẠT</div>
+    <h1 style="font-family:var(--font-display); font-size:28px; margin:2px 0 4px;">
+      <%= t("launcher.title") %>
+    </h1>
+    <p style="color:var(--ink-2); font-size:14px; margin:0; max-width:52ch;">
+      <%= t("launcher.subtitle") %>
+    </p>
   </div>
+  <span class="k-lang">
+    <%= link_to "VI", set_locale_path(:vi), class: ("on" if I18n.locale == :vi), data: { turbo: false } %>
+    <%= link_to "EN", set_locale_path(:en), class: ("on" if I18n.locale == :en), data: { turbo: false } %>
+  </span>
+</header>
+
+<div class="l-eyebrow" style="margin-bottom:10px;"><%= t("launcher.staff_group") %></div>
+<div class="k-grid">
+  <% [
+       [:bod,     merchant_bod_root_path],
+       [:ops,     merchant_ops_root_path],
+       [:desk,    desk_root_path],
+       [:teacher, teacher_root_path],
+       [:admin,   admin_root_path]
+     ].each do |key, path| %>
+    <a class="k-card" href="<%= path %>">
+      <div class="t"><%= t("launcher.#{key}") %></div>
+      <div class="s"><%= t("launcher.#{key}_sub") %></div>
+      <div class="u"><%= path %></div>
+    </a>
+  <% end %>
+</div>
+
+<p style="font-size:12.5px; color:var(--ink-2); margin:14px 2px 0;">
+  <%= t("launcher.login_note", path: new_user_session_path) %>
+</p>
+
+<div class="l-eyebrow" style="margin:30px 0 10px;"><%= t("launcher.parent_group") %></div>
+<div class="k-grid">
+  <% @workspaces.each do |ws| %>
+    <a class="k-card parent" href="/w/<%= ws.slug %>">
+      <div class="t"><%= ws.name %></div>
+      <div class="s"><%= t("launcher.parent_sub") %></div>
+      <div class="u">/w/<%= ws.slug %></div>
+    </a>
+  <% end %>
+  <% if @workspaces.empty? %>
+    <p style="font-size:13.5px; color:var(--ink-2);"><%= t("launcher.no_workspace") %></p>
+  <% end %>
 </div>

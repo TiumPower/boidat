@@ -35,8 +35,8 @@ class ApplicationController < ActionController::Base
     false
   end
 
-  # Base platform host (no subdomain), e.g. "loyalty.czin.net".
-  PLATFORM_HOST = ENV.fetch("PLATFORM_HOST", "boidat.czin.net")
+  # Base platform host (no subdomain), e.g. "boidat.tiumpower.com".
+  PLATFORM_HOST = ENV.fetch("PLATFORM_HOST", "boidat.tiumpower.com")
 
   private
 
@@ -67,7 +67,7 @@ class ApplicationController < ActionController::Base
 
   # Send each scope back to its OWN login after logout: a merchant lands on the
   # merchant login, super admin on the admin login. (Members log out via a
-  # custom controller that redirects to the shop login.)
+  # custom controller that redirects to the parent login.)
   def after_sign_out_path_for(resource_or_scope)
     case resource_or_scope
     when :admin_user then new_admin_user_session_path
@@ -105,7 +105,7 @@ class ApplicationController < ActionController::Base
 
   # Which workspace (and which side of the app) an error came from. Ids only —
   # config.send_default_pii is off, so no names, emails or request bodies leave
-  # the box; this is enough to find the landlord who hit the bug.
+  # the box; this is enough to find the centre that hit the bug.
   #
   # Cố tình đọc từ request thay vì current_workspace/current_guardian: callback
   # này chạy trước các before_action của subclass, chạm vào current_guardian sớm
@@ -154,6 +154,10 @@ class ApplicationController < ActionController::Base
   # Hand flash messages to the client as a short-lived, JS-readable cookie so the
   # toast can be built after Turbo's final render (see app/javascript/toast.js).
   def stash_toast_cookie
+    # Layout "auth" đã in flash ngay trong thẻ đăng nhập; bắn thêm toast là màn
+    # login hiện đúng một câu hai lần.
+    return if devise_controller?
+
     data = { notice: flash[:notice], alert: flash[:alert] }.compact
     return if data.empty?
     cookies[:toast] = { value: data.to_json, path: "/", httponly: false, same_site: :lax }

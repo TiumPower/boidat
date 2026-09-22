@@ -54,6 +54,12 @@
       <% end %>
     <% end %>
 
+    <%# Hai nhóm tách bạch: buổi phải dạy trước, khung còn trống sau. Không có
+        tiêu đề thì danh sách đọc thành "07:00, 07:00, 06:00" như thể lịch bị
+        sắp sai giờ. %>
+    <% if @lessons.any? %>
+      <div class="l-eyebrow" style="margin:4px 2px 8px;">Buổi dạy hôm nay</div>
+    <% end %>
     <% @lessons.each do |lesson| %>
       <% cls = lesson.swim_class %>
       <%= link_to teacher_lesson_path(lesson), class: "l-panel",
@@ -79,6 +85,9 @@
       <% end %>
     <% end %>
 
+    <% if @free_slots.any? %>
+      <div class="l-eyebrow" style="margin:16px 2px 8px;">Khung đã đăng ký, chưa có học viên</div>
+    <% end %>
     <% @free_slots.each do |slot| %>
       <div class="l-panel" style="margin-bottom:10px; border-style:dashed; background:var(--surface);">
         <div style="display:flex; justify-content:space-between; align-items:baseline;">

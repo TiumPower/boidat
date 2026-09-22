@@ -30,8 +30,10 @@
         <span class="ce-tab-ic"><%= ui_icon(:medal, size: 22) %></span><span>Giáo viên</span>
       <% end %>
     <% end %>
-    <%= link_to merchant_account_path, class: ("active" if [:account, :appearance, :billing, :settings, :audit].include?(nav)) do %>
-      <span class="ce-tab-ic"><%= ui_icon(:user, size: 22) %></span><span>Cá nhân</span>
+    <%# Ô cuối là "Thêm" chứ không phải "Cá nhân": thanh tab chỉ có 5 ô trong khi
+        cổng vận hành có 11 mục, nên cần một đường tới toàn bộ menu. %>
+    <%= link_to merchant_menu_path(area: area), class: ("active" if [:menu, :account, :appearance, :billing, :settings, :audit].include?(nav)) do %>
+      <span class="ce-tab-ic"><%= ui_icon(:menu, size: 22) %></span><span>Thêm</span>
     <% end %>
   </div>
 </nav>

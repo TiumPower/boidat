@@ -27,7 +27,7 @@ class RegisterStudent
       @household  = find_or_build_household
       @guardian   = find_or_build_guardian
       @student    = build_student
-      @swim_class = @form.swim_class || build_class
+      @swim_class = @form.swim_class || existing_class_in_slot || build_class
       ensure_capacity!
       @enrollment = build_enrollment
       LessonGenerator.new(@swim_class).call
@@ -80,6 +80,22 @@ class RegisterStudent
       health_notes: @form.health_notes, source: @form.source,
       kind: "center", status: "active"
     )
+  end
+
+  # Sale chọn slot chứ không chọn lớp, nên trước khi mở lớp mới phải xem khung
+  # giờ đó đã có lớp đang chạy chưa. Không kiểm là mỗi lần đăng ký lại đẻ thêm
+  # một lớp chồng lên lớp cũ: giáo viên đứng hai lớp cùng giờ, bảng master data
+  # chỉ vẽ được một ô nên lớp thứ hai vô hình, mà công vẫn tính cho cả hai.
+  def existing_class_in_slot
+    return nil if @form.teacher.nil?
+
+    SwimClass.running.classes
+             .where(pool_id: @pool.id, teacher_id: @form.teacher.id, start_hour: @form.start_hour)
+             .detect do |cls|
+               cls.class_type == @form.effective_class_type &&
+                 (cls.weekday_list & Array(@form.weekdays).map(&:to_i)).any? &&
+                 !cls.course_over?
+             end
   end
 
   # Slot trống → mở lớp mới với giáo viên và khung giờ của slot đó.

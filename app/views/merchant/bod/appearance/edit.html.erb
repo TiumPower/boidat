@@ -1,7 +1,7 @@
 <% content_for :page_title, "Màu chủ đạo & thương hiệu" %>
 <% content_for :page_sub, "Áp dụng cho cả 5 cổng" %>
 
-<div style="display:grid; grid-template-columns:1fr 360px; gap:16px; align-items:start;">
+<div class="l-split" style="--side:360px;">
   <div class="l-panel">
     <div style="font-weight:700; margin-bottom:12px;">Bộ màu có sẵn</div>
     <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:22px;">
@@ -48,7 +48,9 @@
           <%= text_field_tag "branding[contact_phone]", @workspace.branding_value("contact_phone"), class: "l-field" %></div>
       </div>
       <div style="margin-bottom:16px;"><label class="l-label">Logo</label>
-        <%= file_field_tag :logo, class: "l-field", accept: "image/*" %></div>
+        <%= render "shared/upload_field", placeholder: "Chưa chọn ảnh logo",
+              field: file_field_tag(:logo, accept: "image/*",
+                                    data: { upload_target: "input", action: "upload#render" }) %></div>
       <%= submit_tag "Áp dụng", class: "l-btn l-btn-primary" %>
     <% end %>
   </div>

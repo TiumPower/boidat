@@ -125,9 +125,9 @@ kịch bản thầy xin nghỉ → duyệt → hoàn buổi → phụ huynh đ�
 - Postgres (`boidat_production`) + Redis
 - `shared/.env` — xem bảng biến môi trường bên dưới
 - systemd: `config/systemd/*.service` (puma user unit, sidekiq system unit, face service)
-- nginx: `config/nginx/boidat.czin.net.conf` — **phải có block `/cable`**, thiếu
+- nginx: `config/nginx/boidat.tiumpower.com.conf` — **phải có block `/cable`**, thiếu
   nó thì WebSocket bị từ chối âm thầm và chat chỉ cập nhật sau khi F5
-- Cert wildcard `*.boidat.czin.net` qua DNS-01 (mỗi trung tâm một subdomain)
+- Cert wildcard `*.boidat.tiumpower.com` qua DNS-01 (mỗi trung tâm một subdomain)
 
 ### Biến môi trường
 
@@ -237,7 +237,7 @@ nên grep không ra). `raise_on_missing_translations` nay bật ở môi trườ
 
 Việc dọn locale làm lộ thêm một lỗi: **trang giới thiệu ở host trần chưa từng
 hiển thị lần nào trên production**. `tld_length` mặc định là 1 mà host nền tảng
-có ba nhãn, nên Rails đọc `boidat.czin.net` thành "subdomain boidat" — trùng
+có ba nhãn, nên Rails đọc `boidat.tiumpower.com` thành "subdomain boidat" — trùng
 đúng subdomain của trung tâm BƠI ĐẠT — rồi chuyển thẳng sang subdomain đó. Đã
 sửa bằng cách suy `tld_length` từ `PLATFORM_HOST`.
 
@@ -252,7 +252,7 @@ OQ còn lại (`OQ-13` vé lẻ, `OQ-26` doanh thu thuê hồ, `OQ-03` quyền t
 `OQ-22` nhận xét) đang chạy theo mặc định ghi ở bảng trên, đổi được bằng cấu hình.
 
 Hai phụ thuộc bên ngoài: tài khoản **merchant PayOS** đã kích hoạt, và **VPS**
-cho `boidat.czin.net` + wildcard DNS.
+cho `boidat.tiumpower.com` + wildcard DNS.
 
 ### Dữ liệu xuyên biên giới — việc còn nợ
 

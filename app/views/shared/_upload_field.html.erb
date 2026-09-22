@@ -1,0 +1,9 @@
+<%# locals: field (thẻ input đã dựng sẵn), placeholder, icon (tuỳ chọn) %>
+<% icon ||= :image %>
+<label class="l-upload" data-controller="upload"
+       data-upload-placeholder-value="<%= placeholder %>">
+  <%= ui_icon(icon, size: 20) %>
+  <span class="name" data-upload-target="name"><%= placeholder %></span>
+  <span class="pick">Chọn tệp</span>
+  <%= field %>
+</label>

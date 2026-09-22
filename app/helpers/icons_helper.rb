@@ -48,7 +48,8 @@ module IconsHelper
     building: %(<rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2M10 21v-2.5h4V21" stroke-linecap="round"/>),
     key:     %(<circle cx="8" cy="15" r="4.5"/><path d="m11 12 8-8M16 4l3 0 0 3M14.5 6.5 17 9" stroke-linecap="round" stroke-linejoin="round"/>),
     download: %(<path d="M12 3.5v11M8 10.5l4 4 4-4M5 20h14" stroke-linecap="round" stroke-linejoin="round"/>),
-    x:       %(<path d="M6 6l12 12M18 6 6 18" stroke-linecap="round"/>)
+    x:       %(<path d="M6 6l12 12M18 6 6 18" stroke-linecap="round"/>),
+    menu:    %(<path d="M4 7h16M4 12h16M4 17h16" stroke-linecap="round"/>)
   }.freeze
 
   def ui_icon(name, size: 24, klass: nil, stroke: 1.8)

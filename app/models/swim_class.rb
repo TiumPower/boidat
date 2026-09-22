@@ -21,6 +21,7 @@ class SwimClass < ApplicationRecord
   validates :status, inclusion: { in: STATUSES }
   validates :kind, inclusion: { in: KINDS }
   validate  :teacher_has_capacity
+  validate  :teacher_slot_is_free
 
   before_create :assign_code
 
@@ -71,6 +72,13 @@ class SwimClass < ApplicationRecord
 
   def total_sessions = course&.total_sessions || workspace.course_session_count
 
+  # Ngày lớp này còn giữ khung giờ tới. Chưa khai end_date thì lấy buổi cuối
+  # cùng đã sinh; chưa sinh buổi nào thì coi như giữ vô thời hạn (đoán nhầm theo
+  # hướng "còn giữ" an toàn hơn — xem ghi chú ở scope `teaching`).
+  FAR_FUTURE = Date.new(9999, 12, 31)
+
+  def occupied_until = end_date || lessons.maximum(:date) || FAR_FUTURE
+
   # Buổi gần nhất đã diễn ra — dùng để hiện "buổi thứ mấy" trên bảng lịch.
   def current_session_index
     lessons.select { |l| l.status == "done" }.map(&:session_index).compact.max ||
@@ -91,5 +99,28 @@ class SwimClass < ApplicationRecord
     return if teacher.nil? || class_type.nil? || teacher.renter?
     return if class_type <= teacher.capacity
     errors.add(:class_type, "vượt sức chứa của #{teacher.level_label} (tối đa #{teacher.capacity} học viên/tiết)")
+  end
+
+  # Một giáo viên không thể đứng hai lớp cùng giờ cùng thứ. Trước đây không có
+  # ràng buộc nào: dữ liệu demo có 5 cặp lớp chồng nhau, bảng master data chỉ vẽ
+  # được MỘT ô cho mỗi (giáo viên, giờ) nên lớp thứ hai vô hình với vận hành —
+  # chỉ giáo viên nhìn thấy trên PWA, và công thì vẫn tính cho cả hai.
+  def teacher_slot_is_free
+    return if teacher_id.nil? || start_hour.nil? || !running?
+
+    clash = SwimClass.where(teacher_id: teacher_id, start_hour: start_hour, status: "running")
+                     .where.not(id: id)
+                     .detect { |other| (other.weekday_list & weekday_list).any? && overlaps_dates?(other) }
+    return if clash.nil?
+
+    errors.add(:base, "#{teacher.display_name} đã có lớp #{clash.code} vào #{clash.slot_label}")
+  end
+
+  # Hai lớp chỉ thực sự đụng nhau khi khoảng ngày của chúng giao nhau — lớp cũ
+  # đã dạy xong thì khung giờ đó trống cho lớp mới.
+  def overlaps_dates?(other)
+    return true if start_date.nil? || other.start_date.nil?
+
+    start_date <= other.occupied_until && other.start_date <= occupied_until
   end
 end

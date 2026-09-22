@@ -36,4 +36,17 @@ module ApplicationHelper
   def vnd(amount)
     "#{ActiveSupport::NumberHelper.number_to_delimited(amount.to_i)}đ"
   end
+
+  # Phụ đề của mỗi màn đang mang theo mã yêu cầu trong SRS ("FR-206 · 14 em").
+  # Rất tiện lúc nghiệm thu, nhưng trung tâm mua phần mềm thì không biết FR-206
+  # là gì. Mặc định giấu, bật lại bằng SHOW_REQUIREMENT_CODES=true khi đi
+  # nghiệm thu — không phải sửa 29 view.
+  def show_requirement_codes? = ENV["SHOW_REQUIREMENT_CODES"] == "true"
+
+  def page_subtitle(raw)
+    text = raw.to_s.strip
+    return text if show_requirement_codes?
+
+    text.split("·").map(&:strip).reject { |part| part.blank? || part.match?(/\AFR-\d+\z/) }.join(" · ")
+  end
 end

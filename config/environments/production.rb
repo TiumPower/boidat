@@ -114,7 +114,7 @@ Rails.application.configure do
   config.active_job.queue_adapter = :sidekiq
 
   # Mailer URLs
-  config.action_mailer.default_url_options = { host: "boidat.czin.net", protocol: "https" }
+  config.action_mailer.default_url_options = { host: "boidat.tiumpower.com", protocol: "https" }
 
   # Email delivery for OTP. Prefer Brevo's HTTP API (works over 443 where SMTP
   # ports are blocked, e.g. DigitalOcean); fall back to SMTP if configured.
@@ -131,24 +131,27 @@ Rails.application.configure do
       port:                 ENV.fetch("SMTP_PORT", 587).to_i,
       user_name:            ENV["SMTP_USERNAME"],
       password:             ENV["SMTP_PASSWORD"],
-      domain:               ENV.fetch("SMTP_DOMAIN", "boidat.czin.net"),
+      domain:               ENV.fetch("SMTP_DOMAIN", "boidat.tiumpower.com"),
       authentication:       :login,
       enable_starttls_auto: true
     }
   end
 
   # Host authorization — apex + every shop subdomain (white-label PWA).
-  # Host nền tảng có ba nhãn (boidat.czin.net), nên với tld_length mặc định là 1
+  # Host nền tảng có ba nhãn (boidat.tiumpower.com), nên với tld_length mặc định là 1
   # Rails đọc chính nó thành "subdomain boidat" — trùng đúng subdomain của trung
   # tâm BƠI ĐẠT. Hậu quả: apex bị nhận nhầm là trung tâm đó và chuyển thẳng sang
-  # boidat.boidat.czin.net, nên trang giới thiệu ở host trần không bao giờ tới
+  # boidat.boidat.tiumpower.com, nên trang giới thiệu ở host trần không bao giờ tới
   # được, và nếu có trung tâm thứ hai thì apex vẫn thuộc về trung tâm nào tình
   # cờ trùng tên với host.
   #
   # Suy từ PLATFORM_HOST chứ không viết cứng số 2: dev và test chạy trên
   # example.com hai nhãn, đặt cứng là hỏng toàn bộ test subdomain.
-  config.action_dispatch.tld_length = ENV.fetch("PLATFORM_HOST", "boidat.czin.net").count(".")
+  config.action_dispatch.tld_length = ENV.fetch("PLATFORM_HOST", "boidat.tiumpower.com").count(".")
 
+  config.hosts << "boidat.tiumpower.com"
+  config.hosts << /.*\.boidat\.tiumpower\.com/
+  # Tên miền cũ (czin.net) — nginx đã 301 sang domain mới, giữ lại cho chắc.
   config.hosts << "boidat.czin.net"
   config.hosts << /.*\.boidat\.czin\.net/
   # Skip DNS rebinding protection for the default health check endpoint.

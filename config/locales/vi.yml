@@ -15,36 +15,37 @@ vi:
       range_from: Từ
       range_to: Đến
       range_apply: Áp dụng
-      range_note: Điểm tích/đổi & hiệu suất chi nhánh tính theo khoảng đã chọn
+      range_note: Doanh thu & hiệu suất từng hồ tính theo khoảng đã chọn
     locked:
       title: Tài khoản tạm khoá
       unpaid_title: Cần thanh toán để tiếp tục
-      unpaid_note: Thuê bao đã quá hạn hơn %{days} ngày nên cửa hàng tạm bị khoá. Vui lòng thanh toán để mở lại toàn bộ dịch vụ ngay.
+      unpaid_note: Thuê bao đã quá hạn hơn %{days} ngày nên trung tâm tạm bị khoá. Vui lòng thanh toán để mở lại toàn bộ dịch vụ ngay.
       pay_now: Thanh toán ngay
       support_note: Cần hỗ trợ? Liên hệ bộ phận chăm sóc khách hàng của nền tảng.
-      suspended_title: Cửa hàng đã bị tạm ngưng
+      suspended_title: Trung tâm đã bị tạm ngưng
       suspended_note_html: Tài khoản của bạn hiện đang bị tạm ngưng. Vui lòng <strong>liên hệ bộ phận hỗ trợ</strong> để được kích hoạt lại. Trong thời gian này bạn không thể sử dụng dịch vụ.
       logout: Đăng xuất
     plans:
       starter:
         features:
-        - 1 toà nhà · tối đa 20 căn
-        - Hoá đơn & nhắc hạn tự động
-        - Hợp đồng điện tử + tất toán cọc
-        - AI đọc ảnh công tơ
-        - App (PWA) cho người thuê
+        - 1 hồ bơi · 150 học viên · 10 giáo viên
+        - Lịch lớp & điểm danh bằng mã QR
+        - Chấm công tự động theo sĩ số có mặt
+        - Đơn khoá học & thanh toán PayOS
+        - PWA cho phụ huynh và giáo viên
       pro:
         features:
-        - 5 toà nhà · tối đa 100 căn
-        - Mọi tính năng của Starter
-        - Nhân sự & phân quyền
-        - Chat và thông báo đẩy
-        - Đăng tin cho thuê lên chợ phòng
+        - 5 hồ bơi · 800 học viên · 60 giáo viên
+        - Mọi tính năng của gói Một hồ
+        - Điểm danh bằng khuôn mặt
+        - Xếp lịch tự động theo lịch rảnh giáo viên
+        - Chat thời gian thực & thông báo đẩy
+        - Báo cáo điều hành đa hồ
       business:
         features:
-        - Không giới hạn toà nhà và căn
-        - Mọi tính năng của Pro
-        - Tên miền riêng
+        - Không giới hạn hồ bơi và học viên
+        - Mọi tính năng của gói Chuỗi hồ
+        - Tên miền riêng cho trung tâm
         - Ưu tiên hỗ trợ
   date:
     formats:
@@ -90,14 +91,24 @@ vi:
       almost_x_years:
         one: gần 1 năm
         other: gần %{count} năm
-  landing:
-    nav_features: Tính năng
-    nav_how: Cách hoạt động
-    nav_pricing: Bảng giá
-    nav_login: Đăng nhập
-    nav_signup: Đăng ký
-    footer_tagline: Nền tảng quản lý căn hộ cho thuê tại Việt Nam.
-    footer_rights: Bảo lưu mọi quyền.
+  launcher:
+    title: Chọn cổng vào
+    subtitle: Năm cổng cho nhân sự, một cổng cho phụ huynh — cùng một cơ sở dữ liệu.
+    staff_group: Cổng nhân sự
+    parent_group: Cổng phụ huynh
+    bod: Cổng điều hành
+    bod_sub: BOD — báo cáo đa hồ, nhân sự, cấu hình
+    ops: Cổng vận hành
+    ops_sub: Admin · Sale — lịch, học viên, đơn hàng, chấm công
+    desk: Quầy điểm danh
+    desk_sub: Lễ tân tại hồ — quét khuôn mặt, vé lẻ
+    teacher: Cổng giáo viên
+    teacher_sub: Lịch dạy, nhận xét, bảng công, xin nghỉ
+    admin: Super Admin nền tảng
+    admin_sub: Quản lý các trung tâm và gói thuê bao
+    parent_sub: Phụ huynh quét mã QR của người giám hộ để vào
+    login_note: 'Nhân sự đăng nhập tại %{path} · tài khoản do quản trị viên cấp.'
+    no_workspace: Chưa có trung tâm nào.
   customer:
     pwa:
       push_on: Đang bật — bạn sẽ nhận hoá đơn & tin nhắn

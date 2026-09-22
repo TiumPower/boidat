@@ -18,7 +18,7 @@ module Archivable
 
   # Archiving hides a record from the working lists, so it must not be possible
   # while the room is still in use — otherwise an occupied room silently
-  # disappears from the landlord's view.
+  # disappears from the centre's view.
   def archive_block_reason = nil
 
   def archivable? = archive_block_reason.nil?

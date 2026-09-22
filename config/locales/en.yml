@@ -15,36 +15,37 @@ en:
       range_from: From
       range_to: To
       range_apply: Apply
-      range_note: Points earned/redeemed & branch performance reflect the selected range
+      range_note: Revenue & per-pool performance reflect the selected range
     locked:
       title: Account locked
       unpaid_title: Payment required to continue
-      unpaid_note: The subscription is more than %{days} days overdue, so the shop is temporarily locked. Pay now to restore all services immediately.
+      unpaid_note: The subscription is more than %{days} days overdue, so the centre is temporarily locked. Pay now to restore all services immediately.
       pay_now: Pay now
       support_note: Need help? Contact the platform's customer support.
-      suspended_title: Shop suspended
+      suspended_title: Centre suspended
       suspended_note_html: Your account is currently suspended. Please <strong>contact support</strong> to reactivate. You can't use the service in the meantime.
       logout: Log out
     plans:
       starter:
         features:
-        - 1 building · up to 20 units
-        - Automatic bills & reminders
-        - E-contracts + deposit settlement
-        - AI meter photo reading
-        - Tenant app (PWA)
+        - 1 pool · 150 students · 10 teachers
+        - Class schedule & QR check-in
+        - Automatic payroll by attending class size
+        - Course orders & PayOS payments
+        - PWA for parents and teachers
       pro:
         features:
-        - 5 buildings · up to 100 units
-        - Everything in Starter
-        - Staff & permissions
-        - Chat and push notifications
-        - List vacancies on the marketplace
+        - 5 pools · 800 students · 60 teachers
+        - Everything in the single-pool plan
+        - Face recognition check-in
+        - Automatic scheduling from teacher availability
+        - Real-time chat & push notifications
+        - Multi-pool management reports
       business:
         features:
-        - Unlimited buildings and units
-        - Everything in Pro
-        - Custom domain
+        - Unlimited pools and students
+        - Everything in the multi-pool plan
+        - Custom domain for the centre
         - Priority support
   date:
     formats:
@@ -52,14 +53,24 @@ en:
   time:
     formats:
       short: "%H:%M %b %d"
-  landing:
-    nav_features: Features
-    nav_how: How it works
-    nav_pricing: Pricing
-    nav_login: Log in
-    nav_signup: Sign up
-    footer_tagline: The property rental management platform for Vietnam.
-    footer_rights: All rights reserved.
+  launcher:
+    title: Choose a portal
+    subtitle: Five portals for staff, one for parents — all on the same database.
+    staff_group: Staff portals
+    parent_group: Parent portal
+    bod: Management portal
+    bod_sub: BOD — multi-pool reports, staff, settings
+    ops: Operations portal
+    ops_sub: Admin · Sales — schedule, students, orders, payroll
+    desk: Check-in desk
+    desk_sub: Poolside reception — face scan, day passes
+    teacher: Teacher portal
+    teacher_sub: Teaching schedule, feedback, payroll, leave
+    admin: Platform super admin
+    admin_sub: Manage centres and subscription plans
+    parent_sub: Parents scan their guardian QR code to enter
+    login_note: 'Staff log in at %{path} — accounts are issued by an administrator.'
+    no_workspace: No centre yet.
   customer:
     pwa:
       push_on: On — you'll get bills & messages

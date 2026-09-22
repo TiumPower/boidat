@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="<%= I18n.locale %>">
+  <head>
+    <%= render "layouts/head" %>
+    <style>
+      .k-wrap { min-height:100dvh; background:
+        radial-gradient(120% 90% at 50% -20%, var(--surface-2), var(--surface));
+        padding:48px 20px 64px; }
+      .k-in { max-width:900px; margin:0 auto; }
+      .k-head { display:flex; align-items:flex-start; gap:16px; flex-wrap:wrap; margin-bottom:28px; }
+      .k-mark { width:52px; height:52px; border-radius:15px; flex:none; }
+      .k-lang { margin-left:auto; display:flex; gap:2px; background:#fff; border:1px solid var(--line);
+        border-radius:999px; padding:3px; font-size:12px; font-weight:700; }
+      .k-lang a { padding:5px 11px; border-radius:999px; color:var(--ink-2); text-decoration:none; }
+      .k-lang a.on { background:var(--primary); color:var(--on-primary); }
+      .k-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:12px; }
+      .k-card { display:block; background:#fff; border:1px solid var(--line); border-radius:18px;
+        padding:18px; text-decoration:none; color:inherit; box-shadow:var(--shadow); transition:.15s; }
+      .k-card:hover { transform:translateY(-2px); border-color:var(--primary);
+        box-shadow:0 10px 28px -14px color-mix(in srgb, var(--primary) 60%, transparent); }
+      .k-card .t { font-weight:700; font-size:15px; }
+      .k-card .s { font-size:12.5px; color:var(--ink-2); margin-top:3px; }
+      .k-card .u { font-size:11.5px; color:var(--primary-ink); margin-top:9px;
+        font-family:ui-monospace,"SF Mono",Menlo,monospace; word-break:break-all; }
+      .k-card.parent { border-color:color-mix(in srgb, var(--primary) 45%, var(--line)); }
+    </style>
+  </head>
+  <body>
+    <div class="k-wrap"><div class="k-in"><%= yield %></div></div>
+  </body>
+</html>

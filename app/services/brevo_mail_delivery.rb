@@ -15,7 +15,7 @@ class BrevoMailDelivery
     return if key.blank?
 
     addr       = mail.header[:from]&.addrs&.first
-    from_email = addr&.address.presence || Array(mail.from).first || ENV.fetch("MAIL_FROM", "no-reply@boidat.czin.net")
+    from_email = addr&.address.presence || Array(mail.from).first || ENV.fetch("MAIL_FROM", "no-reply@boidat.tiumpower.com")
     from_name  = addr&.display_name.presence || ENV.fetch("MAIL_FROM_NAME", "Boidat")
     body = {
       sender:      { email: from_email, name: from_name },

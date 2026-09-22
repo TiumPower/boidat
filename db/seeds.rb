@@ -356,11 +356,22 @@ ActsAsTenant.with_tenant(ws) do
   pkg_1v2 = Package.find_by(name: "Khoá 12 buổi trẻ em 1:2")
   pkg_1v3 = Package.find_by(name: "Khoá 12 buổi trẻ em 1:3")
 
+  # Khoá định danh của một lớp là (hồ, giáo viên, giờ, các thứ) — KHÔNG có
+  # start_date. Ngày bắt đầu ở đây tính tương đối theo hôm nay
+  # (`2.weeks.ago.beginning_of_week`), nên nếu đưa nó vào find_or_initialize_by
+  # thì chạy `db:seed` lần hai vào một tuần khác là sinh ra lớp thứ hai chồng
+  # đúng lên lớp cũ: nhân đôi lớp, nhân đôi đăng ký, nhân đôi hoá đơn và nhân
+  # đôi công giáo viên.
+  def find_or_build_class(ws:, pool:, teacher:, hour:, weekdays:, kind: "class")
+    SwimClass.where(workspace: ws, pool: pool, teacher: teacher, start_hour: hour, kind: kind)
+             .detect { |c| c.weekday_list == weekdays.map(&:to_i).sort } ||
+      SwimClass.new(workspace: ws, pool: pool, teacher: teacher, start_hour: hour, kind: kind)
+  end
+
   def open_class!(ws:, pool:, teacher:, course:, package:, class_type:, weekdays:, hour:, start_date:, students:, used: 0)
-    cls = SwimClass.find_or_initialize_by(workspace: ws, pool: pool, teacher: teacher,
-                                          start_hour: hour, start_date: start_date)
+    cls = find_or_build_class(ws: ws, pool: pool, teacher: teacher, hour: hour, weekdays: weekdays)
     cls.assign_attributes(course: course, class_type: class_type, weekdays: weekdays,
-                          status: "running", kind: "class")
+                          start_date: start_date, status: "running", kind: "class")
     cls.save!
     LessonGenerator.new(cls).call
 
@@ -468,9 +479,10 @@ ActsAsTenant.with_tenant(ws) do
   # Giờ giáo viên thuê hồ chiếm chỗ trên bảng lịch (FR-225) — không chấm công,
   # không giáo án, chỉ để slot đó hiện là "đã bận".
   rental_students = Student.where(pool: q7, kind: "renter").to_a
-  rental_class = SwimClass.find_or_initialize_by(workspace: ws, pool: q7, teacher: khoa,
-                                                 start_hour: 6, start_date: 4.weeks.ago.to_date.beginning_of_week)
-  rental_class.assign_attributes(class_type: 4, weekdays: [2, 4, 6], status: "running", kind: "rental", course: nil)
+  rental_class = find_or_build_class(ws: ws, pool: q7, teacher: khoa, hour: 6,
+                                     weekdays: [2, 4, 6], kind: "rental")
+  rental_class.assign_attributes(class_type: 4, weekdays: [2, 4, 6], course: nil, status: "running",
+                                 start_date: 4.weeks.ago.to_date.beginning_of_week)
   rental_class.save!
   LessonGenerator.new(rental_class).call(total: 24)
   rental_students.each do |st|
@@ -620,6 +632,37 @@ ActsAsTenant.with_tenant(ws) do
   # kèm theo thì chắc chắn là hàng giả, xoá đi cho khớp với service.
   FaceProfile.where.not(external_ref: nil).find_each do |profile|
     profile.update!(external_ref: nil, recapture_flag: false) unless profile.photos.attached?
+  end
+
+  # Nhật ký thao tác (FR-221) là yêu cầu hợp đồng, nhưng seed ghi thẳng qua
+  # model nên không đi qua `audit!` của controller — màn "Nhật ký thao tác"
+  # trống trơn đúng lúc demo. Ghi lại vài dòng cho đúng những gì seed vừa làm.
+  puts "→ Nhật ký thao tác"
+  if AuditLog.where(workspace: ws).none?
+    bod_user   = User.find_by(email: "bod@boidat.vn")
+    admin_user = User.find_by(email: "hoang@boidat.vn")
+    sale_user  = User.find_by(email: "tram@boidat.vn")
+
+    entries = []
+    Pool.where(workspace: ws).each_with_index do |pool, i|
+      entries << [admin_user, "create", pool, "Tạo hồ #{pool.name}", (30 - i).days.ago]
+    end
+    Package.where(workspace: ws).limit(3).each_with_index do |pkg, i|
+      entries << [bod_user, "create", pkg, "Niêm yết gói #{pkg.name}", (24 - i).days.ago]
+    end
+    SwimClass.where(workspace: ws).classes.limit(4).each_with_index do |cls, i|
+      entries << [sale_user, "create", cls, "Mở lớp #{cls.code} — #{cls.slot_label}", (14 - i).days.ago]
+    end
+    Order.where(workspace: ws).paid.limit(4).each_with_index do |order, i|
+      entries << [sale_user, "update", order, "Ghi nhận thanh toán đơn #{order.code}", (7 - i).days.ago]
+    end
+
+    entries.each do |user, action, entity, summary, at|
+      next if entity.nil?
+      AuditLog.create!(workspace: ws, pool: entity.try(:pool), user: user, actor_label: user&.name,
+                       action: action, entity_type: entity.class.name, entity_id: entity.id,
+                       summary: summary, created_at: at, updated_at: at)
+    end
   end
 
   # Học viên đã đủ điều kiện thi tốt nghiệp (FR-208) — cần đúng mốc buổi.

@@ -1,0 +1,17 @@
+<% content_for :page_title, "Menu" %>
+<% content_for :page_sub, @area == :bod ? "Cổng điều hành" : "Cổng vận hành" %>
+<% content_for :no_sidebar, true %>
+
+<%# Dùng lại đúng partial sidebar, chỉ đổi chỗ đứng: ở đây nó là nội dung trang
+    chứ không phải cột trái, nên không bị quy tắc ẩn sidebar ở ≤900px nuốt mất. %>
+<div class="l-menupage">
+  <%= render "layouts/merchant_sidebar", area: @area %>
+</div>
+
+<% if current_membership&.executive? %>
+  <div style="margin-top:14px; text-align:center;">
+    <%= link_to (@area == :bod ? "Xem menu cổng vận hành" : "Xem menu cổng điều hành"),
+          merchant_menu_path(area: @area == :bod ? "ops" : "bod"),
+          class: "l-btn l-btn-ghost" %>
+  </div>
+<% end %>

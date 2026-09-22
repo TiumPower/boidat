@@ -1,7 +1,7 @@
 require "test_helper"
 
 # Cổng phụ huynh và cổng nhân sự chạy trên CÙNG một host ở production
-# (boidat.boidat.czin.net), nên đường dẫn đăng nhập của hai bên không được
+# (boidat.boidat.tiumpower.com), nên đường dẫn đăng nhập của hai bên không được
 # đụng nhau.
 #
 # Trước đây chúng đụng nhau. Segment `(/w/:workspace_slug)` là tuỳ chọn, nên ở
