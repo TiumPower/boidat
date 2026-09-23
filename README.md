@@ -120,7 +120,9 @@ kịch bản thầy xin nghỉ → duyệt → hoàn buổi → phụ huynh đ�
 
 ## Deploy
 
-`bundle exec cap production deploy` (Capistrano + rbenv). Trên máy chủ cần:
+`git push origin main && bundle exec cap production deploy` (Capistrano + rbenv).
+Mã nguồn ở **GitHub** `git@github.com:vietlee/boidat.git`, máy chủ kéo về qua
+agent forwarding. Trên máy chủ cần:
 
 - Postgres (`boidat_production`) + Redis
 - `shared/.env` — xem bảng biến môi trường bên dưới
