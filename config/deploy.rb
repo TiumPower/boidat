@@ -7,7 +7,7 @@ set :application, "boidat"
 # Repo bare cũ trên server vẫn còn ở /home/deploy/repos/boidat.git; nếu GitHub
 # không với tới được thì chạy `REPO_URL=/home/deploy/repos/boidat.git cap production deploy`
 # (nhớ `git push production main` trước, nó KHÔNG tự đồng bộ với GitHub).
-set :repo_url,    ENV.fetch("REPO_URL", "git@github.com:vietlee/boidat.git")
+set :repo_url,    ENV.fetch("REPO_URL", "git@github.com:TiumPower/boidat.git")
 
 set :deploy_to,   "/var/www/boidat"
 set :branch,      ENV.fetch("BRANCH", "main")
